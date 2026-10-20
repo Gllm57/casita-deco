@@ -249,6 +249,23 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   .menu-top p { margin-left: 0; }
   .menu-cards { margin: 0; }
 }
+/* constructor mode */
+.app:not(.build) .build-only { display: none !important; }
+.floors { display: flex; flex-direction: column; gap: 4px; border-radius: 24px; padding: 4px; }
+.floors button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; font: 800 13px var(--display); cursor: pointer; }
+.floors button.on { background: var(--ink); color: #fff; }
+.night .floors button.on { background: #F1ECFF; color: var(--ink); }
+.toolpill { position: absolute; left: calc((100% - var(--panel-w)) / 2); bottom: calc(var(--sheet-h) + 10px); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 16px; border-radius: 999px; max-width: calc(100% - 130px); }
+.toolpill span { min-width: 0; }
+.toolpill b { display: block; font: 800 14px var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toolpill small { display: block; font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toolpill button { border: 0; border-radius: 999px; background: var(--mint); color: #fff; padding: 9px 14px; font: 800 12.5px var(--body); cursor: pointer; flex: none; }
+.app.in-menu .toolpill, .app.photo .toolpill { opacity: 0; pointer-events: none; }
+.card .ico { width: 80px; height: 72px; border-radius: 16px; background: var(--thumb); display: grid; place-items: center; }
+.card .ico svg { width: 38px; height: 38px; color: var(--card-ink); }
+.mcard.wide { position: relative; }
+.mi.build { background: linear-gradient(135deg, #F2B33D, #E0803A); }
+.mcard .new { position: absolute; top: 10px; right: 12px; background: var(--gold); color: var(--ink); font: 900 10.5px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -280,6 +297,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="side">
         <button class="round glass" id="undoBtn" aria-label="Deshacer" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
         <button class="round glass" id="nightBtn" aria-label="Cambiar a noche"></button>
+        <div class="floors glass build-only" id="floorSel" role="group" aria-label="Piso"><button data-lv="1">1º</button><button data-lv="0">PB</button></div>
+        <button class="round glass build-only" id="wallModeBtn" aria-label="Altura de las paredes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 20h18M5 20V9h5v11M14 20v-6h5v6"/></svg></button>
         <button class="round glass" id="photoBtn" aria-label="Modo foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
       </div>
     </div>
@@ -304,6 +323,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button id="tDone" class="done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Listo</button>
   </div>
 
+  <div class="toolpill glass" id="toolPill" hidden><span><b id="toolName">Pared</b><small id="toolHint">Arrastra de un punto a otro</small></span><button id="toolDone">Hecho</button></div>
   <div class="hint" id="hint">Arrastra para girar · toca un objeto para moverlo</div>
   <div class="toast" id="toast"></div>
 
@@ -326,6 +346,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
         <button class="mcard" id="mStory"><span class="mi story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M9 7V5h6v2M3 12h18"/></svg></span><span><b>Encargos</b><small id="mStorySub">0 de 36 estrellas</small></span></button>
         <button class="mcard" id="mHome"><span class="mi house"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9H3z"/><path d="M10 20v-6h4v6"/></svg></span><span><b>Mi casa</b><small id="mHomeSub">Modo libre</small></span></button>
       </div>
+      <button class="mcard wide" id="mBuild"><span class="mi build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6M12 5V2"/></svg></span><span><b>Constructor</b><small>Diseña tu casa: paredes, puertas y dos pisos</small></span><span class="new">Nuevo</span></button>
       <button class="mcard slim" id="mSettings"><span class="mi gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span><b>Ajustes</b></button>
     </div>
   </div>
@@ -341,6 +362,12 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="panel-head"><div><h2>Mi casa</h2><p class="sub">Modo libre: sin listas ni clientes. Desbloquea salas con las estrellas de los encargos.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="lvgrid" id="homeList"></div>
       <button class="btn" id="resetRoom" style="width:100%;margin-top:14px">Vaciar la sala actual</button>
+    </div>
+  </div>
+  <div class="overlay" id="buildOv" hidden>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Constructor</h2><p class="sub">Levanta paredes, abre puertas y ventanas, pinta cada pared y sube al primer piso con una escalera.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="lvgrid" id="buildList"></div>
     </div>
   </div>
   <div class="overlay" id="settingsOv" hidden>
@@ -372,7 +399,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
-const WALL_H = 2.6, PI = Math.PI;
+const WALL_H = 2.6, PI = Math.PI, LEVEL_H = WALL_H + 0.15;
+let BM = false, HOUSE = null; // constructor mode flag and the house being built
 const $ = id => document.getElementById(id);
 const app = $('app');
 
@@ -674,6 +702,12 @@ Object.assign(CAT, {
       add(g, new THREE.TorusGeometry(0.11, 0.012, 6, 24), ch, 0.42, 1.55, 0.058); disc(g, 0.04, 0.005, M(0xFF7A9A), 0.42, 1.55, 0.058, 16);
       for (const x of [-0.05, 0.05]) B(g, 0.012, 0.12, 0.005, ch, 0.42 + x, 1.78, 0.058).rotation.z = x * 4; } },
 });
+CAT.escalera = { name: 'Escalera', tab: 'obra', tags: 'salon recibidor', w: 1, d: 3, price: 600, comfort: 0, style: 3, role: 'madera', stairs: true,
+  build(g, m) { const n = 12, run = 3 / n, rise = LEVEL_H / n, slope = Math.atan2(LEVEL_H, 3), dk = M(DARK);
+    for (let i = 0; i < n; i++) { B(g, 0.9, 0.06, run + 0.03, m, 0, rise * (i + 1) - 0.03, 1.5 - run * (i + 0.5)); B(g, 0.86, rise - 0.04, 0.03, M(LINEN), 0, rise * (i + 0.5), 1.5 - run * i - 0.01); }
+    for (const sx of [-1, 1]) { const st = B(g, 0.06, 0.16, 3.6, dk, sx * 0.47, LEVEL_H / 2 - 0.08, 0); st.rotation.x = slope; }
+    for (const i of [0, 4, 8, 11]) C(g, 0.022, 0.022, 0.9, dk, 0.47, rise * (i + 1) + 0.45, 1.5 - run * (i + 0.5), 8);
+    const rail = B(g, 0.06, 0.06, 3.6, m, 0.47, LEVEL_H / 2 + 0.9, 0); rail.rotation.x = slope; } };
 const EXTRA_TAGS = { planta: 'oficina cafe yoga recibidor', monstera: 'oficina cafe yoga', cactus: 'oficina gamer', lampara: 'oficina yoga gamer', estanteria: 'oficina', escritorio: 'oficina',
   silla: 'oficina cafe', taburete: 'cafe', balda: 'oficina recibidor cafe', cuadro: 'oficina cafe recibidor', espejo: 'recibidor yoga', guirnalda: 'yoga cafe', puff: 'gamer yoga',
   camaInd: 'gamer', tv: 'gamer', alfombraRedonda: 'yoga recibidor', armarioAlto: 'recibidor', reloj: 'oficina cafe recibidor', colgante: 'cafe yoga' };
@@ -777,17 +811,48 @@ const HOMES = [
   { id: 'h_atico', room: 'Ático gigante', kind: 'Mi casa', tag: 'musica', w: 12, d: 10, wall: 'terracota', floor: 'espiga', unlock: 28, open: [win('N', 2, 3), win('N', 7, 3), win('W', 3, 2), door('E', 6)] },
 ];
 for (const h of HOMES) Object.assign(h, { home: true, color: '#3FB894', needs: [], start: [], s3: Math.round(h.w * h.d * 1.3), c3: Math.round(h.w * h.d * 0.5) });
-const ALL = [...LEVELS, ...HOMES];
+/* constructor: edges between grid points carry walls, cells carry floor tiles; two storeys */
+const ekey = (t, x, z) => `${t},${x},${z}`;
+const parseE = k => { const [t, x, z] = k.split(','); return [t, +x, +z]; };
+const ckey = (x, z) => `${x},${z}`;
+const newLevel = () => ({ tiles: {}, walls: {}, items: [] });
+function setWall(lv, k, c) { if (!lv.walls[k]) lv.walls[k] = { c, o: null }; }
+function rectRoom(lv, x0, z0, x1, z1, floor, wall) {
+  for (let x = x0; x < x1; x++) for (let z = z0; z < z1; z++) lv.tiles[ckey(x, z)] = floor;
+  for (let x = x0; x < x1; x++) { setWall(lv, ekey('h', x, z0), wall); setWall(lv, ekey('h', x, z1), wall); }
+  for (let z = z0; z < z1; z++) { setWall(lv, ekey('v', x0, z), wall); setWall(lv, ekey('v', x1, z), wall); }
+}
+function exampleHouse() {
+  const g = newLevel(), u = newLevel(), it = a => a.map(o => ({ r: 0, ci: 0, ...o }));
+  rectRoom(g, 4, 3, 8, 10, 'roble', 'hueso'); rectRoom(g, 8, 3, 12, 7, 'baldosa', 'menta'); rectRoom(g, 8, 7, 12, 10, 'azulejo', 'cielo');
+  for (const k of ['v,8,5', 'h,9,7', 'h,6,10']) g.walls[k].o = 'door';
+  for (const k of ['v,4,8', 'h,7,10', 'h,10,3', 'v,12,4', 'h,10,10']) g.walls[k].o = 'window';
+  g.items = it([{ type: 'escalera', gx: 4, gz: 4 }, { type: 'alfombra', gx: 5, gz: 6 }, { type: 'sofa', gx: 5, gz: 8, r: 2 }, { type: 'tv', gx: 5, gz: 3 },
+    { type: 'lampara', gx: 7, gz: 8 }, { type: 'planta', gx: 7, gz: 3 }, { type: 'nevera', gx: 11, gz: 3 }, { type: 'fogon', gx: 10, gz: 3 }, { type: 'fregadero', gx: 9, gz: 3 },
+    { type: 'mesaComedor', gx: 9, gz: 5 }, { type: 'silla', gx: 10, gz: 6, r: 2 }, { type: 'banera', gx: 10, gz: 9, r: 2 }, { type: 'lavabo', gx: 8, gz: 7 }, { type: 'inodoro', gx: 11, gz: 7 },
+    { type: 'cuadroGrande', edge: 'h,5,3', side: 1 }, { type: 'espejo', edge: 'h,8,7', side: 1 }, { type: 'reloj', edge: 'v,12,5', side: 1 }]);
+  rectRoom(u, 4, 3, 12, 7, 'moqueta', 'lavanda'); rectRoom(u, 4, 7, 8, 10, 'espiga', 'rosa');
+  u.walls['h,6,7'].o = 'door';
+  for (const k of ['h,11,3', 'v,12,5', 'h,5,10', 'v,4,8', 'h,6,3']) u.walls[k].o = 'window';
+  u.items = it([{ type: 'cama', gx: 9, gz: 3 }, { type: 'mesita', gx: 11, gz: 3 }, { type: 'armario', gx: 7, gz: 6, r: 2 }, { type: 'alfombraRedonda', gx: 8, gz: 5 },
+    { type: 'escritorio', gx: 5, gz: 9, r: 2 }, { type: 'sillaGamer', gx: 5, gz: 8 }, { type: 'puff', gx: 7, gz: 8 }, { type: 'monstera', gx: 7, gz: 7 },
+    { type: 'guirnalda', edge: 'h,9,3', side: 1 }, { type: 'neon', edge: 'v,8,8', side: 1 }, { type: 'cuadro', edge: 'h,9,7', side: -1 }]);
+  return [g, u];
+}
+const BUILD_DEF = { id: 'build', build: true, home: true, room: 'Mi proyecto', kind: 'Constructor', tag: 'salon', color: '#E0803A', w: 16, d: 14, wall: 'hueso', floor: 'roble', needs: [], open: [], start: [], s3: 150, c3: 70 };
+const ALL = [...LEVELS, ...HOMES, BUILD_DEF];
 const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
-const rooms = {}; for (const L of ALL) rooms[L.id] = freshRoom(L);
+const rooms = {}; for (const L of ALL) rooms[L.id] = L.build ? { cur: 0, best: 0, levels: exampleHouse() } : freshRoom(L);
 const settings = { quality: 'alta', cat: '1', vibrate: '1' };
 
 // saved game lives in this browser only (v1 = earlier versions of the game)
 const SAVE_KEY = 'casita-deco-v2';
 let saved = null;
 try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || JSON.parse(localStorage.getItem('casita-deco-v1') || 'null'); } catch (e) { saved = null; }
+const cleanItems = list => (list || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length }));
+if (saved && saved.rooms && saved.rooms.build && saved.rooms.build.levels) rooms.build = { cur: 0, best: 0, levels: saved.rooms.build.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, items: cleanItems(l.items) })) };
 if (saved && saved.rooms) for (const L of ALL) {
-  const r = saved.rooms[L.id]; if (!r) continue;
+  const r = saved.rooms[L.id]; if (!r || L.build) continue;
   rooms[L.id] = { wall: r.wall || L.wall, floor: r.floor || L.floor, best: r.best || 0, items: (r.items || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length })) };
 }
 if (saved && saved.settings) Object.assign(settings, saved.settings);
@@ -822,8 +887,8 @@ const capMat = M(0x5E537A);
 const trimMat = M(WHITE);
 const windowMat = std({ color: 0xBFE3F5, emissive: 0x7FB6D6, emissiveIntensity: 0.8, roughness: 0.1 });
 
-function paintFloor(f) {
-  const x = floorCanvas.getContext('2d'), n = 512;
+function paintFloor(f, cv = floorCanvas) {
+  const x = cv.getContext('2d'), n = 512;
   x.fillStyle = f.a; x.fillRect(0, 0, n, n);
   if (f.id === 'baldosa') {
     const s = n / 8; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { x.fillStyle = (i + j) % 2 ? f.b : f.a; x.fillRect(i * s, j * s, s, s); }
@@ -847,7 +912,7 @@ function paintFloor(f) {
         x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(off, r * h, 2, h); off += len; }
       x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(0, r * h, n, 2); }
   }
-  floorTex.needsUpdate = true;
+  if (cv === floorCanvas) floorTex.needsUpdate = true;
 }
 
 /* ---------- room building ---------- */
@@ -923,6 +988,7 @@ const floorItems = () => R.items.filter(i => !def(i).wall);
 const itemHex = it => (it.hex != null ? it.hex : def(it).colors[it.ci]);
 
 function fits(it, gx, gz, r) {
+  if (BM) return fitsB(it, gx, gz, r);
   const D = def(it), [w, d] = r % 2 ? [D.d, D.w] : [D.w, D.d];
   if (gx < 0 || gz < 0 || gx + w > GW || gz + d > GD) return false;
   if (D.flat) return true;
@@ -940,6 +1006,7 @@ function fitsWall(it, wall, u) {
   return !R.items.some(o => o !== it && def(o).wall && o.wall === wall && hit(o.u, def(o).w));
 }
 function placeMesh(it, lift = 0) {
+  if (BM) return placeMeshB(it, lift);
   const D = def(it);
   if (D.wall) {
     const wg = walls[it.wall].g; if (it.group.parent !== wg) wg.add(it.group);
@@ -966,8 +1033,10 @@ function buildItem(it) {
   g.traverse(o => { o.userData.item = it; });
   it.group = g; placeMesh(it);
 }
-function clearItems() { for (const it of R.items) if (it.group && it.group.parent) it.group.parent.remove(it.group); }
+const allItems = () => (BM ? HOUSE.levels.flatMap(l => l.items) : R.items);
+function clearItems() { for (const it of allItems()) if (it.group && it.group.parent) it.group.parent.remove(it.group); }
 function freeSpot(it) {
+  if (BM) return freeSpotB(it);
   const cells = [];
   for (const r of [0, 1]) for (let x = 0; x < GW; x++) for (let z = 0; z < GD; z++) cells.push([x, z, r]);
   const cx = GW / 2 - 1, cz = GD / 2 - 1;
@@ -983,6 +1052,12 @@ function freeWallSpot(it) {
   return null;
 }
 function placeNew(it) {
+  if (BM) {
+    it.lv = HOUSE.cur;
+    if (def(it).wall) { const sp = freeWallSpotB(it); if (!sp) { toast('No queda pared libre en este piso'); return false; } [it.edge, it.side] = sp; }
+    else { const sp = freeSpotB(it); if (!sp) { toast(def(it).stairs && HOUSE.cur ? 'La escalera va en la planta baja' : 'No queda sitio con suelo en este piso'); return false; } [it.gx, it.gz, it.r] = sp; }
+    return true;
+  }
   if (def(it).wall) { const s = freeWallSpot(it); if (!s) { toast('No queda pared libre'); return false; } [it.wall, it.u] = s; }
   else { const s = freeSpot(it); if (!s) { toast('No queda sitio libre'); return false; } [it.gx, it.gz, it.r] = s; }
   return true;
@@ -990,11 +1065,13 @@ function placeNew(it) {
 
 /* ---------- undo ---------- */
 const history = [];
-const snap = () => ({ id: L.id, wall: R.wall, floor: R.floor, items: JSON.stringify(R.items.map(({ group, ...i }) => i)) });
+const houseJSON = () => JSON.stringify({ cur: HOUSE.cur, levels: HOUSE.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, items: lv.items.map(({ group, ...i }) => i) })) });
+const snap = () => (BM ? { id: L.id, house: houseJSON() } : { id: L.id, wall: R.wall, floor: R.floor, items: JSON.stringify(R.items.map(({ group, ...i }) => i)) });
 function pushUndo(s = snap()) { history.push(s); if (history.length > 40) history.shift(); $('undoBtn').disabled = false; }
 function undo() {
   const s = history.pop(); $('undoBtn').disabled = !history.length;
   if (!s || s.id !== L.id) return;
+  if (s.house) { clearItems(); const d = JSON.parse(s.house); HOUSE.levels = d.levels; HOUSE.cur = d.cur; rebuildHouse(); select(null); toast('Deshecho'); buzz(); return; }
   clearItems(); R.wall = s.wall; R.floor = s.floor; R.items = JSON.parse(s.items);
   applySurfaces(); R.items.forEach(buildItem); select(null); refreshHud(); toast('Deshecho'); buzz();
 }
@@ -1069,15 +1146,23 @@ const thumbs = {};
 
 /* ---------- catalog ---------- */
 let tab = 'muebles';
-$('tabs').innerHTML = TABS.map(([k, n]) => `<button class="tab" role="tab" id="tab-${k}" data-tab="${k}" aria-selected="${k === tab}">${n}</button>`).join('');
+function renderTabs() {
+  const list = BM ? [['obra', 'Obra'], ...TABS] : TABS;
+  if (!list.some(t => t[0] === tab)) tab = list[0][0];
+  $('tabs').innerHTML = list.map(([k, n]) => `<button class="tab" role="tab" id="tab-${k}" data-tab="${k}" aria-selected="${k === tab}">${n}</button>`).join('');
+}
+renderTabs();
 const wanted = new Set();
 function renderStrip() {
   wanted.clear(); for (const n of L.needs) if (countOf(n.types) < n.n) n.types.forEach(t => wanted.add(t));
   const el = $('strip'); let html = '';
-  if (tab === 'pintura') {
-    html = WALLS.map(w => `<button class="card ${R.wall === w.id ? 'active' : ''}" data-wall="${w.id}"><span class="sw" style="background:${hexCss(w.hex)}"></span><span class="nm">${w.name}</span>${HARMONY.has(w.id + '|' + R.floor) ? '<span class="want">combina</span>' : ''}</button>`).join('');
+  if (tab === 'obra') {
+    html = TOOLS.map(t => `<button class="card ${tool && tool.id === t.id ? 'active' : ''}" data-tool="${t.id}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></span><span class="nm">${t.name}</span><span class="pr">Obra</span></button>`).join('')
+      + `<button class="card" data-buy="escalera"><img src="${thumbs.escalera || ''}" alt=""><span class="nm">Escalera</span><span class="pr">Une los dos pisos</span></button>`;
+  } else if (tab === 'pintura') {
+    html = WALLS.map(w => `<button class="card ${(BM ? tool && tool.id === 'paint' && brush.wall === w.id : R.wall === w.id) ? 'active' : ''}" data-wall="${w.id}"><span class="sw" style="background:${hexCss(w.hex)}"></span><span class="nm">${w.name}</span>${HARMONY.has(w.id + '|' + R.floor) ? '<span class="want">combina</span>' : ''}</button>`).join('');
   } else if (tab === 'suelo') {
-    html = FLOORS.map(f => `<button class="card ${R.floor === f.id ? 'active' : ''}" data-floor="${f.id}"><span class="sw" style="background:linear-gradient(135deg,${f.a} 50%,${f.b} 50%)"></span><span class="nm">${f.name}</span>${HARMONY.has(R.wall + '|' + f.id) ? '<span class="want">combina</span>' : ''}</button>`).join('');
+    html = FLOORS.map(f => `<button class="card ${(BM ? tool && tool.id === 'floor' && brush.floor === f.id : R.floor === f.id) ? 'active' : ''}" data-floor="${f.id}"><span class="sw" style="background:linear-gradient(135deg,${f.a} 50%,${f.b} 50%)"></span><span class="nm">${f.name}</span>${HARMONY.has(R.wall + '|' + f.id) ? '<span class="want">combina</span>' : ''}</button>`).join('');
   } else {
     html = Object.entries(CAT).filter(([, D]) => D.tab === tab).map(([k, D]) =>
       `<button class="card" data-buy="${k}">${wanted.has(k) ? '<span class="want">lo pide</span>' : ''}${thumbs[k] ? `<img src="${thumbs[k]}" alt="">` : '<span class="sw"></span>'}<span class="nm">${D.name}</span><span class="pr"><span class="coin"></span>${D.price}</span></button>`).join('');
@@ -1088,10 +1173,14 @@ function applySurfaces() { wallMat.color.setHex(WALLS.find(w => w.id === R.wall)
 $('strip').addEventListener('click', e => {
   const b = e.target.closest('.card'); if (!b) return;
   dismissHint();
+  if (b.dataset.tool) { setTool(tool && tool.id === b.dataset.tool ? null : b.dataset.tool); return; }
+  if (BM && b.dataset.wall) { setTool('paint', { wall: b.dataset.wall }); return; }
+  if (BM && b.dataset.floor) { setTool('floor', { floor: b.dataset.floor }); return; }
   if (b.dataset.buy) {
+    if (tool) setTool(null);
     const it = { type: b.dataset.buy, r: 0, ci: R.items.some(i => i.hex == null) ? mainSet().i : 0 };
     const before = snap(); if (!placeNew(it)) return;
-    pushUndo(before); R.items.push(it); buildItem(it); select(it); pop(it); buzz();
+    pushUndo(before); R.items.push(it); buildItem(it); afterItemsChanged(it); select(it); pop(it); buzz();
     toast(`${def(it).name} añadido`); $('mission').classList.add('collapsed'); queueLayout();
   } else if (b.dataset.wall && b.dataset.wall !== R.wall) {
     pushUndo(); R.wall = b.dataset.wall; applySurfaces(); harmonyToast();
@@ -1121,16 +1210,20 @@ function select(it) {
 }
 function updateMarker(ok) {
   const it = sel;
-  marker.visible = wallMarker.visible = false; if (grid) grid.material.opacity = 0;
+  marker.visible = wallMarker.visible = false; if (grid) grid.material.opacity = tool ? 0.45 : 0;
   if (!it) return;
   const D = def(it);
   markerMat.color.setHex(ok ? 0x3FB894 : 0xE5533D);
-  if (D.wall) {
+  if (D.wall && BM) {
+    const wm = wallMeshes[it.lv][it.edge]; if (wm) { if (wallMarker.parent !== wm.g) wm.g.add(wallMarker);
+      wallMarker.scale.set(D.w - 0.05, D.h + 0.2, 1); wallMarker.position.set((D.w - 1) / 2, D.y, it.side * 0.09); wallMarker.rotation.y = it.side > 0 ? 0 : PI; wallMarker.visible = true; }
+  } else if (D.wall) {
+    wallMarker.rotation.y = 0;
     const wg = walls[it.wall].g; if (wallMarker.parent !== wg) wg.add(wallMarker);
     wallMarker.scale.set(D.w - 0.05, D.h + 0.2, 1); wallMarker.position.set(along(it.wall, it.u, D.w), D.y, 0.085); wallMarker.visible = true;
   } else {
     const [w, d] = fp(it);
-    marker.scale.set(w, d, 1); marker.position.x = it.gx + w / 2 - GW / 2; marker.position.z = it.gz + d / 2 - GD / 2;
+    marker.scale.set(w, d, 1); marker.position.y = (BM ? it.lv * LEVEL_H : 0) + 0.035; marker.position.x = it.gx + w / 2 - GW / 2; marker.position.z = it.gz + d / 2 - GD / 2;
     marker.visible = true; grid.material.opacity = 0.35;
   }
   $('selName').classList.toggle('bad', !ok);
@@ -1146,7 +1239,7 @@ $('tRotate').addEventListener('click', () => {
     const spot = [[-1, 0], [0, -1], [-1, -1], [1, 0], [0, 1]].find(([dx, dz]) => fits(it, it.gx + dx, it.gz + dz, r));
     if (spot) { it.gx += spot[0]; it.gz += spot[1]; it.r = r; break; }
   }
-  placeMesh(it); updateMarker(true); pop(it); buzz();
+  placeMesh(it); updateMarker(true); pop(it); buzz(); afterItemsChanged(it);
 });
 function renderPalette() {
   const it = sel; if (!it) return;
@@ -1170,12 +1263,12 @@ $('tCopy').addEventListener('click', () => {
   const it = sel; if (!it) return;
   const c = { type: it.type, r: it.r, ci: it.ci }; if (it.hex != null) c.hex = it.hex;
   const before = snap(); if (!placeNew(c)) return;
-  pushUndo(before); R.items.push(c); buildItem(c); select(c); pop(c); refreshHud(); buzz();
+  pushUndo(before); R.items.push(c); buildItem(c); afterItemsChanged(c); select(c); pop(c); refreshHud(); buzz();
 });
 $('tSell').addEventListener('click', () => {
   const it = sel; if (!it) return;
   pushUndo(); it.group.parent.remove(it.group); R.items = R.items.filter(o => o !== it);
-  toast(`${def(it).name} quitado`); select(null); refreshHud(); buzz();
+  toast(`${def(it).name} quitado`); select(null); afterItemsChanged(it); refreshHud(); buzz();
 });
 $('tDone').addEventListener('click', () => select(null));
 
@@ -1195,13 +1288,24 @@ const cat = { g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 1, jump: 0, 
 function cellBlocked(x, z) {
   const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2);
   if (cx < 0 || cz < 0 || cx >= GW || cz >= GD) return true;
+  if (BM) { const g0 = HOUSE.levels[0]; if (!g0.tiles[ckey(cx, cz)]) return true;
+    return g0.items.some(o => { if (def(o).wall || def(o).flat) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; }); }
   return floorItems().some(o => { if (def(o).flat) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; });
+}
+function stepBlocked(x1, z1, x2, z2) {
+  if (cellBlocked(x2, z2)) return true;
+  if (!BM) return false;
+  const a = [Math.floor(x1 + GW / 2), Math.floor(z1 + GD / 2)], b = [Math.floor(x2 + GW / 2), Math.floor(z2 + GD / 2)], w0 = HOUSE.levels[0].walls;
+  const blk = k => w0[k] && w0[k].o !== 'door';
+  if (a[0] !== b[0] && blk(ekey('v', Math.max(a[0], b[0]), a[1]))) return true;
+  if (a[1] !== b[1] && blk(ekey('h', b[0], Math.max(a[1], b[1])))) return true;
+  return false;
 }
 function catTarget() {
   for (let k = 0; k < 14; k++) {
     const tx = Math.floor(Math.random() * GW) - GW / 2 + 0.5, tz = Math.floor(Math.random() * GD) - GD / 2 + 0.5;
     const steps = Math.ceil(Math.hypot(tx - cat.x, tz - cat.z) / 0.2); let clear = true;
-    for (let i = 1; i <= steps && clear; i++) clear = !cellBlocked(cat.x + (tx - cat.x) * i / steps, cat.z + (tz - cat.z) * i / steps);
+    for (let i = 1; i <= steps && clear; i++) clear = !stepBlocked(cat.x + (tx - cat.x) * (i - 1) / steps, cat.z + (tz - cat.z) * (i - 1) / steps, cat.x + (tx - cat.x) * i / steps, cat.z + (tz - cat.z) * i / steps);
     if (clear) { cat.tx = tx; cat.tz = tz; return; }
   }
   cat.wait = 1;
@@ -1221,7 +1325,7 @@ function updateCat(dt) {
   if (cat.wait > 0) cat.wait -= dt;
   else if (dist > 0.03) {
     const step = Math.min(dist, dt * 0.9), nx = cat.x + dx / dist * step, nz = cat.z + dz / dist * step;
-    if (cellBlocked(nx, nz)) { cat.tx = cat.x; cat.tz = cat.z; cat.wait = 0.6; }
+    if (stepBlocked(cat.x, cat.z, nx, nz)) { cat.tx = cat.x; cat.tz = cat.z; cat.wait = 0.6; }
     else { cat.x = nx; cat.z = nz; moving = true; cat.g.rotation.y = Math.atan2(-dz, dx); }
   } else { cat.wait = 1.5 + Math.random() * 3; catTarget(); }
   if (cat.jump > 0) cat.jump = Math.max(0, cat.jump - dt * 1.8);
@@ -1239,7 +1343,7 @@ function applyNight() {
   sun.intensity = n ? 0.1 : 0.85; sun.color.setHex(n ? 0x8C9BE8 : 0xFFF0DD); fill.intensity = n ? 0.06 : 0.22;
   windowMat.color.setHex(n ? 0x2C3570 : 0xBFE3F5); windowMat.emissive.setHex(n ? 0x1B2150 : 0x7FB6D6);
   glowMats.forEach(m => { m.emissiveIntensity = n ? 1.1 : 0.5; });
-  for (const it of R.items) if (it.group && it.group.userData.light) it.group.userData.light.intensity = n ? def(it).light.power : 0;
+  for (const it of allItems()) if (it.group && it.group.userData.light) it.group.userData.light.intensity = n ? def(it).light.power : 0;
   app.classList.toggle('night', n);
   $('nightBtn').innerHTML = n ? sunIcon : moonIcon; $('nightBtn').setAttribute('aria-label', n ? 'Cambiar a día' : 'Cambiar a noche');
 }
@@ -1250,32 +1354,275 @@ const snapAz = dir => { const base = view.azGoal ?? view.az; view.azGoal = Math.
 $('rotL').addEventListener('click', () => snapAz(-1));
 $('rotR').addEventListener('click', () => snapAz(1));
 
+/* ---------- constructor engine ---------- */
+const brush = { wall: 'hueso', floor: 'roble' };
+const TOOLS = [
+  { id: 'room', name: 'Habitación', hint: 'Arrastra en diagonal: crea paredes y suelo', svg: '<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 12h7v7"/>' },
+  { id: 'wall', name: 'Pared', hint: 'Arrastra de un punto a otro de la cuadrícula', svg: '<path d="M5 18L19 6"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/>' },
+  { id: 'door', name: 'Puerta', hint: 'Toca una pared para poner o quitar una puerta', svg: '<rect x="6" y="3" width="12" height="18" rx="1.5"/><circle cx="15" cy="12" r="1.1" fill="currentColor"/>' },
+  { id: 'window', name: 'Ventana', hint: 'Toca una pared para poner o quitar una ventana', svg: '<rect x="4" y="5" width="16" height="13" rx="1.5"/><path d="M12 5v13M4 11.5h16"/>' },
+  { id: 'erase', name: 'Quitar pared', hint: 'Arrastra sobre las paredes que quieras quitar', svg: '<path d="M5 18L19 6"/><path d="M9 5l7 14" stroke="#D9433A"/>' },
+  { id: 'unfloor', name: 'Quitar suelo', hint: 'Arrastra para quitar suelo', svg: '<path d="M3 14l9-5 9 5-9 5z"/><path d="M9 4l6 6M15 4l-6 6" stroke="#D9433A"/>' },
+];
+const EXTRA_TOOLS = { paint: { name: 'Pintar pared', hint: 'Toca o arrastra sobre las paredes' }, floor: { name: 'Poner suelo', hint: 'Arrastra para cubrir un área' } };
+let tool = null, levelGroups = [], wallMeshes = [{}, {}], wallMode = 'auto', preview = null;
+const floorMats = {}, wallMats = {}, boxCache = {}, tileGeos = {};
+function floorMatFor(id) {
+  if (floorMats[id]) return floorMats[id];
+  const cv = document.createElement('canvas'); cv.width = cv.height = 512; paintFloor(FLOORS.find(f => f.id === id), cv);
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+  return (floorMats[id] = std({ map: t, roughness: 0.82 }));
+}
+const wallMatFor = id => wallMats[id] || (wallMats[id] = std({ color: WALLS.find(w => w.id === id).hex, roughness: 0.92 }));
+const boxGeo = (w, h, d) => boxCache[[w, h, d]] || (boxCache[[w, h, d]] = new THREE.BoxGeometry(w, h, d));
+const P = (g, w, h, d, mat, x, y, z) => add(g, boxGeo(w, h, d), mat, x, y, z);
+function tileGeo(x, z) {
+  const k = `${x % 8},${z % 8}`; if (tileGeos[k]) return tileGeos[k];
+  const g = new THREE.PlaneGeometry(1, 1), uv = g.attributes.uv, u0 = (x % 8) / 8, vt = 1 - (z % 8) / 8;
+  uv.setXY(0, u0, vt); uv.setXY(1, u0 + 0.125, vt); uv.setXY(2, u0, vt - 0.125); uv.setXY(3, u0 + 0.125, vt - 0.125);
+  return (tileGeos[k] = g);
+}
+const slabMat = M(0xEDE7F5), doorMat = M(0xC99A6B);
+const ghostOk = new THREE.MeshBasicMaterial({ color: 0x3FB894, transparent: true, opacity: 0.45, depthWrite: false });
+const ghostBad = new THREE.MeshBasicMaterial({ color: 0xE5533D, transparent: true, opacity: 0.45, depthWrite: false });
+const edgeShift = (k, n) => { const [t, x, z] = parseE(k); return t === 'h' ? ekey('h', x + n, z) : ekey('v', x, z + n); };
+const edgeCenter = k => { const [t, x, z] = parseE(k); return t === 'h' ? [x + 0.5 - GW / 2, z - GD / 2] : [x - GW / 2, z + 0.5 - GD / 2]; };
+const cellOnSide = (k, side) => { const [t, x, z] = parseE(k); return t === 'h' ? (side > 0 ? [x, z] : [x, z - 1]) : (side > 0 ? [x - 1, z] : [x, z]); };
+function stairHole(i, x, z) { return i > 0 && HOUSE.levels[i - 1].items.some(o => { if (!def(o).stairs) return false; const [w, d] = fp(o); return x >= o.gx && x < o.gx + w && z >= o.gz && z < o.gz + d; }); }
+const hasTile = (i, x, z) => !!HOUSE.levels[i] && !!HOUSE.levels[i].tiles[ckey(x, z)] && !stairHole(i, x, z);
+
+function rebuildHouse(first) {
+  HOUSE.levels.forEach((lv, i) => lv.items.forEach(it => { it.lv = i; }));
+  R = HOUSE.levels[HOUSE.cur];
+  if (roomGroup) scene.remove(roomGroup);
+  roomGroup = new THREE.Group(); scene.add(roomGroup);
+  const lot = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.3), M(0x9CCB8A)); lot.position.y = -0.2; lot.receiveShadow = true; roomGroup.add(lot);
+  const lot2 = new THREE.Mesh(roundBox(GW + 2, 0.3, GD + 2, 0.15), M(0x8E83A8)); lot2.position.y = -0.5; roomGroup.add(lot2);
+  grid = makeGrid(); roomGroup.add(grid);
+  levelGroups = HOUSE.levels.map((lv, i) => { const root = new THREE.Group(), geo = new THREE.Group(), items = new THREE.Group(); root.position.y = i * LEVEL_H; root.add(geo, items); roomGroup.add(root); return { root, geo, items }; });
+  HOUSE.levels.forEach((lv, i) => buildLevelGeo(i));
+  for (const pass of [false, true]) for (const it of allItems()) if (!!def(it).wall === pass) buildItem(it);
+  const m = Math.max(GW, GD) * 0.8; Object.assign(sun.shadow.camera, { left: -m, right: m, top: m, bottom: -m, near: 1, far: 60 }); sun.shadow.camera.updateProjectionMatrix();
+  setLevel(HOUSE.cur, true);
+  if (!first) { refreshHud(); applyNight(); }
+}
+function buildLevelGeo(i) {
+  const lg = levelGroups[i], lv = HOUSE.levels[i]; if (!lg) return;
+  for (const it of lv.items) if (def(it).wall && it.group && it.group.parent) it.group.parent.remove(it.group);
+  lg.geo.clear(); wallMeshes[i] = {};
+  for (const [k, f] of Object.entries(lv.tiles)) {
+    const [x, z] = k.split(',').map(Number); if (stairHole(i, x, z)) continue;
+    const t = new THREE.Mesh(tileGeo(x, z), floorMatFor(f)); t.rotation.x = -PI / 2; t.position.set(x + 0.5 - GW / 2, 0.002, z + 0.5 - GD / 2); t.receiveShadow = true; lg.geo.add(t);
+    if (i > 0) P(lg.geo, 1, 0.15, 1, slabMat, x + 0.5 - GW / 2, -0.074, z + 0.5 - GD / 2);
+  }
+  for (const [k, e] of Object.entries(lv.walls)) makeEdge(i, k, e);
+  for (const it of lv.items.slice()) if (def(it).wall) {
+    if (wallMeshes[i][it.edge] && fitsWallB(it, it.edge, it.side)) { if (it.group) placeMeshB(it); }
+    else { if (sel === it) select(null); lv.items.splice(lv.items.indexOf(it), 1); }
+  }
+}
+function makeEdge(i, k, e) {
+  const [t] = parseE(k), [cx, cz] = edgeCenter(k), g = new THREE.Group();
+  g.position.set(cx, 0, cz); if (t === 'v') g.rotation.y = -PI / 2;
+  const body = new THREE.Group(), stub = new THREE.Group(), mat = wallMatFor(e.c), L1 = 1.15, T = 0.15;
+  g.add(body, stub);
+  if (!e.o) P(body, L1, WALL_H, T, mat, 0, WALL_H / 2, 0);
+  else if (e.o === 'door') {
+    for (const sx of [-1, 1]) { P(body, 0.175, 2.1, T, mat, sx * 0.4875, 1.05, 0); P(body, 0.05, 2.12, T + 0.04, trimMat, sx * 0.425, 1.06, 0); S(body, 0.035, M(GOLD), 0.3, 1.0, sx * 0.05); }
+    P(body, L1, WALL_H - 2.1, T, mat, 0, (WALL_H + 2.1) / 2, 0); P(body, 0.9, 0.05, T + 0.04, trimMat, 0, 2.12, 0); P(body, 0.8, 2.08, 0.05, doorMat, 0, 1.04, 0);
+  } else {
+    P(body, L1, 0.85, T, mat, 0, 0.425, 0); P(body, L1, WALL_H - 2.05, T, mat, 0, (WALL_H + 2.05) / 2, 0);
+    for (const sx of [-1, 1]) P(body, 0.175, 1.2, T, mat, sx * 0.4875, 1.45, 0);
+    P(body, 0.8, 1.2, 0.03, windowMat, 0, 1.45, 0); P(body, 0.04, 1.2, 0.07, trimMat, 0, 1.45, 0); P(body, 0.8, 0.04, 0.07, trimMat, 0, 1.45, 0);
+    P(body, 0.95, 0.05, T + 0.12, trimMat, 0, 0.85, 0); P(body, 0.9, 0.05, T + 0.04, trimMat, 0, 2.05, 0);
+  }
+  P(body, L1 + 0.02, 0.04, T + 0.03, capMat, 0, WALL_H + 0.02, 0);
+  if (e.o !== 'door') { for (const sz of [-1, 1]) P(body, 1.0, 0.1, 0.02, trimMat, 0, 0.05, sz * (T / 2 + 0.01)); P(stub, L1, 0.24, T, mat, 0, 0.12, 0); P(stub, L1 + 0.02, 0.04, T + 0.03, capMat, 0, 0.26, 0); }
+  else for (const sx of [-1, 1]) P(stub, 0.175, 0.24, T, mat, sx * 0.4875, 0.12, 0);
+  g.traverse(o => { if (o.isMesh) { o.userData.edge = k; if (o.material === mat) o.userData.wallMat = true; } });
+  levelGroups[i].geo.add(g);
+  wallMeshes[i][k] = { g, body, stub, h: 1, key: k, t };
+}
+function repaintEdge(k) { const wm = wallMeshes[HOUSE.cur][k], mat = wallMatFor(R.walls[k].c); if (wm) wm.g.traverse(o => { if (o.userData.wallMat) o.material = mat; }); }
+function updateBuildWalls(dt) {
+  const k = Math.min(1, dt * (reduce ? 60 : 10));
+  HOUSE.levels.forEach((lv, i) => {
+    for (const wm of Object.values(wallMeshes[i])) {
+      let target = 1;
+      if (i === HOUSE.cur && wallMode === 'bajas') target = 0;
+      else if (i === HOUSE.cur && wallMode === 'auto') {
+        const [t, x, z] = parseE(wm.key);
+        if (t === 'h' && Math.abs(camDir.z) > 0.2) target = hasTile(i, x, camDir.z > 0 ? z - 1 : z) ? 0 : 1;
+        if (t === 'v' && Math.abs(camDir.x) > 0.2) target = hasTile(i, camDir.x > 0 ? x - 1 : x, z) ? 0 : 1;
+      }
+      wm.h += (target - wm.h) * k; wm.body.scale.y = Math.max(0.001, wm.h); wm.body.visible = wm.h > 0.02; wm.stub.visible = wm.h < 0.98;
+    }
+  });
+  for (const it of allItems()) if (def(it).wall && it.group) { const wm = wallMeshes[it.lv][it.edge]; it.group.visible = !!wm && wm.h > 0.5; }
+}
+function setLevel(i, quiet) {
+  select(null); clearPreview(); HOUSE.cur = i; R = HOUSE.levels[i];
+  levelGroups.forEach((lg, j) => { lg.root.visible = j <= i; });
+  if (grid) grid.position.y = i * LEVEL_H + 0.03;
+  groundPlane.constant = -i * LEVEL_H; view.target.y = i * LEVEL_H + 0.5;
+  document.querySelectorAll('#floorSel button').forEach(b => b.classList.toggle('on', +b.dataset.lv === i));
+  $('cSub').textContent = `Constructor · ${i ? 'Primer piso' : 'Planta baja'}`;
+  if (!quiet) { if (i && !Object.keys(R.tiles).length) toast('Primer piso vacío: abre Obra y usa Habitación'); refreshHud(); queueLayout(); }
+}
+$('floorSel').addEventListener('click', e => { const b = e.target.closest('button'); if (b && BM && +b.dataset.lv !== HOUSE.cur) setLevel(+b.dataset.lv); });
+$('wallModeBtn').addEventListener('click', () => { wallMode = { auto: 'altas', altas: 'bajas', bajas: 'auto' }[wallMode]; toast({ auto: 'Paredes recortadas', altas: 'Paredes altas', bajas: 'Paredes bajas' }[wallMode]); });
+function afterItemsChanged(it) { if (BM && def(it).stairs && HOUSE.levels[it.lv + 1]) buildLevelGeo(it.lv + 1); }
+
+function fitsB(it, gx, gz, r) {
+  const D = def(it), [w, d] = r % 2 ? [D.d, D.w] : [D.w, D.d], i = it.lv ?? HOUSE.cur, lv = HOUSE.levels[i];
+  if (D.stairs && i >= HOUSE.levels.length - 1) return false;
+  if (gx < 0 || gz < 0 || gx + w > GW || gz + d > GD) return false;
+  for (let x = gx; x < gx + w; x++) for (let z = gz; z < gz + d; z++) if (!hasTile(i, x, z)) return false;
+  for (let x = gx; x < gx + w; x++) for (let z = gz + 1; z < gz + d; z++) if (lv.walls[ekey('h', x, z)]) return false;
+  for (let x = gx + 1; x < gx + w; x++) for (let z = gz; z < gz + d; z++) if (lv.walls[ekey('v', x, z)]) return false;
+  if (D.flat) return true;
+  return !lv.items.some(o => { if (o === it || def(o).wall || def(o).flat) return false; const [ow, od] = fp(o); return gx < o.gx + ow && gx + w > o.gx && gz < o.gz + od && gz + d > o.gz; });
+}
+function fitsWallB(it, edge, side) {
+  const lv = HOUSE.levels[it.lv ?? HOUSE.cur], w = def(it).w, mine = [];
+  for (let n = 0; n < w; n++) { const k = edgeShift(edge, n), e = lv.walls[k]; if (!e || e.o) return false; mine.push(k); }
+  return !lv.items.some(o => o !== it && def(o).wall && o.side === side && Array.from({ length: def(o).w }, (_, n) => edgeShift(o.edge, n)).some(k => mine.includes(k)));
+}
+function placeMeshB(it, lift = 0) {
+  const D = def(it), lg = levelGroups[it.lv];
+  if (D.wall) {
+    const wm = wallMeshes[it.lv][it.edge]; if (!wm) return;
+    if (it.group.parent !== wm.g) wm.g.add(it.group);
+    it.group.position.set((D.w - 1) / 2, 0, it.side * (0.075 + lift * 0.4)); it.group.rotation.y = it.side > 0 ? 0 : PI;
+  } else {
+    const [w, d] = fp(it);
+    if (it.group.parent !== lg.items) lg.items.add(it.group);
+    it.group.position.set(it.gx + w / 2 - GW / 2, lift, it.gz + d / 2 - GD / 2); it.group.rotation.y = -it.r * PI / 2;
+  }
+}
+function freeSpotB(it) {
+  const cells = Object.keys(R.tiles).map(k => k.split(',').map(Number)); if (!cells.length) return null;
+  const cx = cells.reduce((a, c) => a + c[0], 0) / cells.length, cz = cells.reduce((a, c) => a + c[1], 0) / cells.length, opts = [];
+  for (const [x, z] of cells) for (const r of [0, 1]) opts.push([x, z, r]);
+  opts.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cz) - Math.hypot(b[0] - cx, b[1] - cz) + (a[2] - b[2]) * 0.3);
+  return opts.find(([x, z, r]) => fitsB(it, x, z, r)) || null;
+}
+const facingSide = t => (t === 'h' ? (camDir.z > 0 ? 1 : -1) : (camDir.x < 0 ? 1 : -1));
+function freeWallSpotB(it) {
+  const list = Object.values(wallMeshes[HOUSE.cur]).filter(w => w.h > 0.5);
+  list.sort((a, b) => { const [ax, az] = edgeCenter(a.key), [bx, bz] = edgeCenter(b.key); return (ax * camDir.x + az * camDir.z) - (bx * camDir.x + bz * camDir.z); });
+  for (const wm of list) { const side = facingSide(wm.t), [x, z] = cellOnSide(wm.key, side); if (hasTile(HOUSE.cur, x, z) && fitsWallB(it, wm.key, side)) return [wm.key, side]; }
+  return null;
+}
+function wallHit(e, tallOnly) {
+  setRay(e); const meshes = [];
+  for (const wm of Object.values(wallMeshes[HOUSE.cur])) { if (wm.h > 0.5) wm.body.traverse(o => { if (o.isMesh) meshes.push(o); }); else if (!tallOnly) wm.stub.traverse(o => { if (o.isMesh) meshes.push(o); }); }
+  const hit = ray.intersectObjects(meshes, false)[0]; return hit ? hit.object.userData.edge : null;
+}
+function wallPointB(e) {
+  const k = wallHit(e, true); if (!k) return null;
+  const [t] = parseE(k), d = ray.ray.direction;
+  return { key: k, side: t === 'h' ? (d.z < 0 ? 1 : -1) : (d.x > 0 ? 1 : -1) };
+}
+function edgeAt(e) {
+  const k = wallHit(e, false); if (k) return k;
+  const p = floorPoint(e); if (!p) return null;
+  const gx = p.x + GW / 2, gz = p.z + GD / 2, rx = Math.round(gx), rz = Math.round(gz);
+  const c = [[ekey('h', Math.floor(gx), rz), Math.abs(gz - rz)], [ekey('v', rx, Math.floor(gz)), Math.abs(gx - rx)]].filter(([q]) => R.walls[q]).sort((a, b) => a[1] - b[1])[0];
+  return c && c[1] < 0.4 ? c[0] : null;
+}
+
+/* tools */
+function setTool(id, o = {}) {
+  select(null); Object.assign(brush, o); clearPreview();
+  tool = id ? { id } : null;
+  const t = id && (TOOLS.find(x => x.id === id) || EXTRA_TOOLS[id]);
+  $('toolPill').hidden = !t;
+  if (t) {
+    const extra = id === 'paint' ? ` · ${WALLS.find(w => w.id === brush.wall).name}` : id === 'floor' ? ` · ${FLOORS.find(f => f.id === brush.floor).name}` : id === 'room' ? ` · ${FLOORS.find(f => f.id === brush.floor).name}` : '';
+    $('toolName').textContent = t.name + extra; $('toolHint').textContent = t.hint;
+  }
+  app.classList.toggle('tool-on', !!t); if (grid) grid.material.opacity = t ? 0.45 : 0;
+  renderStrip();
+}
+$('toolDone').addEventListener('click', () => setTool(null));
+const gridPt = p => ({ x: THREE.MathUtils.clamp(Math.round(p.x + GW / 2), 0, GW), z: THREE.MathUtils.clamp(Math.round(p.z + GD / 2), 0, GD) });
+const cellPt = p => ({ x: THREE.MathUtils.clamp(Math.floor(p.x + GW / 2), 0, GW - 1), z: THREE.MathUtils.clamp(Math.floor(p.z + GD / 2), 0, GD - 1) });
+function lineEdges(a, b) {
+  const out = [];
+  if (Math.abs(b.x - a.x) >= Math.abs(b.z - a.z)) for (let x = Math.min(a.x, b.x); x < Math.max(a.x, b.x); x++) out.push(ekey('h', x, a.z));
+  else for (let z = Math.min(a.z, b.z); z < Math.max(a.z, b.z); z++) out.push(ekey('v', a.x, z));
+  return out;
+}
+function gridRect(pa, pb) { const a = gridPt(pa), b = gridPt(pb), r = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; return r.x1 - r.x0 < 1 || r.z1 - r.z0 < 1 ? null : r; }
+function rectEdges(r) { const out = []; for (let x = r.x0; x < r.x1; x++) out.push(ekey('h', x, r.z0), ekey('h', x, r.z1)); for (let z = r.z0; z < r.z1; z++) out.push(ekey('v', r.x0, z), ekey('v', r.x1, z)); return out; }
+function clearPreview() { if (preview) { if (preview.parent) preview.parent.remove(preview); preview = null; } }
+function ghostEdge(pv, k, bad) { const [t] = parseE(k), [cx, cz] = edgeCenter(k); const m = new THREE.Mesh(boxGeo(t === 'h' ? 1.05 : 0.2, WALL_H, t === 'h' ? 0.2 : 1.05), bad ? ghostBad : ghostOk); m.position.set(cx, WALL_H / 2, cz); pv.add(m); }
+function ghostCells(pv, x0, z0, x1, z1, bad) { const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 + 1, z1 - z0 + 1), bad ? ghostBad : ghostOk); m.rotation.x = -PI / 2; m.position.set((x0 + x1 + 1) / 2 - GW / 2, 0.05, (z0 + z1 + 1) / 2 - GD / 2); pv.add(m); }
+function toolMove(g, e) {
+  const id = tool.id;
+  if (id === 'door' || id === 'window') return;
+  if (id === 'paint') { const k = edgeAt(e); if (k && R.walls[k] && R.walls[k].c !== brush.wall) { R.walls[k].c = brush.wall; repaintEdge(k); g.changed = true; buzz(4); } return; }
+  const p = floorPoint(e); if (!p) return; g.b = p; if (!g.a) g.a = p;
+  clearPreview(); preview = new THREE.Group(); preview.position.y = HOUSE.cur * LEVEL_H; roomGroup.add(preview);
+  if (id === 'wall' || id === 'erase') for (const k of lineEdges(gridPt(g.a), gridPt(g.b))) ghostEdge(preview, k, id === 'erase');
+  else if (id === 'room') { const r = gridRect(g.a, g.b); if (r) { rectEdges(r).forEach(k => ghostEdge(preview, k, false)); ghostCells(preview, r.x0, r.z0, r.x1 - 1, r.z1 - 1, false); } }
+  else { const a = cellPt(g.a), b = cellPt(g.b); ghostCells(preview, Math.min(a.x, b.x), Math.min(a.z, b.z), Math.max(a.x, b.x), Math.max(a.z, b.z), id === 'unfloor'); }
+}
+function toolEnd(g) {
+  const id = tool.id; clearPreview();
+  if (id === 'paint') { if (g.changed) pushUndo(g.before); return; }
+  if (id === 'door' || id === 'window') {
+    const k = edgeAt({ clientX: g.x0, clientY: g.y0 }), w = k && R.walls[k];
+    if (!w) return toast('Toca justo encima de una pared');
+    pushUndo(g.before); w.o = w.o === id ? null : id; buildLevelGeo(HOUSE.cur); buzz(); return;
+  }
+  if (!g.a || !g.b) return;
+  let changed = false;
+  if (id === 'wall' || id === 'erase') {
+    for (const k of lineEdges(gridPt(g.a), gridPt(g.b))) { if (id === 'wall' && !R.walls[k]) { R.walls[k] = { c: brush.wall, o: null }; changed = true; } if (id === 'erase' && R.walls[k]) { delete R.walls[k]; changed = true; } }
+    if (!changed && id === 'wall') toast('Arrastra de un punto a otro para levantar la pared');
+  } else if (id === 'room') {
+    const r = gridRect(g.a, g.b); if (!r) return toast('Arrastra en diagonal para trazar la habitación');
+    rectRoom(R, r.x0, r.z0, r.x1, r.z1, brush.floor, brush.wall); changed = true;
+  } else {
+    const a = cellPt(g.a), b = cellPt(g.b);
+    for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++) for (let z = Math.min(a.z, b.z); z <= Math.max(a.z, b.z); z++) {
+      const k = ckey(x, z); if (id === 'floor' && R.tiles[k] !== brush.floor) { R.tiles[k] = brush.floor; changed = true; } if (id === 'unfloor' && R.tiles[k]) { delete R.tiles[k]; changed = true; } }
+  }
+  if (!changed) return;
+  pushUndo(g.before); buildLevelGeo(HOUSE.cur); refreshHud(); buzz();
+}
+
 /* ---------- rooms ---------- */
 function loadRoom(id) {
   select(null); clearItems();
   scene.add(wallMarker);
-  L = ALL.find(l => l.id === id); R = rooms[id]; GW = L.w; GD = L.d;
-  buildRoom(); applySurfaces();
-  for (const it of R.items) buildItem(it);
-  view.az = PI / 4; view.azGoal = null; view.el = 0.62; view.zoom = 1;
+  if (tool) setTool(null);
+  L = ALL.find(l => l.id === id); GW = L.w; GD = L.d;
+  BM = !!L.build; for (const k of Object.keys(walls)) delete walls[k];
+  if (BM) { HOUSE = rooms.build; rebuildHouse(true); }
+  else { R = rooms[id]; groundPlane.constant = 0; view.target.y = 0.5; buildRoom(); applySurfaces(); for (const it of R.items) buildItem(it); }
+  view.az = PI / 4; view.azGoal = null; view.el = BM ? 0.7 : 0.62; view.zoom = BM ? 1.35 : 1;
   for (const w of Object.values(walls)) w.h = 1;
+  app.classList.toggle('build', BM); tab = BM ? 'obra' : tab === 'obra' ? 'muebles' : tab; renderTabs();
   history.length = 0; $('undoBtn').disabled = true;
   resetCat(); applyNight();
   app.classList.toggle('home', !!L.home);
   const idx = LEVELS.indexOf(L);
   $('cRoom').textContent = L.room;
-  $('cSub').textContent = L.home ? `Mi casa · ${L.w} × ${L.d}` : `Encargo ${idx + 1} de ${LEVELS.length} · ${L.kind}`;
+  $('cSub').textContent = BM ? `Constructor · ${HOUSE.cur ? 'Primer piso' : 'Planta baja'}` : L.home ? `Mi casa · ${L.w} × ${L.d}` : `Encargo ${idx + 1} de ${LEVELS.length} · ${L.kind}`;
   $('cIco').style.background = L.color;
   if (!L.home) { $('mTitle').textContent = `Lo que pide ${L.client}`; $('mission').classList.remove('collapsed'); }
   refreshHud(); queueLayout(); save();
 }
 
 /* ---------- menus ---------- */
-function openMenu() { select(null); state.menu = true; app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
-function closeMenu() { state.menu = false; app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
+function openMenu() { select(null); if (tool) setTool(null); state.menu = true; app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
+function closeMenu() { state.menu = false; app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
 function renderMenu() {
   const t = totalStars(), homes = HOMES.filter(homeUnlocked).length;
-  $('mContinueSub').textContent = (L.home ? 'Mi casa · ' : '') + L.room;
+  $('mContinueSub').textContent = (BM ? 'Constructor · ' : L.home ? 'Mi casa · ' : '') + L.room;
   $('mStorySub').textContent = `${t} de ${LEVELS.length * 3} estrellas`;
   $('mHomeSub').textContent = `${homes} de ${HOMES.length} salas`;
 }
@@ -1296,6 +1643,26 @@ function renderHomes() {
 $('mContinue').addEventListener('click', closeMenu);
 $('mStory').addEventListener('click', () => { renderStory(); $('storyOv').hidden = false; });
 $('mHome').addEventListener('click', () => { renderHomes(); $('homeOv').hidden = false; });
+$('mBuild').addEventListener('click', () => { renderBuildList(); $('buildOv').hidden = false; });
+function renderBuildList() {
+  const b = rooms.build, walls0 = b.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0), items0 = b.levels.reduce((a, l) => a + l.items.length, 0);
+  const band = (bg, svg) => `<span class="band" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" style="width:26px;height:26px">${svg}</svg></span>`;
+  $('buildList').innerHTML = `
+    <button class="lv" data-b="open">${band('linear-gradient(135deg,#F2B33D,#E0803A)', '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>')}<span class="body"><b>Mi proyecto</b><small>${walls0} paredes · ${items0} objetos · ${GWB}×${GDB} casillas</small></span></button>
+    <button class="lv" data-b="example">${band('linear-gradient(135deg,#8F74E0,#6A4FC2)', '<path d="M4 21V11l8-6 8 6v10z"/><path d="M4 15h16"/>')}<span class="body"><b>Casita de ejemplo</b><small>Dos pisos ya montados para inspirarte</small></span></button>
+    <button class="lv" data-b="empty">${band('linear-gradient(135deg,#4CC9A0,#2F9E7C)', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16" stroke-dasharray="2 2"/>')}<span class="body"><b>Parcela vacía</b><small>Empieza de cero sobre el césped</small></span></button>`;
+}
+const GWB = BUILD_DEF.w, GDB = BUILD_DEF.d;
+$('buildList').addEventListener('click', e => {
+  const b = e.target.closest('[data-b]'); if (!b) return;
+  if (b.dataset.b !== 'open') {
+    const has = rooms.build.levels.some(l => Object.keys(l.walls).length || l.items.length);
+    if (has && b.dataset.armed !== '1') { b.dataset.armed = '1'; b.querySelector('small').textContent = 'Toca otra vez: sustituye tu proyecto actual'; return; }
+    rooms.build = { cur: 0, best: 0, levels: b.dataset.b === 'example' ? exampleHouse() : [newLevel(), newLevel()] };
+  }
+  $('buildOv').hidden = true; loadRoom('build'); closeMenu();
+  if (b.dataset.b === 'empty') toast('Abre Obra y usa Habitación para empezar');
+});
 $('mSettings').addEventListener('click', () => { renderSettings(); $('settingsOv').hidden = false; });
 $('menuBtn').addEventListener('click', openMenu);
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => { b.closest('.overlay').hidden = true; }));
@@ -1306,7 +1673,7 @@ for (const list of ['storyList', 'homeList']) $(list).addEventListener('click', 
   loadRoom(b.dataset.room); closeMenu();
 });
 $('resetRoom').addEventListener('click', () => {
-  if (!L.home) return toast('Entra en una sala de Mi casa para vaciarla');
+  if (!L.home || BM) return toast('Entra en una sala de Mi casa para vaciarla');
   pushUndo(); clearItems(); R.items = []; refreshHud(); $('homeOv').hidden = true; closeMenu(); toast('Sala vacía: ¡a decorar! (Deshacer la recupera)');
 });
 function renderSettings() {
@@ -1371,7 +1738,7 @@ function layoutView() {
   }
   const visW = Math.max(160, right - left), visH = Math.max(160, bottom - top);
   const span = (GW + GD) / 2 * 0.72;
-  const hw = span + 0.2, hh = span * Math.sin(view.el) + WALL_H * Math.cos(view.el) * 0.45 + 0.3;
+  const hw = span + 0.2, hh = span * Math.sin(view.el) + (BM ? LEVEL_H * 1.4 : WALL_H) * Math.cos(view.el) * 0.45 + 0.3;
   fit.tppu = Math.min(visW / (2 * hw), visH / (2 * hh));
   fit.tcx = left + visW / 2; fit.tcy = top + visH / 2;
   if (!fit.ready) { fit.cx = fit.tcx; fit.cy = fit.tcy; fit.ppu = fit.tppu; fit.ready = true; }
@@ -1398,7 +1765,7 @@ function setRay(e) { const r = canvas.getBoundingClientRect(); ndc.set(((e.clien
 function pick(e) {
   setRay(e);
   if (cat.g.visible && ray.intersectObject(cat.g, true).length) return 'cat';
-  const groups = R.items.filter(i => !def(i).wall || walls[i.wall].h > 0.5).map(i => i.group);
+  const groups = R.items.filter(i => i.group && (!def(i).wall || (BM ? (wallMeshes[i.lv][i.edge] || { h: 0 }).h > 0.5 : walls[i.wall].h > 0.5))).map(i => i.group);
   const hits = ray.intersectObjects(groups, true).filter(h => h.object.material !== blobMat);
   if (!hits.length) return null;
   const solid = hits.find(h => !def(h.object.userData.item).flat);
@@ -1423,13 +1790,16 @@ canvas.addEventListener('pointerdown', e => {
   if (state.menu) return;
   canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   dismissHint(); closePalette();
-  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; gesture = { kind: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y), z0: view.zoom }; return; }
+  if (pointers.size === 2) { clearPreview(); const [a, b] = [...pointers.values()]; gesture = { kind: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y), z0: view.zoom, mx: (a.x + b.x) / 2 }; return; }
+  if (e.button === 2 || e.shiftKey) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: 99 }; return; }
+  if (BM && tool) { const p = floorPoint(e); gesture = { kind: 'tool', a: p, b: p, before: snap(), x0: e.clientX, y0: e.clientY }; toolMove(gesture, e); return; }
   const it = pick(e);
   if (it === 'cat') { cat.jump = 1; toast('Miso: ¡miau!'); buzz(20); gesture = null; return; }
   if (it) {
     if (sel !== it) select(it);
     const before = snap();
-    if (def(it).wall) gesture = { kind: 'wdrag', it, last: [it.wall, it.u], start: [it.wall, it.u], before, moved: false };
+    if (def(it).wall && BM) gesture = { kind: 'bwdrag', it, last: [it.edge, it.side], start: [it.edge, it.side], before, moved: false };
+    else if (def(it).wall) gesture = { kind: 'wdrag', it, last: [it.wall, it.u], start: [it.wall, it.u], before, moved: false };
     else {
       const p = floorPoint(e), [w, d] = fp(it);
       gesture = { kind: 'drag', it, ox: p ? p.x - (it.gx + w / 2 - GW / 2) : 0, oz: p ? p.z - (it.gz + d / 2 - GD / 2) : 0, last: [it.gx, it.gz], start: [it.gx, it.gz], before, moved: false };
@@ -1442,7 +1812,16 @@ canvas.addEventListener('pointermove', e => {
   if (!gesture) return;
   if (gesture.kind === 'pinch' && pointers.size === 2) {
     const [a, b] = [...pointers.values()];
-    view.zoom = THREE.MathUtils.clamp(gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0, 0.6, 2.8);
+    view.zoom = THREE.MathUtils.clamp(gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0, 0.6, 3.2);
+    const mx = (a.x + b.x) / 2; view.az -= (mx - gesture.mx) * 0.008; gesture.mx = mx; view.azGoal = null;
+  } else if (gesture.kind === 'tool') {
+    toolMove(gesture, e);
+  } else if (gesture.kind === 'bwdrag') {
+    const hit = wallPointB(e); if (!hit) return;
+    const it = gesture.it; let edge = hit.key;
+    if (!fitsWallB(it, edge, hit.side) && fitsWallB(it, edgeShift(edge, -1), hit.side)) edge = edgeShift(edge, -1);
+    if (edge !== it.edge || hit.side !== it.side) { it.edge = edge; it.side = hit.side; gesture.moved = true; const ok = fitsWallB(it, edge, hit.side); if (ok) gesture.last = [edge, hit.side]; updateMarker(ok); buzz(5); }
+    if (wallMeshes[it.lv][it.edge]) placeMeshB(it, 0.14);
   } else if (gesture.kind === 'orbit') {
     const dx = e.clientX - gesture.x, dy = e.clientY - gesture.y; gesture.x = e.clientX; gesture.y = e.clientY;
     gesture.moved += Math.abs(dx) + Math.abs(dy); view.azGoal = null;
@@ -1465,16 +1844,18 @@ canvas.addEventListener('pointermove', e => {
 function endPointer(e) {
   pointers.delete(e.pointerId);
   if (!gesture) return;
-  if (gesture.kind === 'drag' || gesture.kind === 'wdrag') {
-    const it = gesture.it, wall = gesture.kind === 'wdrag';
-    const ok = wall ? fitsWall(it, it.wall, it.u) : fits(it, it.gx, it.gz, it.r);
-    if (!ok) { if (wall) [it.wall, it.u] = gesture.last; else [it.gx, it.gz] = gesture.last; toast('Ahí no cabe, vuelve a su sitio'); }
-    const now = wall ? [it.wall, it.u] : [it.gx, it.gz];
-    if (now[0] !== gesture.start[0] || now[1] !== gesture.start[1]) { pushUndo(gesture.before); pop(it); buzz(); }
+  if (gesture.kind === 'tool') toolEnd(gesture);
+  else if (gesture.kind === 'drag' || gesture.kind === 'wdrag' || gesture.kind === 'bwdrag') {
+    const it = gesture.it, k = gesture.kind;
+    const ok = k === 'bwdrag' ? fitsWallB(it, it.edge, it.side) : k === 'wdrag' ? fitsWall(it, it.wall, it.u) : fits(it, it.gx, it.gz, it.r);
+    if (!ok) { if (k === 'bwdrag') [it.edge, it.side] = gesture.last; else if (k === 'wdrag') [it.wall, it.u] = gesture.last; else [it.gx, it.gz] = gesture.last; toast('Ahí no cabe, vuelve a su sitio'); }
+    const now = k === 'bwdrag' ? [it.edge, it.side] : k === 'wdrag' ? [it.wall, it.u] : [it.gx, it.gz];
+    if (now[0] !== gesture.start[0] || now[1] !== gesture.start[1]) { pushUndo(gesture.before); pop(it); buzz(); afterItemsChanged(it); }
     placeMesh(it); updateMarker(true);
   } else if (gesture.kind === 'orbit' && gesture.moved < 6 && sel) select(null);
   gesture = null;
 }
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (!state.menu) view.zoom = THREE.MathUtils.clamp(view.zoom * (e.deltaY > 0 ? 0.92 : 1.08), 0.6, 2.8); }, { passive: false });
 for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -1488,7 +1869,7 @@ function save() {
   if (wiping) return;
   try {
     const out = {};
-    for (const [id, r] of Object.entries(rooms)) out[id] = { wall: r.wall, floor: r.floor, best: r.best, items: r.items.map(({ group, ...i }) => i) };
+    for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, items: lv.items.map(({ group, lv: _lv, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, items: r.items.map(({ group, ...i }) => i) };
     localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, night: state.night, settings }));
   } catch (e) { /* storage blocked: the game still plays, it just won't remember */ }
 }
@@ -1503,13 +1884,14 @@ function frame(now) {
   if (state.menu && !reduce) view.az += dt * 0.12;
   if (view.azGoal != null) { view.az += (view.azGoal - view.az) * Math.min(1, dt * 8); if (Math.abs(view.azGoal - view.az) < 0.002) { view.az = view.azGoal; view.azGoal = null; } }
   updateCamera(dt);
+  if (BM) updateBuildWalls(dt);
   for (const w of Object.values(walls)) {
     const facing = w.normal.dot(camDir) > 0.15;
     w.h += ((facing ? 0 : 1) - w.h) * Math.min(1, dt * (reduce ? 60 : 10));
     w.body.scale.y = Math.max(0.001, w.h); w.body.visible = w.h > 0.02; w.stub.visible = w.h < 0.98;
   }
-  for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
-  if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = walls[sel.wall].h > 0.5;
+  if (!BM) for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
+  if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
   if (popAnim) {
     popAnim.t += dt * 3.2; const t = popAnim.t, s = t >= 1 ? 1 : 1 + Math.sin(t * PI) * 0.12;
     popAnim.it.group.scale.set(s, 2 - s, s); if (t >= 1) popAnim = null;
