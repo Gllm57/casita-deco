@@ -103,9 +103,9 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 /* camera rotate pair, floating just above the catalog */
 .cam { position: absolute; bottom: calc(var(--sheet-h) + 10px); display: flex; gap: 8px; transition: opacity .2s; }
 .histbar { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(var(--sheet-h) + 10px); display: flex; gap: 2px; padding: 4px; border-radius: 999px; transition: bottom .2s, opacity .2s; }
-.histbar button { border: 0; background: transparent; height: 38px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px; font: 800 13px var(--body); cursor: pointer; }
+.histbar button { border: 0; background: transparent; height: 40px; padding: 0 13px; border-radius: 999px; display: flex; align-items: center; gap: 6px; font: 800 13px var(--body); cursor: pointer; }
 .histbar button + button { padding: 0 11px; box-shadow: -1px 0 0 rgba(124,113,148,.25); border-radius: 0 999px 999px 0; }
-.histbar button svg { width: 18px; height: 18px; }
+.histbar button svg { width: 21px; height: 21px; }
 .histbar button[disabled] { opacity: .35; cursor: default; }
 .histbar .n { min-width: 18px; height: 18px; border-radius: 9px; background: var(--coral); color: #fff; font-size: 10.5px; display: grid; place-items: center; padding: 0 5px; }
 .histbar .n:empty { display: none; }
@@ -356,7 +356,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   </div>
 
   <div class="histbar glass" id="histbar" role="group" aria-label="Historial">
-    <button id="undoBtn" disabled aria-label="Deshacer (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Deshacer<span class="n" id="undoCount"></span></button>
+    <button id="undoBtn" disabled aria-label="Deshacer (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg><span class="n" id="undoCount" hidden></span></button>
     <button id="redoBtn" disabled aria-label="Rehacer (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
   </div>
   <div class="cam r glass" role="group" aria-label="Girar la vista">
@@ -1492,26 +1492,48 @@ $('tDone').addEventListener('click', () => select(null));
 
 /* ---------- cat ---------- */
 const cat = { g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 1, jump: 0, t: 0 };
-// Milo the pug: fawn coat, black mask and ears, curly tail. Faces +x like everything that walks here.
+// Milo the pug: fawn coat, black mask, rose ears, forehead wrinkles, curly tail and a red collar. Faces +x.
 (function buildPug() {
-  const g = cat.g, fawn = M(0xD9B07E), fawnL = M(0xE8C79C), mask = M(0x2A2333), eye = M(0x120E1C), shine = M(0xFFFFFF);
-  S(g, 0.16, fawn, -0.02, 0.21, 0).scale.set(1.45, 0.95, 1.08);
-  S(g, 0.11, fawnL, 0.1, 0.18, 0).scale.set(1, 0.9, 1);
-  for (const [x, z] of [[0.13, 0.08], [0.13, -0.08], [-0.15, 0.08], [-0.15, -0.08]]) { C(g, 0.038, 0.034, 0.12, fawn, x, 0.06, z, 10); S(g, 0.036, fawnL, x + 0.01, 0.012, z).scale.set(1.2, 0.5, 1); }
-  const head = new THREE.Group(); head.position.set(0.22, 0.33, 0); g.add(head); cat.head = head;
-  S(head, 0.135, fawn, 0, 0, 0).scale.set(0.95, 0.95, 1.05);
-  S(head, 0.075, mask, 0.1, -0.03, 0).scale.set(0.7, 0.85, 1.15);
-  S(head, 0.022, mask, 0.155, 0.0, 0).scale.set(0.8, 0.8, 1.3);
-  for (const z of [-0.035, 0.035]) S(head, 0.03, fawnL, 0.12, 0.05, z).scale.set(0.6, 0.35, 1);
-  for (const sz of [-1, 1]) {
-    S(head, 0.034, eye, 0.085, 0.045, sz * 0.068); S(head, 0.009, shine, 0.112, 0.06, sz * 0.068);
-    const ear = S(head, 0.05, mask, -0.01, 0.1, sz * 0.105); ear.scale.set(0.9, 0.45, 0.9); ear.rotation.x = sz * 0.6;
+  const fawn = M(0xD9B07E), fawnL = M(0xEACFA6), fawnD = M(0xC39563), mask = std({ color: 0x241E2E, roughness: 0.55 }), nose = std({ color: 0x15111C, roughness: 0.25 });
+  const iris = std({ color: 0x3A2414, roughness: 0.2 }), shine = M(0xFFFFFF), eyeW = M(0xF7F3EE), pink = M(0xFF8FA3), collar = M(0xE5533D), gold = M(GOLD);
+  const body = new THREE.Group(); cat.g.add(body); cat.body = body;
+  // chunky body with a lighter chest and a slightly darker back
+  S(body, 0.17, fawn, -0.03, 0.22, 0).scale.set(1.45, 0.93, 1.1);
+  S(body, 0.13, fawnL, 0.1, 0.2, 0).scale.set(0.95, 1, 1.05);
+  S(body, 0.13, fawn, -0.17, 0.22, 0).scale.set(1, 1, 1.12);
+  S(body, 0.12, fawnD, -0.06, 0.32, 0).scale.set(1.6, 0.32, 0.9);
+  for (const [x, z] of [[0.13, 0.085], [0.13, -0.085], [-0.18, 0.09], [-0.18, -0.09]]) {
+    C(body, 0.042, 0.036, 0.14, fawn, x, 0.075, z, 14);
+    S(body, 0.046, fawnL, x + 0.015, 0.022, z).scale.set(1.25, 0.55, 1.1);
+    for (const dz of [-0.02, 0, 0.02]) S(body, 0.012, fawnD, x + 0.058, 0.02, z + dz).scale.set(1, 0.8, 1);
   }
-  S(head, 0.022, M(0xFF8FA3), 0.135, -0.085, 0.01).scale.set(0.8, 0.5, 1);
-  const tail = add(g, new THREE.TorusGeometry(0.045, 0.02, 8, 18, PI * 1.6), fawn, -0.24, 0.33, 0); tail.rotation.y = PI / 2; cat.tail = tail;
-  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.42), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; g.add(blob);
-  g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; });
-  scene.add(g);
+  // collar with a little gold tag
+  const col = add(body, new THREE.TorusGeometry(0.1, 0.022, 10, 28), collar, 0.15, 0.33, 0); col.rotation.set(0, PI / 2, 0.55);
+  const tag = C(body, 0.026, 0.026, 0.01, gold, 0.215, 0.255, 0, 18); tag.rotation.z = PI / 2;
+  // head
+  const head = new THREE.Group(); head.position.set(0.25, 0.37, 0); body.add(head); cat.head = head;
+  S(head, 0.14, fawn, 0, 0, 0).scale.set(0.95, 0.92, 1.08);
+  for (const [y, r] of [[0.075, 0.05], [0.1, 0.04]]) { const w = add(head, new THREE.TorusGeometry(r, 0.006, 6, 18, PI * 0.8), fawnD, 0.115, y, 0); w.rotation.set(0, PI / 2, PI * 0.1); }
+  const fold = add(head, new THREE.TorusGeometry(0.04, 0.008, 8, 18, PI), fawnD, 0.14, 0.012, 0); fold.rotation.set(0, PI / 2, 0);
+  S(head, 0.085, mask, 0.105, -0.035, 0).scale.set(0.62, 0.82, 1.2);
+  S(head, 0.03, nose, 0.165, 0.0, 0).scale.set(0.75, 0.65, 1.25);
+  const mouth = add(head, new THREE.TorusGeometry(0.03, 0.006, 6, 16, PI), mask, 0.152, -0.055, 0); mouth.rotation.set(0, PI / 2, PI);
+  const tongue = new THREE.Group(); tongue.position.set(0.16, -0.075, 0.008); head.add(tongue); cat.tongue = tongue;
+  S(tongue, 0.025, pink, 0, -0.012, 0).scale.set(0.5, 1, 0.9);
+  cat.eyes = [];
+  for (const sz of [-1, 1]) {
+    const eye = new THREE.Group(); eye.position.set(0.085, 0.042, sz * 0.066); head.add(eye); cat.eyes.push(eye);
+    S(eye, 0.042, eyeW, 0, 0, 0); S(eye, 0.034, iris, 0.018, 0.002, sz * 0.004); S(eye, 0.011, shine, 0.047, 0.016, -sz * 0.006);
+    const ear = S(head, 0.055, mask, 0.0, 0.075, sz * 0.122); ear.scale.set(0.32, 0.72, 0.9); ear.rotation.set(sz * 1.25, 0, 0.45);
+    S(head, 0.03, mask, 0.025, 0.05, sz * 0.14).scale.set(0.35, 0.7, 0.7);
+  }
+  // double-curl tail
+  const tail = new THREE.Group(); tail.position.set(-0.27, 0.34, 0); body.add(tail); cat.tail = tail;
+  add(tail, new THREE.TorusGeometry(0.05, 0.022, 10, 26, PI * 1.8), fawn, 0, 0.02, 0).rotation.y = PI / 2;
+  add(tail, new THREE.TorusGeometry(0.022, 0.016, 8, 18, PI * 1.6), fawnD, 0, 0.03, 0).rotation.y = PI / 2;
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.42), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; cat.g.add(blob);
+  cat.g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; });
+  cat.blinkAt = 2; scene.add(cat.g);
 })();
 function cellBlocked(x, z) {
   const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2);
@@ -1558,7 +1580,12 @@ function updateCat(dt) {
   } else { cat.wait = 1.5 + Math.random() * 3; catTarget(); }
   if (cat.jump > 0) cat.jump = Math.max(0, cat.jump - dt * 1.8);
   cat.g.position.set(cat.x, (moving ? Math.abs(Math.sin(cat.t * 12)) * 0.03 : 0) + Math.sin(cat.jump * PI) * 0.45, cat.z);
-  cat.tail.rotation.x = Math.sin(cat.t * (moving ? 14 : 5)) * 0.35; cat.g.rotation.x = moving ? Math.sin(cat.t * 10) * 0.05 : 0; cat.head.rotation.z = moving ? 0 : Math.sin(cat.t * 0.8) * 0.12;
+  cat.tail.rotation.x = Math.sin(cat.t * (moving ? 16 : 6)) * 0.4;
+  cat.body.rotation.x = moving ? Math.sin(cat.t * 10) * 0.07 : 0;
+  cat.head.rotation.x = moving ? 0 : Math.sin(cat.t * 0.7) * 0.18; cat.head.rotation.z = moving ? Math.sin(cat.t * 10) * 0.05 : 0;
+  cat.tongue.scale.y = moving ? 1 + Math.abs(Math.sin(cat.t * 12)) * 0.8 : 1;
+  const blink = cat.t > cat.blinkAt && cat.t < cat.blinkAt + 0.13; if (cat.t > cat.blinkAt + 0.13) cat.blinkAt = cat.t + 2 + Math.random() * 3;
+  for (const e of cat.eyes) e.scale.y = blink ? 0.12 : 1;
 }
 
 /* ---------- day / night ---------- */

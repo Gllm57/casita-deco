@@ -12,7 +12,7 @@ Abre el enlace en el móvil. Para tenerlo como app, usa **Añadir a pantalla de 
 - **Constructor (sandbox completo):** diseña tu propia casa en una parcela de 16×14 casillas y dos pisos. Herramientas de obra: Habitación (arrastra en diagonal), Pared, Puerta, Ventana, Quitar pared y Quitar suelo; pinta cada cara de cada pared por separado (cada habitación con su color) y pon suelo por zonas desde Pintura y Suelo. La escalera une la planta baja con el primer piso. Las paredes que tapan el interior se recortan solas (o elige altas/bajas).
 - **Mi casa (modo libre):** 6 salas propias para decorar sin reglas. Se desbloquean con las estrellas de los encargos.
 - Arrastra el fondo o usa las flechas para girar la cámara; pellizca para acercar. Con una herramienta de obra activa, gira con dos dedos (o clic derecho en ordenador).
-- Toca un objeto para moverlo, girarlo, copiarlo o cambiarle el color con la paleta (colecciones o color libre). El botón **Deshacer** (abajo a la izquierda, con el número de pasos) retrocede hasta 40 pasos y **Rehacer** los recupera; en ordenador también Ctrl+Z y Ctrl+Y.
+- Toca un objeto para moverlo, girarlo, copiarlo o cambiarle el color con la paleta (colecciones o color libre). Las flechas de **Deshacer** (abajo a la izquierda) retroceden hasta 40 pasos y **Rehacer** los recupera; en ordenador también Ctrl+Z y Ctrl+Y.
 - Modo noche con luces reales y modo foto sin interfaz.
 - Menú con rango de decorador (de Aprendiz a Arquitecto estrella), progreso de cada modo y una guía de Cómo jugar.
 
