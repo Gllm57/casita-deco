@@ -176,29 +176,54 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .app.photo .photo-exit { display: block; }
 
 /* menus */
-.menu { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; padding: calc(28px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); background: linear-gradient(180deg, rgba(30,24,48,.55) 0%, rgba(30,24,48,0) 30%, rgba(30,24,48,0) 45%, rgba(30,24,48,.88) 72%, #1E1830 100%); color: #fff; transition: opacity .35s; }
+.menu { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; justify-content: space-between; padding: calc(26px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: linear-gradient(180deg, rgba(30,24,48,.6) 0%, rgba(30,24,48,0) 30%, rgba(30,24,48,0) 44%, rgba(30,24,48,.9) 70%, #1E1830 100%); color: #fff; transition: opacity .35s; }
 .menu.off { opacity: 0; pointer-events: none; }
-.menu-top { text-align: center; }
+.menu-top { display: grid; justify-items: center; gap: 14px; text-align: center; }
 .logo { font-family: var(--display); font-weight: 800; font-size: clamp(54px, 15vw, 78px); line-height: .82; letter-spacing: -.01em; text-shadow: 0 6px 0 var(--coral), 0 16px 34px rgba(0,0,0,.35); }
-.menu-top p { margin: 14px auto 0; font-weight: 800; font-size: 15px; color: #F1E9FF; max-width: 30ch; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
-.menu-cards { display: grid; gap: 10px; width: 100%; max-width: 440px; margin: 0 auto; }
-.mcard { border: 0; border-radius: 22px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; text-align: left; background: rgba(255,255,255,.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: transform .12s; }
-.mcard:active { transform: scale(.97); }
-.mcard .mi { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; flex: none; }
+.rank { display: flex; align-items: center; gap: 10px; text-align: left; background: rgba(30,24,48,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 999px; padding: 6px 16px 6px 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.medal { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE7A0, var(--gold) 60%, #C98A12); color: #6B3F00; font: 800 15px var(--display); display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); flex: none; }
+.rank b { display: block; font: 800 15px var(--display); line-height: 1.05; }
+.rank small { display: block; font-size: 11px; color: #CFC6E6; font-weight: 700; }
+.track { display: block; height: 6px; border-radius: 6px; background: rgba(255,255,255,.15); overflow: hidden; }
+.track i { display: block; height: 100%; width: 0; border-radius: 6px; background: currentColor; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.rank .track { width: 120px; margin-top: 4px; color: var(--gold); }
+.menu-cards { display: grid; gap: 10px; width: 100%; max-width: 460px; margin: 0 auto; }
+.menu:not(.off) .menu-cards > * { animation: rise .45s cubic-bezier(.2,.8,.2,1) backwards; }
+.menu-cards > :nth-child(2) { animation-delay: .07s !important; }
+.menu-cards > :nth-child(3) { animation-delay: .14s !important; }
+@keyframes rise { from { transform: translateY(18px); opacity: 0; } }
+.mcard { border: 0; border-radius: 22px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; text-align: left; color: #fff; transition: transform .12s; }
+.mcard .grow { flex: 1; min-width: 0; }
+.mcard > svg { width: 22px; height: 22px; opacity: .8; }
+.mcard .mi { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; flex: none; background: rgba(255,255,255,.22); }
 .mcard .mi svg { width: 24px; height: 24px; }
-.mcard b { font-family: var(--display); font-size: 20px; line-height: 1.05; display: block; }
-.mcard small { font-size: 13px; font-weight: 700; color: #CFC6E6; display: block; }
-.mcard.primary { background: linear-gradient(135deg, #FF8A66, #FF6A4D); box-shadow: 0 8px 0 var(--coral-d), 0 18px 34px rgba(255,106,77,.35); }
-.mcard.primary small { color: #FFE6DD; }
-.mcard.primary .mi { background: rgba(255,255,255,.22); }
-.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.mgrid .mcard { flex-direction: column; align-items: flex-start; gap: 10px; }
+.mcard b { font-family: var(--display); font-size: 21px; line-height: 1.05; display: block; }
+.mcard small { font-size: 13px; font-weight: 700; color: #FFE6DD; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcard.primary { background: linear-gradient(135deg, #FF8A66, #FF6A4D); box-shadow: 0 7px 0 var(--coral-d), 0 18px 34px rgba(255,106,77,.35); }
+.mcard.primary:active { transform: translateY(4px); box-shadow: 0 3px 0 var(--coral-d), 0 10px 20px rgba(255,106,77,.3); }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mode { position: relative; border: 0; border-radius: 20px; padding: 12px 10px 11px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; cursor: pointer; text-align: left; color: #fff; background: rgba(255,255,255,.09); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: transform .12s, background .15s; }
+.mode:active { transform: scale(.96); }
+.mode .mi { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; margin-bottom: 2px; }
+.mode .mi svg { width: 22px; height: 22px; }
+.mode b { font: 800 16px var(--display); line-height: 1.05; }
+.mode small { font-size: 11.5px; font-weight: 700; color: #CFC6E6; line-height: 1.2; }
+.mode .track { width: 100%; margin-top: auto; }
+.mode .new { position: absolute; top: 8px; right: 8px; background: var(--gold); color: var(--ink); font: 900 9px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 999px; }
 .mi.story { background: linear-gradient(135deg, #8F74E0, #6A4FC2); }
 .mi.house { background: linear-gradient(135deg, #4CC9A0, #2F9E7C); }
-.mi.gear { background: rgba(255,255,255,.14); width: 38px; height: 38px; border-radius: 12px; }
-.mcard.slim { padding: 10px 14px; }
-.mcard.slim b { font-size: 16px; }
-
+.mi.build { background: linear-gradient(135deg, #F2B33D, #E0803A); }
+.mrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mslim { border: 0; border-radius: 16px; padding: 11px 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,.08); color: #fff; font: 800 14px var(--body); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); transition: transform .12s; }
+.mslim:active { transform: scale(.96); }
+.mslim svg { width: 19px; height: 19px; opacity: .85; }
+@media (hover: hover) { .mode:hover, .mslim:hover { background: rgba(255,255,255,.15); } }
+.help { display: grid; gap: 14px; }
+.help > div { display: flex; gap: 12px; align-items: flex-start; }
+.hi { width: 40px; height: 40px; border-radius: 12px; background: var(--soft); display: grid; place-items: center; flex: none; }
+.hi svg { width: 22px; height: 22px; }
+.help p { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); font-weight: 700; }
+.help b { display: block; color: var(--ink); font: 800 15px var(--display); margin-bottom: 1px; }
 .overlay { position: absolute; inset: 0; z-index: 25; background: rgba(20,15,36,.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
 .panel { width: 100%; max-width: 560px; background: #FFFFFF; color: var(--ink); border-radius: 30px 30px 0 0; padding: 20px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); max-height: 90%; overflow-y: auto; animation: up .3s cubic-bezier(.2,.8,.2,1); }
 @keyframes up { from { transform: translateY(40px); opacity: 0; } }
@@ -271,9 +296,26 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .app.in-menu .toolpill, .app.photo .toolpill { opacity: 0; pointer-events: none; }
 .card .ico { width: 80px; height: 72px; border-radius: 16px; background: var(--thumb); display: grid; place-items: center; }
 .card .ico svg { width: 38px; height: 38px; color: var(--card-ink); }
-.mcard.wide { position: relative; }
-.mi.build { background: linear-gradient(135deg, #F2B33D, #E0803A); }
-.mcard .new { position: absolute; top: 10px; right: 12px; background: var(--gold); color: var(--ink); font: 900 10.5px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+/* side rail, camera pill and press feedback */
+.rail { display: flex; flex-direction: column; gap: 2px; padding: 5px; border-radius: 22px; }
+.rail button { width: 50px; height: 50px; border: 0; background: transparent; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font: 800 9.5px var(--body); cursor: pointer; }
+.rail button svg { width: 21px; height: 21px; }
+.rail button.on { background: var(--ink); color: #fff; }
+.night .rail button.on { background: #F1ECFF; color: var(--ink); }
+.floors { align-self: center; }
+.floors button { width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+.floors button b { font: 800 13px var(--display); line-height: 1; }
+.floors button small { font: 800 8.5px var(--body); opacity: .7; }
+.cam.r { display: flex; gap: 2px; padding: 4px; border-radius: 999px; }
+.cam.r button { width: 46px; height: 40px; border: 0; background: transparent; border-radius: 999px; display: grid; place-items: center; cursor: pointer; }
+.cam.r button + button { box-shadow: -1px 0 0 rgba(124,113,148,.25); border-radius: 0 999px 999px 0; }
+.cam.r button:first-child { border-radius: 999px 0 0 999px; }
+.cam.r svg { width: 22px; height: 22px; }
+.tpi { width: 34px; height: 34px; border-radius: 50%; background: rgba(124,113,148,.14); display: grid; place-items: center; flex: none; margin-left: -10px; }
+.tpi svg { width: 19px; height: 19px; }
+.rail button, .cam.r button, .histbar button, .tools button, .chip, .tab, .floors button, .card, .close { transition: transform .1s ease, background .15s; }
+.rail button:active, .cam.r button:active, .histbar button:not([disabled]):active, .tools button:not([disabled]):active, .chip:active, .tab:active, .floors button:active, .close:active { transform: scale(.92); }
+@media (hover: hover) { .rail button:not(.on):hover, .cam.r button:hover, .histbar button:not([disabled]):hover, .floors button:not(.on):hover { background: rgba(124,113,148,.14); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -284,8 +326,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 
   <div class="hud" id="hud">
     <div class="topbar">
-      <button class="chip glass" id="menuBtn" aria-label="Menú principal">
-        <span class="menu-ico" id="cIco"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2.2H4zm0 5h16v2.2H4zm0 5h16v2.2H4z"/></svg></span>
+      <button class="chip glass" id="menuBtn" aria-label="Volver al menú principal" title="Volver al menú">
+        <span class="menu-ico" id="cIco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></span>
         <span class="txt"><b id="cRoom">Dormitorio de Lucía</b><small id="cSub">Encargo 1 de 12</small></span>
       </button>
       <div class="coins glass" title="Dinero ilimitado"><span class="coin"></span><div><b>∞</b><small id="roomValue">Sala: 0</small></div></div>
@@ -303,10 +345,12 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
         <button class="deliver" id="deliver" disabled>Entregar habitación</button>
       </div>
       <div class="side">
-        <button class="round glass" id="nightBtn" aria-label="Cambiar a noche"></button>
-        <div class="floors glass build-only" id="floorSel" role="group" aria-label="Piso"><button data-lv="1">1º</button><button data-lv="0">PB</button></div>
-        <button class="round glass build-only" id="wallModeBtn" aria-label="Altura de las paredes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 20h18M5 20V9h5v11M14 20v-6h5v6"/></svg></button>
-        <button class="round glass" id="photoBtn" aria-label="Modo foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+        <div class="rail glass" role="toolbar" aria-label="Vista">
+          <button id="nightBtn" title="Día / noche"></button>
+          <button id="wallModeBtn" class="build-only" title="Altura de las paredes"></button>
+          <button id="photoBtn" title="Modo foto: oculta los botones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Foto</span></button>
+        </div>
+        <div class="floors glass build-only" id="floorSel" role="group" aria-label="Piso"><button data-lv="1" title="Primer piso"><b>1º</b><small>piso</small></button><button data-lv="0" title="Planta baja"><b>PB</b><small>baja</small></button></div>
       </div>
     </div>
   </div>
@@ -315,7 +359,10 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button id="undoBtn" disabled aria-label="Deshacer (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Deshacer<span class="n" id="undoCount"></span></button>
     <button id="redoBtn" disabled aria-label="Rehacer (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
   </div>
-  <div class="cam r"><button class="round glass" id="rotL" aria-label="Girar cámara a la izquierda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 1 1 2.3 5.7"/><path d="M4 4v7h7"/></svg></button><button class="round glass" id="rotR" aria-label="Girar cámara a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div>
+  <div class="cam r glass" role="group" aria-label="Girar la vista">
+    <button id="rotL" title="Girar la vista a la izquierda" aria-label="Girar la vista a la izquierda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button>
+    <button id="rotR" title="Girar la vista a la derecha" aria-label="Girar la vista a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg></button>
+  </div>
 
   <div class="sel-name" id="selName">Sofá</div>
   <div class="palette glass" id="palette">
@@ -326,14 +373,14 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button class="clear" id="clearHex">Volver al color de la colección</button>
   </div>
   <div class="tools glass" id="tools" role="toolbar" aria-label="Objeto seleccionado">
-    <button id="tRotate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Girar</button>
-    <button id="tColor"><span class="swatch-dot" id="tColorDot"></span>Color</button>
-    <button id="tCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Copiar</button>
-    <button id="tSell" class="sell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Quitar</button>
-    <button id="tDone" class="done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Listo</button>
+    <button id="tRotate" title="Girar 90°"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="8" rx="1.5"/><path d="M4 12a8 8 0 0 1 13.7-5.6"/><path d="M18 3v4h-4"/></svg>Girar</button>
+    <button id="tColor" title="Colección o color libre"><span class="swatch-dot" id="tColorDot"></span>Color</button>
+    <button id="tCopy" title="Duplicar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Copiar</button>
+    <button id="tSell" class="sell" title="Quitar de la sala"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Quitar</button>
+    <button id="tDone" class="done" title="Terminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Listo</button>
   </div>
 
-  <div class="toolpill glass" id="toolPill" hidden><span><b id="toolName">Pared</b><small id="toolHint">Arrastra de un punto a otro</small></span><button id="toolDone">Hecho</button></div>
+  <div class="toolpill glass" id="toolPill" hidden><i class="tpi" id="toolIco"></i><span><b id="toolName">Pared</b><small id="toolHint">Arrastra de un punto a otro</small></span><button id="toolDone">Hecho</button></div>
   <div class="hint" id="hint">Arrastra para girar · toca un objeto para moverlo</div>
   <div class="toast" id="toast"></div>
 
@@ -343,24 +390,40 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <div class="strip" id="strip"></div>
   </div>
 
-  <button class="photo-exit glass" id="photoExit">Salir del modo foto</button>
+  <button class="photo-exit glass" id="photoExit">Salir del modo foto · o toca la pantalla</button>
 
   <div class="menu" id="menu">
     <div class="menu-top" id="menuTop">
       <div class="logo">Casita<br>Deco</div>
-      <p>Decora casas para tu clientela y construye la tuya a tu aire.</p>
+      <div class="rank" title="Tu rango sube con las estrellas de los encargos"><span class="medal" id="rankStars">0</span><span><b id="rankName">Aprendiz</b><small id="rankNext">4 estrellas para Decorador</small><span class="track"><i id="rankBar"></i></span></span></div>
     </div>
     <div class="menu-cards" id="menuCards">
-      <button class="mcard primary" id="mContinue"><span class="mi"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span><b>Continuar</b><small id="mContinueSub">Dormitorio de Lucía</small></span></button>
-      <div class="mgrid">
-        <button class="mcard" id="mStory"><span class="mi story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M9 7V5h6v2M3 12h18"/></svg></span><span><b>Encargos</b><small id="mStorySub">0 de 36 estrellas</small></span></button>
-        <button class="mcard" id="mHome"><span class="mi house"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9H3z"/><path d="M10 20v-6h4v6"/></svg></span><span><b>Mi casa</b><small id="mHomeSub">Modo libre</small></span></button>
+      <button class="mcard primary" id="mContinue"><span class="mi"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="grow"><b>Continuar</b><small id="mContinueSub">Dormitorio de Lucía</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="modes">
+        <button class="mode" id="mStory"><span class="mi story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M9 7V5h6v2M3 12h18"/></svg></span><b>Encargos</b><small id="mStorySub">0 de 36</small><span class="track" style="color:#B9A6FF"><i id="mStoryBar"></i></span></button>
+        <button class="mode" id="mHome"><span class="mi house"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9H3z"/><path d="M10 20v-6h4v6"/></svg></span><b>Mi casa</b><small id="mHomeSub">1 de 6 salas</small><span class="track" style="color:#7FE0BE"><i id="mHomeBar"></i></span></button>
+        <button class="mode" id="mBuild"><span class="mi build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg></span><b>Constructor</b><small id="mBuildSub">2 pisos</small><span class="track" style="color:#FFC86B"><i id="mBuildBar"></i></span><span class="new">Nuevo</span></button>
       </div>
-      <button class="mcard wide" id="mBuild"><span class="mi build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6M12 5V2"/></svg></span><span><b>Constructor</b><small>Diseña tu casa: paredes, puertas y dos pisos</small></span><span class="new">Nuevo</span></button>
-      <button class="mcard slim" id="mSettings"><span class="mi gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span><b>Ajustes</b></button>
+      <div class="mrow">
+        <button class="mslim" id="mHelp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg>Cómo jugar</button>
+        <button class="mslim" id="mSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>Ajustes</button>
+      </div>
     </div>
   </div>
 
+  <div class="overlay" id="helpOv" hidden>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Cómo jugar</h2><p class="sub">Lo básico en un minuto.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="help">
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></span><p><b>Mover la vista</b>Arrastra el fondo para girar y pellizca para acercar. Las flechas de abajo a la derecha giran de 90 en 90.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg></span><p><b>Añadir y colocar</b>Toca un objeto del catálogo para ponerlo en la sala. Tócalo y arrástralo: si se pone rojo, ahí no cabe.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/></svg></span><p><b>Editar</b>Con un objeto seleccionado puedes girarlo, cambiarle el color, copiarlo o quitarlo. Deshacer y Rehacer están abajo a la izquierda.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4 6.8 19.2l1-5.9L3.5 9.2l5.9-.8z"/></svg></span><p><b>Encargos y estrellas</b>Cumple la lista del cliente y pulsa Entregar. Más estilo y comodidad dan más estrellas, que abren encargos, salas de Mi casa y suben tu rango.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8-16 8 16z"/><path d="M8 13h8"/></svg></span><p><b>Ganar estilo</b>Variedad de objetos, cosas propias de la sala, tres o más de la misma colección y pared y suelo que combinan.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/></svg></span><p><b>Constructor</b>En Obra: Habitación, Pared, Puerta y Ventana. Cada cara de una pared se pinta por separado. Cambia de piso con 1º y PB y sube con la escalera. Con una herramienta activa, gira con dos dedos.</p></div>
+      </div>
+    </div>
+  </div>
   <div class="overlay" id="storyOv" hidden>
     <div class="panel">
       <div class="panel-head"><div><h2>Encargos</h2><p class="sub" id="storySub">0 de 36 estrellas</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -409,7 +472,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
-const WALL_H = 2.6, PI = Math.PI, LEVEL_H = WALL_H + 0.15;
+const WALL_H = 2.6, PI = Math.PI, LEVEL_H = WALL_H + 0.15, WALL_T = 0.15, STUB_H = 0.24;
 let BM = false, HOUSE = null; // constructor mode flag and the house being built
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -826,11 +889,12 @@ const ekey = (t, x, z) => `${t},${x},${z}`;
 const parseE = k => { const [t, x, z] = k.split(','); return [t, +x, +z]; };
 const ckey = (x, z) => `${x},${z}`;
 const newLevel = () => ({ tiles: {}, walls: {}, items: [] });
-function setWall(lv, k, c) { if (!lv.walls[k]) lv.walls[k] = { c, o: null }; }
+// a wall edge keeps one colour per face: c = front (+1), b = back (-1)
+function setWall(lv, k, c, side = 0) { const e = lv.walls[k] || (lv.walls[k] = { c, b: c, o: null }); if (side > 0) e.c = c; if (side < 0) e.b = c; }
 function rectRoom(lv, x0, z0, x1, z1, floor, wall) {
   for (let x = x0; x < x1; x++) for (let z = z0; z < z1; z++) lv.tiles[ckey(x, z)] = floor;
-  for (let x = x0; x < x1; x++) { setWall(lv, ekey('h', x, z0), wall); setWall(lv, ekey('h', x, z1), wall); }
-  for (let z = z0; z < z1; z++) { setWall(lv, ekey('v', x0, z), wall); setWall(lv, ekey('v', x1, z), wall); }
+  for (let x = x0; x < x1; x++) { setWall(lv, ekey('h', x, z0), wall, 1); setWall(lv, ekey('h', x, z1), wall, -1); }
+  for (let z = z0; z < z1; z++) { setWall(lv, ekey('v', x0, z), wall, -1); setWall(lv, ekey('v', x1, z), wall, 1); }
 }
 function exampleHouse() {
   const g = newLevel(), u = newLevel(), it = a => a.map(o => ({ r: 0, ci: 0, ...o }));
@@ -1371,14 +1435,15 @@ function applyNight() {
   glowMats.forEach(m => { m.emissiveIntensity = n ? 1.1 : 0.5; });
   for (const it of allItems()) if (it.group && it.group.userData.light) it.group.userData.light.intensity = n ? def(it).light.power : 0;
   app.classList.toggle('night', n);
-  $('nightBtn').innerHTML = n ? sunIcon : moonIcon; $('nightBtn').setAttribute('aria-label', n ? 'Cambiar a día' : 'Cambiar a noche');
+  $('nightBtn').innerHTML = (n ? sunIcon : moonIcon) + `<span>${n ? 'Día' : 'Noche'}</span>`; $('nightBtn').classList.toggle('on', n); $('nightBtn').setAttribute('aria-label', n ? 'Cambiar a día' : 'Cambiar a noche');
 }
 $('nightBtn').addEventListener('click', () => { state.night = !state.night; applyNight(); toast(state.night ? 'Buenas noches: enciende las lámparas' : 'Buenos días'); });
 $('photoBtn').addEventListener('click', () => { select(null); app.classList.add('photo'); });
 $('photoExit').addEventListener('click', () => app.classList.remove('photo'));
+canvas.addEventListener('click', () => { if (app.classList.contains('photo')) app.classList.remove('photo'); });
 const snapAz = dir => { const base = view.azGoal ?? view.az; view.azGoal = Math.round((base - PI / 4) / (PI / 2)) * (PI / 2) + PI / 4 + dir * PI / 2; };
-$('rotL').addEventListener('click', () => snapAz(-1));
-$('rotR').addEventListener('click', () => snapAz(1));
+$('rotL').addEventListener('click', () => { snapAz(-1); buzz(6); });
+$('rotR').addEventListener('click', () => { snapAz(1); buzz(6); });
 
 /* ---------- constructor engine ---------- */
 const brush = { wall: 'hueso', floor: 'roble' };
@@ -1390,7 +1455,7 @@ const TOOLS = [
   { id: 'erase', name: 'Quitar pared', hint: 'Arrastra sobre las paredes que quieras quitar', svg: '<path d="M5 18L19 6"/><path d="M9 5l7 14" stroke="#D9433A"/>' },
   { id: 'unfloor', name: 'Quitar suelo', hint: 'Arrastra para quitar suelo', svg: '<path d="M3 14l9-5 9 5-9 5z"/><path d="M9 4l6 6M15 4l-6 6" stroke="#D9433A"/>' },
 ];
-const EXTRA_TOOLS = { paint: { name: 'Pintar pared', hint: 'Toca o arrastra sobre las paredes' }, floor: { name: 'Poner suelo', hint: 'Arrastra para cubrir un área' } };
+const EXTRA_TOOLS = { paint: { name: 'Pintar pared', hint: 'Pinta la cara que tocas: cada habitación con su color' }, floor: { name: 'Poner suelo', hint: 'Arrastra para cubrir un área' } };
 let tool = null, levelGroups = [], wallMeshes = [{}, {}], wallMode = 'auto', preview = null;
 const floorMats = {}, wallMats = {}, boxCache = {}, tileGeos = {};
 function floorMatFor(id) {
@@ -1442,6 +1507,7 @@ function buildLevelGeo(i) {
     if (i > 0) P(lg.geo, 1, 0.15, 1, slabMat, x + 0.5 - GW / 2, -0.074, z + 0.5 - GD / 2);
   }
   for (const [k, e] of Object.entries(lv.walls)) makeEdge(i, k, e);
+  makePosts(i); makeRuns(i);
   for (const it of lv.items.slice()) if (def(it).wall) {
     if (wallMeshes[i][it.edge] && fitsWallB(it, it.edge, it.side)) { if (it.group) placeMeshB(it); }
     else { if (sel === it) select(null); lv.items.splice(lv.items.indexOf(it), 1); }
@@ -1450,39 +1516,76 @@ function buildLevelGeo(i) {
 function makeEdge(i, k, e) {
   const [t] = parseE(k), [cx, cz] = edgeCenter(k), g = new THREE.Group();
   g.position.set(cx, 0, cz); if (t === 'v') g.rotation.y = -PI / 2;
-  const body = new THREE.Group(), stub = new THREE.Group(), mat = wallMatFor(e.c), L1 = 1.15, T = 0.15;
+  const body = new THREE.Group(), stub = new THREE.Group(), T = WALL_T, L1 = 1 - T, O = 0.7, sw = (L1 - O) / 2, sx0 = O / 2 + sw / 2;
+  const mf = wallMatFor(e.c), mb = wallMatFor(e.b || e.c);
+  // each wall piece is two half-thickness slabs so the two faces can carry different paint
+  const W = (grp, w, h, x, y) => { const a = P(grp, w, h, T / 2, mf, x, y, T / 4), b = P(grp, w, h, T / 2, mb, x, y, -T / 4); a.userData.face = 1; b.userData.face = -1; };
   g.add(body, stub);
-  if (!e.o) P(body, L1, WALL_H, T, mat, 0, WALL_H / 2, 0);
+  if (!e.o) W(body, L1, WALL_H, 0, WALL_H / 2);
   else if (e.o === 'door') {
-    for (const sx of [-1, 1]) { P(body, 0.175, 2.1, T, mat, sx * 0.4875, 1.05, 0); P(body, 0.05, 2.12, T + 0.04, trimMat, sx * 0.425, 1.06, 0); S(body, 0.035, M(GOLD), 0.3, 1.0, sx * 0.05); }
-    P(body, L1, WALL_H - 2.1, T, mat, 0, (WALL_H + 2.1) / 2, 0); P(body, 0.9, 0.05, T + 0.04, trimMat, 0, 2.12, 0); P(body, 0.8, 2.08, 0.05, doorMat, 0, 1.04, 0);
+    for (const sx of [-1, 1]) { W(body, sw, 2.1, sx * sx0, 1.05); P(body, 0.05, 2.12, T + 0.04, trimMat, sx * (O / 2 + 0.01), 1.06, 0); S(body, 0.032, M(GOLD), 0.24, 1.0, sx * 0.045); }
+    W(body, L1, WALL_H - 2.1, 0, (WALL_H + 2.1) / 2); P(body, O + 0.08, 0.05, T + 0.04, trimMat, 0, 2.12, 0); P(body, O - 0.02, 2.08, 0.05, doorMat, 0, 1.04, 0);
   } else {
-    P(body, L1, 0.85, T, mat, 0, 0.425, 0); P(body, L1, WALL_H - 2.05, T, mat, 0, (WALL_H + 2.05) / 2, 0);
-    for (const sx of [-1, 1]) P(body, 0.175, 1.2, T, mat, sx * 0.4875, 1.45, 0);
-    P(body, 0.8, 1.2, 0.03, windowMat, 0, 1.45, 0); P(body, 0.04, 1.2, 0.07, trimMat, 0, 1.45, 0); P(body, 0.8, 0.04, 0.07, trimMat, 0, 1.45, 0);
-    P(body, 0.95, 0.05, T + 0.12, trimMat, 0, 0.85, 0); P(body, 0.9, 0.05, T + 0.04, trimMat, 0, 2.05, 0);
+    W(body, L1, 0.85, 0, 0.425); W(body, L1, WALL_H - 2.05, 0, (WALL_H + 2.05) / 2);
+    for (const sx of [-1, 1]) W(body, sw, 1.2, sx * sx0, 1.45);
+    P(body, O, 1.2, 0.03, windowMat, 0, 1.45, 0); P(body, 0.04, 1.2, 0.07, trimMat, 0, 1.45, 0); P(body, O, 0.04, 0.07, trimMat, 0, 1.45, 0);
+    P(body, O + 0.12, 0.05, T + 0.12, trimMat, 0, 0.85, 0); P(body, O + 0.06, 0.05, T + 0.04, trimMat, 0, 2.05, 0);
   }
-  P(body, L1 + 0.02, 0.04, T + 0.03, capMat, 0, WALL_H + 0.02, 0);
-  if (e.o !== 'door') { for (const sz of [-1, 1]) P(body, 1.0, 0.1, 0.02, trimMat, 0, 0.05, sz * (T / 2 + 0.01)); P(stub, L1, 0.24, T, mat, 0, 0.12, 0); P(stub, L1 + 0.02, 0.04, T + 0.03, capMat, 0, 0.26, 0); }
-  else for (const sx of [-1, 1]) P(stub, 0.175, 0.24, T, mat, sx * 0.4875, 0.12, 0);
-  g.traverse(o => { if (o.isMesh) { o.userData.edge = k; if (o.material === mat) o.userData.wallMat = true; } });
+  P(body, L1 - 0.03, 0.04, T + 0.03, capMat, 0, WALL_H + 0.02, 0);
+  if (e.o !== 'door') { for (const sz of [-1, 1]) P(body, L1, 0.1, 0.02, trimMat, 0, 0.05, sz * (T / 2 + 0.01)); W(stub, L1, STUB_H, 0, STUB_H / 2); P(stub, L1 - 0.03, 0.04, T + 0.03, capMat, 0, STUB_H + 0.02, 0); }
+  else for (const sx of [-1, 1]) { W(stub, sw, STUB_H, sx * sx0, STUB_H / 2); P(stub, sw, 0.04, T + 0.03, capMat, sx * sx0, STUB_H + 0.02, 0); }
+  g.traverse(o => { if (o.isMesh) o.userData.edge = k; });
   levelGroups[i].geo.add(g);
   wallMeshes[i][k] = { g, body, stub, h: 1, key: k, t };
 }
-function repaintEdge(k) { const wm = wallMeshes[HOUSE.cur][k], mat = wallMatFor(R.walls[k].c); if (wm) wm.g.traverse(o => { if (o.userData.wallMat) o.material = mat; }); }
+// square posts where walls meet: segments stop at the post, so nothing overlaps or flickers
+let posts = [[], []];
+function makePosts(i) {
+  const lv = HOUSE.levels[i], verts = {};
+  for (const k of Object.keys(lv.walls)) { const [t, x, z] = parseE(k), a = ckey(x, z), b = t === 'h' ? ckey(x + 1, z) : ckey(x, z + 1); (verts[a] = verts[a] || []).push(k); (verts[b] = verts[b] || []).push(k); }
+  posts[i] = [];
+  for (const [v, edges] of Object.entries(verts)) {
+    const [x, z] = v.split(',').map(Number), g = new THREE.Group(), body = new THREE.Group(), stub = new THREE.Group(), mat = wallMatFor(lv.walls[edges[0]].c);
+    g.position.set(x - GW / 2, 0, z - GD / 2); g.add(body, stub);
+    P(body, WALL_T, WALL_H, WALL_T, mat, 0, WALL_H / 2, 0); P(body, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, WALL_H + 0.02, 0);
+    P(stub, WALL_T, STUB_H, WALL_T, mat, 0, STUB_H / 2, 0); P(stub, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, STUB_H + 0.02, 0);
+    g.traverse(o => { if (o.isMesh && o.material === mat) o.userData.post = true; });
+    levelGroups[i].geo.add(g); posts[i].push({ g, body, stub, edges, h: 1 });
+  }
+}
+// straight runs of wall go up and down together, so a wall never ends up half tall and half cut
+function makeRuns(i) {
+  const lv = HOUSE.levels[i], seen = new Set();
+  for (const k of Object.keys(lv.walls)) {
+    if (seen.has(k)) continue;
+    let st = k; while (lv.walls[edgeShift(st, -1)]) st = edgeShift(st, -1);
+    const run = []; for (let c = st; lv.walls[c]; c = edgeShift(c, 1)) { run.push(c); seen.add(c); }
+    for (const c of run) if (wallMeshes[i][c]) wallMeshes[i][c].run = run;
+  }
+}
+const applyH = w => { w.body.visible = w.h > 0.1; w.stub.visible = !w.body.visible; w.body.scale.y = Math.max(0.1, w.h); };
+function segLow(i, k) {
+  const [t, x, z] = parseE(k);
+  if (t === 'h' && Math.abs(camDir.z) > 0.2) return hasTile(i, x, camDir.z > 0 ? z - 1 : z);
+  if (t === 'v' && Math.abs(camDir.x) > 0.2) return hasTile(i, camDir.x > 0 ? x - 1 : x, z);
+  return false;
+}
+function repaintEdge(k, face) {
+  const wm = wallMeshes[HOUSE.cur][k], e = R.walls[k], mat = wallMatFor(face > 0 ? e.c : e.b);
+  if (wm) wm.g.traverse(o => { if (o.userData.face === face) o.material = mat; });
+  for (const p of posts[HOUSE.cur] || []) if (p.edges[0] === k && face > 0) p.g.traverse(o => { if (o.userData.post) o.material = mat; });
+}
 function updateBuildWalls(dt) {
   const k = Math.min(1, dt * (reduce ? 60 : 10));
   HOUSE.levels.forEach((lv, i) => {
+    const runT = new Map();
     for (const wm of Object.values(wallMeshes[i])) {
       let target = 1;
       if (i === HOUSE.cur && wallMode === 'bajas') target = 0;
-      else if (i === HOUSE.cur && wallMode === 'auto') {
-        const [t, x, z] = parseE(wm.key);
-        if (t === 'h' && Math.abs(camDir.z) > 0.2) target = hasTile(i, x, camDir.z > 0 ? z - 1 : z) ? 0 : 1;
-        if (t === 'v' && Math.abs(camDir.x) > 0.2) target = hasTile(i, camDir.x > 0 ? x - 1 : x, z) ? 0 : 1;
-      }
-      wm.h += (target - wm.h) * k; wm.body.scale.y = Math.max(0.001, wm.h); wm.body.visible = wm.h > 0.02; wm.stub.visible = wm.h < 0.98;
+      else if (i === HOUSE.cur && wallMode === 'auto') { if (!runT.has(wm.run)) runT.set(wm.run, (wm.run || [wm.key]).some(q => segLow(i, q)) ? 0 : 1); target = runT.get(wm.run); }
+      wm.h += (target - wm.h) * k; applyH(wm);
     }
+    for (const p of posts[i] || []) { p.h = Math.max(...p.edges.map(q => (wallMeshes[i][q] || { h: 0 }).h)); applyH(p); }
   });
   for (const it of allItems()) if (def(it).wall && it.group) { const wm = wallMeshes[it.lv][it.edge]; it.group.visible = !!wm && wm.h > 0.5; }
 }
@@ -1496,7 +1599,10 @@ function setLevel(i, quiet) {
   if (!quiet) { if (i && !Object.keys(R.tiles).length) toast('Primer piso vacío: abre Obra y usa Habitación'); refreshHud(); queueLayout(); }
 }
 $('floorSel').addEventListener('click', e => { const b = e.target.closest('button'); if (b && BM && +b.dataset.lv !== HOUSE.cur) setLevel(+b.dataset.lv); });
-$('wallModeBtn').addEventListener('click', () => { wallMode = { auto: 'altas', altas: 'bajas', bajas: 'auto' }[wallMode]; toast({ auto: 'Paredes recortadas', altas: 'Paredes altas', bajas: 'Paredes bajas' }[wallMode]); });
+const WALL_ICONS = { auto: '<path d="M3 20h18"/><path d="M5 20V8h6v12"/><path d="M14 20v-4h5v4"/><path d="M13 9l7-3" stroke-dasharray="2 2"/>', altas: '<path d="M3 20h18"/><path d="M5 20V5h6v15M14 20V5h5v15"/>', bajas: '<path d="M3 20h18"/><path d="M5 20v-4h6v4M14 20v-4h5v4"/>' };
+function renderWallMode() { $('wallModeBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${WALL_ICONS[wallMode]}</svg><span>${{ auto: 'Recortar', altas: 'Altas', bajas: 'Bajas' }[wallMode]}</span>`; }
+renderWallMode();
+$('wallModeBtn').addEventListener('click', () => { wallMode = { auto: 'altas', altas: 'bajas', bajas: 'auto' }[wallMode]; renderWallMode(); toast({ auto: 'Paredes recortadas: se bajan las que tapan', altas: 'Paredes altas', bajas: 'Paredes bajas' }[wallMode]); buzz(); });
 function afterItemsChanged(it) { if (BM && def(it).stairs && HOUSE.levels[it.lv + 1]) buildLevelGeo(it.lv + 1); }
 
 function fitsB(it, gx, gz, r) {
@@ -1550,6 +1656,12 @@ function wallPointB(e) {
   const [t] = parseE(k), d = ray.ray.direction;
   return { key: k, side: t === 'h' ? (d.z < 0 ? 1 : -1) : (d.x > 0 ? 1 : -1) };
 }
+function faceAt(e) {
+  const k = wallHit(e, false), d = ray.ray.direction;
+  if (k) { const [t] = parseE(k); return { k, face: t === 'h' ? (d.z < 0 ? 1 : -1) : (d.x > 0 ? 1 : -1) }; }
+  const p = floorPoint(e), q = edgeAt(e); if (!q || !p) return null;
+  const [t, x, z] = parseE(q); return { k: q, face: t === 'h' ? (p.z + GD / 2 > z ? 1 : -1) : (p.x + GW / 2 < x ? 1 : -1) };
+}
 function edgeAt(e) {
   const k = wallHit(e, false); if (k) return k;
   const p = floorPoint(e); if (!p) return null;
@@ -1567,6 +1679,7 @@ function setTool(id, o = {}) {
   if (t) {
     const extra = id === 'paint' ? ` · ${WALLS.find(w => w.id === brush.wall).name}` : id === 'floor' ? ` · ${FLOORS.find(f => f.id === brush.floor).name}` : id === 'room' ? ` · ${FLOORS.find(f => f.id === brush.floor).name}` : '';
     $('toolName').textContent = t.name + extra; $('toolHint').textContent = t.hint;
+    $('toolIco').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.svg || (id === 'paint' ? '<path d="M4 15V5h13v4H8v6z"/><path d="M8 15h3v5H8z"/>' : '<path d="M3 14l9-5 9 5-9 5z"/>')}</svg>`;
   }
   app.classList.toggle('tool-on', !!t); if (grid) grid.material.opacity = t ? 0.45 : 0;
   renderStrip();
@@ -1588,7 +1701,7 @@ function ghostCells(pv, x0, z0, x1, z1, bad) { const m = new THREE.Mesh(new THRE
 function toolMove(g, e) {
   const id = tool.id;
   if (id === 'door' || id === 'window') return;
-  if (id === 'paint') { const k = edgeAt(e); if (k && R.walls[k] && R.walls[k].c !== brush.wall) { R.walls[k].c = brush.wall; repaintEdge(k); g.changed = true; buzz(4); } return; }
+  if (id === 'paint') { const f = faceAt(e), w = f && R.walls[f.k]; if (w) { const cur = f.face > 0 ? w.c : (w.b || w.c); if (cur !== brush.wall) { if (f.face > 0) w.c = brush.wall; else { w.b = brush.wall; } repaintEdge(f.k, f.face); g.changed = true; buzz(4); } } return; }
   const p = floorPoint(e); if (!p) return; g.b = p; if (!g.a) g.a = p;
   clearPreview(); preview = new THREE.Group(); preview.position.y = HOUSE.cur * LEVEL_H; roomGroup.add(preview);
   if (id === 'wall' || id === 'erase') for (const k of lineEdges(gridPt(g.a), gridPt(g.b))) ghostEdge(preview, k, id === 'erase');
@@ -1606,7 +1719,7 @@ function toolEnd(g) {
   if (!g.a || !g.b) return;
   let changed = false;
   if (id === 'wall' || id === 'erase') {
-    for (const k of lineEdges(gridPt(g.a), gridPt(g.b))) { if (id === 'wall' && !R.walls[k]) { R.walls[k] = { c: brush.wall, o: null }; changed = true; } if (id === 'erase' && R.walls[k]) { delete R.walls[k]; changed = true; } }
+    for (const k of lineEdges(gridPt(g.a), gridPt(g.b))) { if (id === 'wall' && !R.walls[k]) { R.walls[k] = { c: brush.wall, b: brush.wall, o: null }; changed = true; } if (id === 'erase' && R.walls[k]) { delete R.walls[k]; changed = true; } }
     if (!changed && id === 'wall') toast('Arrastra de un punto a otro para levantar la pared');
   } else if (id === 'room') {
     const r = gridRect(g.a, g.b); if (!r) return toast('Arrastra en diagonal para trazar la habitación');
@@ -1645,13 +1758,22 @@ function loadRoom(id) {
 
 /* ---------- menus ---------- */
 function openMenu() { select(null); if (tool) setTool(null); state.menu = true; app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
-function closeMenu() { state.menu = false; app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
+function closeMenu() { state.menu = false; app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
+const RANKS = [[0, 'Aprendiz'], [4, 'Decorador'], [10, 'Interiorista'], [18, 'Diseñador'], [27, 'Arquitecto estrella']];
 function renderMenu() {
-  const t = totalStars(), homes = HOMES.filter(homeUnlocked).length;
+  const t = totalStars(), max = LEVELS.length * 3, homes = HOMES.filter(homeUnlocked).length;
+  let ri = 0; RANKS.forEach((r, i) => { if (t >= r[0]) ri = i; });
+  const next = RANKS[ri + 1];
+  $('rankStars').textContent = t; $('rankName').textContent = RANKS[ri][1];
+  $('rankNext').textContent = next ? `${next[0] - t} estrellas para ${next[1]}` : '¡Rango máximo!';
+  $('rankBar').style.width = (next ? (t - RANKS[ri][0]) / (next[0] - RANKS[ri][0]) * 100 : 100) + '%';
   $('mContinueSub').textContent = (BM ? 'Constructor · ' : L.home ? 'Mi casa · ' : '') + L.room;
-  $('mStorySub').textContent = `${t} de ${LEVELS.length * 3} estrellas`;
-  $('mHomeSub').textContent = `${homes} de ${HOMES.length} salas`;
+  $('mStorySub').textContent = `${t} de ${max} estrellas`; $('mStoryBar').style.width = t / max * 100 + '%';
+  $('mHomeSub').textContent = `${homes} de ${HOMES.length} salas`; $('mHomeBar').style.width = homes / HOMES.length * 100 + '%';
+  const bw = rooms.build.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0);
+  $('mBuildSub').textContent = bw ? `${bw} paredes` : 'Tu casa, 2 pisos'; $('mBuildBar').style.width = Math.min(100, bw / 80 * 100) + '%';
 }
+$('mHelp').addEventListener('click', () => { $('helpOv').hidden = false; });
 function renderStory() {
   $('storySub').textContent = `${totalStars()} de ${LEVELS.length * 3} estrellas · cada encargo se abre con 1 estrella en el anterior`;
   $('storyList').innerHTML = LEVELS.map((l, i) => { const open = storyUnlocked(i);
@@ -1666,7 +1788,7 @@ function renderHomes() {
       <span class="band" style="background:linear-gradient(135deg,#4CC9A0,#2F9E7C)">${h.w}×${h.d}${open ? '' : lockSvg}</span>
       <span class="body"><b>${h.room}</b><small>${open ? (n ? `${n} objetos` : 'Vacía, por estrenar') : `Necesitas ${h.unlock} estrellas (tienes ${t})`}</small></span></button>`; }).join('');
 }
-$('mContinue').addEventListener('click', closeMenu);
+$('mContinue').addEventListener('click', () => { closeMenu(); if (!settings.seenHelp) { settings.seenHelp = 1; save(); $('helpOv').hidden = false; } });
 $('mStory').addEventListener('click', () => { renderStory(); $('storyOv').hidden = false; });
 $('mHome').addEventListener('click', () => { renderHomes(); $('homeOv').hidden = false; });
 $('mBuild').addEventListener('click', () => { renderBuildList(); $('buildOv').hidden = false; });
@@ -1914,7 +2036,7 @@ function frame(now) {
   for (const w of Object.values(walls)) {
     const facing = w.normal.dot(camDir) > 0.15;
     w.h += ((facing ? 0 : 1) - w.h) * Math.min(1, dt * (reduce ? 60 : 10));
-    w.body.scale.y = Math.max(0.001, w.h); w.body.visible = w.h > 0.02; w.stub.visible = w.h < 0.98;
+    applyH(w);
   }
   if (!BM) for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
   if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
