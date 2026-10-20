@@ -18,6 +18,7 @@ Abre el enlace en el móvil. Para tenerlo como app, usa **Añadir a pantalla de 
 - 6 encargos: dormitorio, cocina, baño, salón, cuarto de bebé y ático de música.
 - 46 objetos en muebles, cocina, baño, decoración y pared, más 10 pinturas y 6 suelos.
 - Dinero ilimitado (modo creativo), modo día/noche con luces reales y Miso, la gata.
+- 5 colecciones de color (Natural, Pastel, Nórdico, Terracota y Océano): juntar 3 o más objetos de la misma da bonus de estilo.
 - Pantalla de inicio, partida guardada automáticamente y opción de empezar una habitación de cero.
 
 Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
