@@ -8,17 +8,17 @@ Juego para móvil de decoración de interiores en 3D, con vista isométrica al e
 
 Abre el enlace en el móvil. Para tenerlo como app, usa **Añadir a pantalla de inicio** en el menú del navegador (en iPhone, desde el botón Compartir de Safari). La partida se guarda sola en el dispositivo.
 
-- Arrastra el fondo para girar la habitación; pellizca o usa la rueda para acercar.
-- Toca un objeto del catálogo para añadirlo; tócalo en la sala y arrástralo para moverlo.
-- Las paredes que tapan la vista se bajan solas.
-- Cumple la lista de cada cliente y pulsa **Entregar habitación** para ganar de 1 a 3 estrellas.
+- **Encargos:** 12 clientes, cada uno con su habitación y una lista de deseos. Cumple la lista y entrega para ganar de 1 a 3 estrellas. Cada encargo se abre con 1 estrella en el anterior.
+- **Mi casa (modo libre):** 6 salas propias para decorar sin reglas. Se desbloquean con las estrellas de los encargos.
+- Arrastra el fondo o usa las flechas para girar la cámara; pellizca para acercar.
+- Toca un objeto para moverlo, girarlo, copiarlo o cambiarle el color con la paleta (colecciones o color libre). El botón de deshacer arregla cualquier error.
+- Modo noche con luces reales y modo foto sin interfaz.
 
 ## Contenido
 
-- 6 encargos: dormitorio, cocina, baño, salón, cuarto de bebé y ático de música.
-- 46 objetos en muebles, cocina, baño, decoración y pared, más 10 pinturas y 6 suelos.
-- Dinero ilimitado (modo creativo), modo día/noche con luces reales y Miso, la gata.
-- 5 colecciones de color (Natural, Pastel, Nórdico, Terracota y Océano): juntar 3 o más objetos de la misma da bonus de estilo.
-- Pantalla de inicio, partida guardada automáticamente y opción de empezar una habitación de cero.
+- 58 objetos en muebles, cocina, baño, decoración y pared, más 10 pinturas y 6 suelos.
+- 5 colecciones de color (Natural, Pastel, Nórdico, Terracota y Océano) y 20 colores libres. Juntar 3 o más objetos de la misma colección da bonus de estilo.
+- Dinero ilimitado y Miso, la gata, que pasea por la casa.
+- En pantallas horizontales o de ordenador el catálogo pasa a un panel lateral.
 
 Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
