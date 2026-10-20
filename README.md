@@ -20,7 +20,7 @@ Abre el enlace en el móvil. Para tenerlo como app, usa **Añadir a pantalla de 
 
 - 59 objetos (incluida la escalera) en muebles, cocina, baño, decoración y pared, más 10 pinturas y 6 suelos.
 - 5 colecciones de color (Natural, Pastel, Nórdico, Terracota y Océano) y 20 colores libres. Juntar 3 o más objetos de la misma colección da bonus de estilo.
-- Dinero ilimitado y Miso, la gata, que pasea por la casa.
+- Dinero ilimitado y Milo, un pug que pasea por la casa (tócalo y ladra).
 - En pantallas horizontales o de ordenador el catálogo pasa a un panel lateral.
 
 Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.

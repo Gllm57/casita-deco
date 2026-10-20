@@ -447,7 +447,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <div class="panel">
       <div class="panel-head"><div><h2>Ajustes</h2><p class="sub">Se guardan en este dispositivo.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="setting"><span>Calidad gráfica<small>Ahorro va más fluido en móviles antiguos</small></span><div class="seg" data-setting="quality"><button data-v="alta">Alta</button><button data-v="ahorro">Ahorro</button></div></div>
-      <div class="setting"><span>Miso, la gata<small>Pasea por las habitaciones</small></span><div class="seg" data-setting="cat"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Milo, el pug<small>Pasea por las habitaciones</small></span><div class="seg" data-setting="cat"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Vibración<small>Al colocar objetos (Android)</small></span><div class="seg" data-setting="vibrate"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <button class="danger" id="wipe">Borrar toda la partida</button>
     </div>
@@ -523,6 +523,34 @@ function leafBlob(g, x, y, z, s, ry, rz) { const l = S(g, 0.22 * s, M(LEAF), x, 
 function gradTex(draw) { const c = document.createElement('canvas'); c.width = c.height = 128; draw(c.getContext('2d')); return new THREE.CanvasTexture(c); }
 const blobMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, map: gradTex(x => {
   const g = x.createRadialGradient(64, 64, 8, 64, 64, 64); g.addColorStop(0, 'rgba(40,26,70,.5)'); g.addColorStop(.55, 'rgba(40,26,70,.24)'); g.addColorStop(1, 'rgba(40,26,70,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }) });
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; }
+const mirrorMat = (() => { const t = canvasTex(256, 256, (x, w, h) => {
+  const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#F6FBFE'); g.addColorStop(0.45, '#CFE1EB'); g.addColorStop(1, '#93AEC1'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  const band = (a, b, c, d, al) => { x.fillStyle = `rgba(255,255,255,${al})`; x.beginPath(); x.moveTo(w * a, h * b); x.lineTo(w * c, h * d); x.lineTo(w * (c + 0.12), h * d); x.lineTo(w * (a + 0.12), h * b); x.fill(); };
+  band(0.08, 0.62, 0.5, 0.08, 0.55); band(0.34, 0.86, 0.74, 0.34, 0.3); });
+  return std({ map: t, roughness: 0.05, emissive: 0xFFFFFF, emissiveMap: t, emissiveIntensity: 0.32 }); })();
+const artAbstract = std({ roughness: 0.9, map: canvasTex(256, 280, (x, w, h) => {
+  x.fillStyle = '#F4ECDF'; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#E9A23B'; x.beginPath(); x.arc(w * 0.68, h * 0.7, w * 0.3, Math.PI, 0); x.fill();
+  x.fillStyle = '#E5674B'; x.beginPath(); x.arc(w * 0.38, h * 0.36, w * 0.24, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#3F6EA8'; x.fillRect(w * 0.12, h * 0.62, w * 0.36, h * 0.2);
+  x.strokeStyle = '#2B2140'; x.lineWidth = 5; x.beginPath(); x.moveTo(w * 0.1, h * 0.9); x.bezierCurveTo(w * 0.4, h * 0.55, w * 0.6, h * 1.0, w * 0.92, h * 0.2); x.stroke(); }) });
+const artLandscape = std({ roughness: 0.9, map: canvasTex(512, 280, (x, w, h) => {
+  const sky = x.createLinearGradient(0, 0, 0, h * 0.7); sky.addColorStop(0, '#9CC7E8'); sky.addColorStop(1, '#F8DCC6'); x.fillStyle = sky; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#FFB347'; x.beginPath(); x.arc(w * 0.74, h * 0.34, h * 0.11, 0, Math.PI * 2); x.fill();
+  const hill = (y0, amp, ph, col) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, h); for (let i = 0; i <= 40; i++) { const t = i / 40; x.lineTo(t * w, h * (y0 - amp * Math.sin(t * Math.PI * 1.6 + ph))); } x.lineTo(w, h); x.fill(); };
+  hill(0.62, 0.12, 0.4, '#8FB7A0'); hill(0.72, 0.1, 2.2, '#5E9472'); hill(0.86, 0.06, 1.1, '#3F7558');
+  for (const [tx, ty] of [[0.18, 0.7], [0.22, 0.73], [0.6, 0.77]]) { x.fillStyle = '#2F5A44'; x.beginPath(); x.moveTo(w * tx, h * (ty - 0.12)); x.lineTo(w * (tx + 0.025), h * ty); x.lineTo(w * (tx - 0.025), h * ty); x.fill(); } }) });
+const chalkMenu = std({ roughness: 0.95, map: canvasTex(512, 300, (x, w, h) => {
+  x.fillStyle = '#2E3B33'; x.fillRect(0, 0, w, h);
+  x.fillStyle = 'rgba(255,255,255,.06)'; for (let i = 0; i < 40; i++) x.fillRect(Math.random() * w, Math.random() * h, 60, 3);
+  x.fillStyle = '#F4F1EA'; x.font = 'bold 54px "Trebuchet MS", sans-serif'; x.fillText('MENÚ', 34, 70);
+  x.font = 'bold 30px "Trebuchet MS", sans-serif';
+  [['Café', '1,50'], ['Té chai', '2,20'], ['Tarta', '3,00'], ['Zumo', '2,50']].forEach(([a, b], i) => { x.fillStyle = '#F4F1EA'; x.fillText(a, 40, 122 + i * 42); x.fillStyle = '#FFD43B'; x.fillText(b, 250, 122 + i * 42); });
+  x.strokeStyle = '#F4F1EA'; x.lineWidth = 5; x.beginPath(); x.arc(410, 175, 44, 0, Math.PI); x.lineTo(366, 140); x.lineTo(454, 140); x.closePath(); x.stroke();
+  x.beginPath(); x.arc(462, 165, 14, -1.2, 1.2); x.stroke(); x.fillStyle = '#FF7A9A'; x.beginPath(); x.arc(410, 152, 10, 0, Math.PI * 2); x.fill();
+  for (const dx of [-14, 2, 18]) { x.beginPath(); x.moveTo(398 + dx, 120); x.quadraticCurveTo(390 + dx, 105, 400 + dx, 92); x.stroke(); } }) });
+const BX = (g, w, h, d, mat, x, y, z) => add(g, new THREE.BoxGeometry(w, h, d), mat, x, y, z);
 const aoMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, map: gradTex(x => {
   const g = x.createLinearGradient(0, 0, 0, 128); g.addColorStop(0, 'rgba(40,26,70,.34)'); g.addColorStop(1, 'rgba(40,26,70,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }) });
 
@@ -676,35 +704,49 @@ const CAT = {
     build(g, m) { B(g, 0.8, 0.68, 0.45, m, 0, 0.34, -0.12); B(g, 0.72, 0.36, 0.37, waterMat, 0, 0.88, -0.12); B(g, 0.76, 0.44, 0.41, glassMat, 0, 0.91, -0.12);
       B(g, 0.7, 0.04, 0.35, M(0xE6D3B3), 0, 0.72, -0.12); S(g, 0.06, M(LEAF), -0.22, 0.8, -0.18).scale.set(0.6, 1.8, 0.6);
       for (const [x, y, c] of [[0.1, 0.9, 0xFF8A3D], [-0.05, 0.98, 0xFFD43B], [0.2, 1.0, 0x5BC0EB]]) { S(g, 0.04, M(c), x, y, -0.1).scale.set(1.6, 1, 0.6); K(g, 0.03, 0.05, M(c), x - 0.08, y, -0.1).rotation.z = PI / 2; } } },
-  camaGato: { name: 'Cama de gato', tab: 'deco', tags: 'dorm salon', w: 1, d: 1, price: 50, comfort: 2, style: 3, flat: false, role: 'tela',
-    build(g, m) { const t = add(g, new THREE.TorusGeometry(0.26, 0.1, 12, 28), m, 0, 0.1, 0); t.rotation.x = PI / 2; C(g, 0.27, 0.27, 0.06, M(LINEN), 0, 0.05, 0, 24);
-      S(g, 0.06, M(0xFF7A59), 0.3, 0.06, 0.3); } },
+  camaGato: { name: 'Cama de Milo', tab: 'deco', tags: 'dorm salon', w: 1, d: 1, price: 50, comfort: 2, style: 3, flat: false, role: 'tela',
+    build(g, m) { const t = add(g, new THREE.TorusGeometry(0.26, 0.075, 14, 32), m, 0, 0.09, 0); t.rotation.x = PI / 2;
+      C(g, 0.21, 0.23, 0.07, M(LINEN), 0, 0.045, 0, 28); SB(g, 0.18, 0.05, 0.14, M(0xFFFFFF), 0.04, 0.09, -0.03).rotation.y = 0.4;
+      S(g, 0.065, M(0xFF7A59), 0.33, 0.065, 0.3); C(g, 0.006, 0.006, 0.2, M(0xFF7A59), 0.22, 0.012, 0.36, 4).rotation.set(PI / 2, 0, 1.1); } },
   libros: { name: 'Pila de libros', tab: 'deco', tags: 'dorm musica salon', w: 1, d: 1, price: 40, comfort: 0, style: 3, role: 'acento',
-    build(g, m) { const cs = [m, M(0xE0B04A), M(0x5B7FA6), M(LINEN), m]; for (let i = 0; i < 5; i++) { const b = B(g, 0.42 - i * 0.03, 0.07, 0.3 - i * 0.01, cs[i], 0, 0.035 + i * 0.072, 0); b.rotation.y = (i % 2 ? 0.2 : -0.15) * i * 0.4; }
-      C(g, 0.05, 0.045, 0.1, M(WHITE), 0.02, 0.41, 0, 12); } },
+    build(g, m) { const covers = [m, M(0xE0B04A), M(0x5B7FA6), M(0x7FA87A), m], pages = M(0xFBF7EE);
+      for (let i = 0; i < 5; i++) {
+        const w = 0.42 - i * 0.03, d = 0.3 - i * 0.012, bk = new THREE.Group(); bk.position.y = 0.036 + i * 0.072; bk.rotation.y = (i % 2 ? 0.22 : -0.16) * (1 + i * 0.3); g.add(bk);
+        BX(bk, w, 0.012, d, covers[i], 0, 0.03, 0); BX(bk, w, 0.012, d, covers[i], 0, -0.03, 0); BX(bk, 0.014, 0.072, d, covers[i], -w / 2 + 0.007, 0, 0);
+        BX(bk, w - 0.03, 0.05, d - 0.02, pages, 0.008, 0, 0);
+      }
+      C(g, 0.05, 0.045, 0.1, M(WHITE), 0.02, 0.41, 0, 14); C(g, 0.045, 0.045, 0.005, M(0x6B4630), 0.02, 0.456, 0, 14); } },
   // pared
   cuadro: { name: 'Cuadro', tab: 'pared', wall: true, tags: 'dorm salon bano', w: 1, h: 0.72, y: 1.5, price: 90, comfort: 0, style: 4, role: 'marco',
-    build(g, m) { B(g, 0.66, 0.72, 0.04, m, 0, 1.5, 0.02); B(g, 0.54, 0.6, 0.02, M(LINEN), 0, 1.5, 0.045);
-      disc(g, 0.13, 0.01, M(0xFF7A59), -0.06, 1.58, 0.06); B(g, 0.3, 0.16, 0.01, M(0x5B7FA6), 0.08, 1.38, 0.06); } },
+    build(g, m) { B(g, 0.66, 0.72, 0.04, m, 0, 1.5, 0.02); B(g, 0.56, 0.62, 0.02, M(LINEN), 0, 1.5, 0.042);
+      add(g, new THREE.PlaneGeometry(0.5, 0.56), artAbstract, 0, 1.5, 0.054); } },
   cuadroGrande: { name: 'Cuadro grande', tab: 'pared', wall: true, tags: 'salon musica', w: 2, h: 0.95, y: 1.55, price: 260, comfort: 0, style: 8, role: 'marco',
-    build(g, m) { B(g, 1.6, 0.95, 0.04, m, 0, 1.55, 0.02); B(g, 1.48, 0.83, 0.02, M(0xBFD9EC), 0, 1.55, 0.045);
-      B(g, 1.48, 0.3, 0.01, M(0x7FA87A), 0, 1.28, 0.058); const h1 = S(g, 0.42, M(0x5E8C64), -0.35, 1.3, 0.055); h1.scale.set(1, 0.5, 0.02); const h2 = S(g, 0.36, M(0x9DC79A), 0.35, 1.3, 0.056); h2.scale.set(1, 0.6, 0.02);
-      disc(g, 0.11, 0.01, M(0xFFB347), 0.45, 1.78, 0.06); } },
+    build(g, m) { B(g, 1.6, 0.95, 0.04, m, 0, 1.55, 0.02); B(g, 1.5, 0.85, 0.02, M(LINEN), 0, 1.55, 0.042);
+      add(g, new THREE.PlaneGeometry(1.42, 0.78), artLandscape, 0, 1.55, 0.054); } },
   espejo: { name: 'Espejo', tab: 'pared', wall: true, tags: 'bano dorm', w: 1, h: 0.8, y: 1.55, price: 150, comfort: 0, style: 5, role: 'marco',
-    build(g, m) { disc(g, 0.38, 0.05, m, 0, 1.55, 0.03, 36); disc(g, 0.32, 0.02, std({ color: 0xDDEBF2, emissive: 0x8FA9B8, emissiveIntensity: 0.4 }), 0, 1.55, 0.06, 36);
-      const sh = B(g, 0.05, 0.4, 0.01, M(WHITE), -0.08, 1.62, 0.072); sh.rotation.z = 0.6; } },
+    build(g, m) { disc(g, 0.38, 0.04, m, 0, 1.55, 0.02, 40); add(g, new THREE.TorusGeometry(0.35, 0.03, 10, 48), m, 0, 1.55, 0.05);
+      disc(g, 0.33, 0.01, mirrorMat, 0, 1.55, 0.045, 40); } },
   reloj: { name: 'Reloj', tab: 'pared', wall: true, tags: 'cocina salon', w: 1, h: 0.5, y: 1.85, price: 70, comfort: 0, style: 3, role: 'acento',
-    build(g, m) { disc(g, 0.23, 0.05, m, 0, 1.85, 0.03, 32); disc(g, 0.19, 0.02, M(WHITE), 0, 1.85, 0.05, 32);
-      const h = B(g, 0.025, 0.12, 0.01, M(DARK), 0.03, 1.89, 0.065); h.rotation.z = -0.5; const mn = B(g, 0.02, 0.16, 0.01, M(DARK), -0.04, 1.92, 0.07); mn.rotation.z = 0.5; S(g, 0.02, M(DARK), 0, 1.85, 0.07); } },
+    build(g, m) { disc(g, 0.23, 0.05, m, 0, 1.85, 0.03, 36); disc(g, 0.195, 0.02, M(WHITE), 0, 1.85, 0.05, 36);
+      for (let i = 0; i < 12; i++) { const a = i * PI / 6, r = 0.16, big = i % 3 === 0; BX(g, big ? 0.016 : 0.01, big ? 0.04 : 0.022, 0.006, M(DARK), Math.sin(a) * r, 1.85 + Math.cos(a) * r, 0.062).rotation.z = -a; }
+      const hh = new THREE.Group(); hh.position.set(0, 1.85, 0.066); hh.rotation.z = -1.0; g.add(hh); BX(hh, 0.022, 0.1, 0.006, M(DARK), 0, 0.045, 0);
+      const mm = new THREE.Group(); mm.position.set(0, 1.85, 0.07); mm.rotation.z = 0.5; g.add(mm); BX(mm, 0.014, 0.15, 0.006, M(DARK), 0, 0.068, 0);
+      S(g, 0.016, M(0xE5533D), 0, 1.85, 0.074); } },
   balda: { name: 'Balda con plantas', tab: 'pared', wall: true, tags: 'cocina dorm salon bano', w: 2, h: 0.5, y: 1.45, price: 120, comfort: 0, style: 5, role: 'madera',
     build(g, m) { B(g, 1.5, 0.05, 0.26, m, 0, 1.3, 0.13); for (const s of [-1, 1]) B(g, 0.03, 0.15, 0.2, M(DARK), s * 0.6, 1.22, 0.1);
       C(g, 0.08, 0.06, 0.12, M(0xD9776B), -0.45, 1.39, 0.13, 12); S(g, 0.1, M(LEAF), -0.45, 1.5, 0.13);
       C(g, 0.07, 0.06, 0.1, M(WHITE), -0.1, 1.38, 0.13, 12); S(g, 0.07, M(LEAF2), -0.1, 1.46, 0.13);
       for (let i = 0; i < 4; i++) B(g, 0.06, 0.22 - i * 0.02, 0.18, M([0xFF7A59, 0x5B7FA6, 0xE0B04A, 0x7FA87A][i]), 0.25 + i * 0.07, 1.43 - i * 0.01, 0.13); } },
   colgante: { name: 'Macetero colgante', tab: 'pared', wall: true, tags: 'bano cocina dorm musica', w: 1, h: 0.9, y: 1.6, price: 80, comfort: 0, style: 5, role: 'maceta',
-    build(g, m) { B(g, 0.08, 0.06, 0.12, M(DARK), 0, 2.05, 0.06); C(g, 0.006, 0.006, 0.35, M(0xC9B48A), 0, 1.87, 0.22, 4);
-      C(g, 0.14, 0.1, 0.16, m, 0, 1.65, 0.22, 16); S(g, 0.12, M(LEAF), 0, 1.72, 0.22);
-      for (let i = 0; i < 5; i++) { const a = i * 1.3; S(g, 0.045, M(i % 2 ? LEAF : LEAF2), Math.cos(a) * 0.12, 1.55 - i * 0.08, 0.22 + Math.sin(a) * 0.1); } } },
+    build(g, m) { B(g, 0.08, 0.05, 0.14, M(DARK), 0, 2.05, 0.07); for (const a of [0, 2.1, 4.2]) { const r = C(g, 0.005, 0.005, 0.4, M(0xC9B48A), Math.cos(a) * 0.05, 1.86, 0.22 + Math.sin(a) * 0.05, 4); r.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
+      C(g, 0.14, 0.1, 0.16, m, 0, 1.65, 0.22, 18); C(g, 0.125, 0.125, 0.01, M(0x5A4032), 0, 1.725, 0.22, 18);
+      S(g, 0.1, M(LEAF), 0, 1.76, 0.22).scale.set(1.2, 0.6, 1.2);
+      for (const [a, n] of [[0.3, 6], [2.4, 5], [4.3, 7]]) {
+        const sx = Math.cos(a) * 0.12, sz = 0.22 + Math.sin(a) * 0.1;
+        for (let j = 0; j < n; j++) { const y = 1.7 - j * 0.065, dx = Math.sin(j * 0.9 + a) * 0.025;
+          const l = S(g, 0.042, M(j % 2 ? LEAF : LEAF2), sx * (1 + j * 0.06) + dx, y, sz); l.scale.set(1, 0.55, 0.8); l.rotation.z = j % 2 ? 0.5 : -0.5; }
+        C(g, 0.004, 0.004, n * 0.065, M(0x4E8A4A), sx, 1.7 - n * 0.0325, sz, 4);
+      } } },
   guirnalda: { name: 'Guirnalda de luces', tab: 'pared', wall: true, glow: true, tags: 'bebe dorm musica', w: 2, h: 0.4, y: 2.2, price: 60, comfort: 1, style: 5, light: { y: 2.0, z: 0.4, color: 0xFFD08A, power: 0.9 }, role: 'luz',
     build(g, m) { for (let i = 0; i <= 10; i++) { const x = -0.8 + i * 0.16, y = 2.32 - 0.16 * Math.sin(PI * i / 10);
         S(g, 0.06, m, x, y - 0.05, 0.06); if (i < 10) { const x2 = x + 0.16, y2 = 2.32 - 0.16 * Math.sin(PI * (i + 1) / 10); const w = C(g, 0.005, 0.005, Math.hypot(0.16, y2 - y), M(DARK), (x + x2) / 2, (y + y2) / 2, 0.04, 4); w.rotation.z = PI / 2 + Math.atan2(y2 - y, 0.16); } } } },
@@ -760,8 +802,7 @@ Object.assign(CAT, {
       C(g, 0.13, 0.13, 0.12, M(0x3C3A44), -0.06, 1.95, -0.05, 18); C(g, 0.2, 0.2, 0.015, M(0x3C3A44), -0.06, 1.89, -0.05, 22); } },
   espejoPie: { name: 'Espejo de pie', tab: 'deco', tags: 'recibidor dorm yoga', w: 1, d: 1, price: 210, comfort: 0, style: 6, role: 'marco',
     build(g, m) { const f = new THREE.Group(); f.position.set(0, 0, -0.22); f.rotation.x = -0.1; g.add(f);
-      add(f, roundBox(0.62, 1.75, 0.05, 0.03), m, 0, 0.88, 0); B(f, 0.52, 1.63, 0.02, std({ color: 0xDDEBF2, emissive: 0x8FA9B8, emissiveIntensity: 0.35, roughness: 0.05 }), 0, 0.88, 0.03);
-      B(f, 0.05, 0.6, 0.01, M(WHITE), -0.1, 1.15, 0.045).rotation.z = 0.5;
+      add(f, roundBox(0.62, 1.75, 0.05, 0.03), m, 0, 0.88, 0); add(f, new THREE.PlaneGeometry(0.52, 1.63), mirrorMat, 0, 0.88, 0.027);
       const leg = B(g, 0.04, 1.2, 0.04, m, 0, 0.6, -0.45); leg.rotation.x = 0.35; } },
   neon: { name: 'Neón luna', tab: 'pared', wall: true, glow: true, tags: 'gamer cafe dorm musica', w: 2, h: 0.8, y: 1.65, price: 150, comfort: 0, style: 7, role: 'neon', light: { y: 1.65, z: 0.4, color: 0xC08AFF, power: 0.8 },
     build(g, m) { B(g, 1.3, 0.75, 0.02, std({ color: 0x1E1830, transparent: true, opacity: 0.25 }), 0, 1.65, 0.015);
@@ -769,11 +810,8 @@ Object.assign(CAT, {
       for (const a of [0, PI / 4, PI / 2, 3 * PI / 4]) B(g, 0.24, 0.022, 0.022, m, 0.33, 1.8, 0.05).rotation.z = a;
       for (const [x, y] of [[0.2, 1.48], [0.45, 1.55]]) S(g, 0.025, m, x, y, 0.05); } },
   pizarra: { name: 'Pizarra de menú', tab: 'pared', wall: true, tags: 'cafe cocina', w: 2, h: 0.95, y: 1.6, price: 110, comfort: 0, style: 5, role: 'marco',
-    build(g, m) { B(g, 1.5, 0.95, 0.04, m, 0, 1.6, 0.02); B(g, 1.38, 0.83, 0.02, M(0x2E3B33), 0, 1.6, 0.045);
-      const ch = M(0xF4F1EA); B(g, 0.6, 0.05, 0.005, ch, -0.25, 1.9, 0.058);
-      for (let i = 0; i < 4; i++) { B(g, 0.5 - (i % 2) * 0.12, 0.022, 0.005, ch, -0.35 + (i % 2) * 0.06, 1.76 - i * 0.12, 0.058); B(g, 0.1, 0.022, 0.005, M(0xFFD43B), 0.1, 1.76 - i * 0.12, 0.058); }
-      add(g, new THREE.TorusGeometry(0.11, 0.012, 6, 24), ch, 0.42, 1.55, 0.058); disc(g, 0.04, 0.005, M(0xFF7A9A), 0.42, 1.55, 0.058, 16);
-      for (const x of [-0.05, 0.05]) B(g, 0.012, 0.12, 0.005, ch, 0.42 + x, 1.78, 0.058).rotation.z = x * 4; } },
+    build(g, m) { B(g, 1.5, 0.95, 0.04, m, 0, 1.6, 0.02); B(g, 1.4, 0.85, 0.02, M(0x2E3B33), 0, 1.6, 0.042);
+      add(g, new THREE.PlaneGeometry(1.38, 0.83), chalkMenu, 0, 1.6, 0.054); B(g, 1.3, 0.03, 0.06, m, 0, 1.13, 0.05); B(g, 0.08, 0.02, 0.02, M(WHITE), 0.4, 1.155, 0.06); } },
 });
 CAT.escalera = { name: 'Escalera', tab: 'obra', tags: 'salon recibidor', w: 1, d: 3, price: 600, comfort: 0, style: 3, role: 'madera', stairs: true,
   build(g, m) { const n = 12, run = 3 / n, rise = LEVEL_H / n, slope = Math.atan2(LEVEL_H, 3), dk = M(DARK);
@@ -1364,15 +1402,25 @@ $('tDone').addEventListener('click', () => select(null));
 
 /* ---------- cat ---------- */
 const cat = { g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 1, jump: 0, t: 0 };
-(function buildCat() {
-  const g = cat.g, fur = M(0xF0A15A), lite = M(0xFFE3C4), dark = M(0x2A2333);
-  S(g, 0.15, fur, 0, 0.16, 0).scale.set(1.5, 1, 1); S(g, 0.1, lite, 0.05, 0.12, 0).scale.set(1.4, 0.8, 0.9);
-  S(g, 0.12, fur, 0.24, 0.28, 0);
-  for (const s of [-1, 1]) { const e = K(g, 0.045, 0.09, fur, 0.24, 0.4, s * 0.065); e.rotation.x = s * 0.25; S(g, 0.018, dark, 0.34, 0.3, s * 0.045); }
-  S(g, 0.02, M(0xFF8FA3), 0.36, 0.26, 0);
-  const tail = C(g, 0.025, 0.018, 0.32, fur, -0.27, 0.27, 0, 8); tail.rotation.z = 0.7; cat.tail = tail;
-  for (const [x, z] of [[0.12, 0.07], [0.12, -0.07], [-0.12, 0.07], [-0.12, -0.07]]) S(g, 0.045, lite, x, 0.04, z);
-  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.4), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; g.add(blob);
+// Milo the pug: fawn coat, black mask and ears, curly tail. Faces +x like everything that walks here.
+(function buildPug() {
+  const g = cat.g, fawn = M(0xD9B07E), fawnL = M(0xE8C79C), mask = M(0x2A2333), eye = M(0x120E1C), shine = M(0xFFFFFF);
+  S(g, 0.16, fawn, -0.02, 0.21, 0).scale.set(1.45, 0.95, 1.08);
+  S(g, 0.11, fawnL, 0.1, 0.18, 0).scale.set(1, 0.9, 1);
+  for (const [x, z] of [[0.13, 0.08], [0.13, -0.08], [-0.15, 0.08], [-0.15, -0.08]]) { C(g, 0.038, 0.034, 0.12, fawn, x, 0.06, z, 10); S(g, 0.036, fawnL, x + 0.01, 0.012, z).scale.set(1.2, 0.5, 1); }
+  const head = new THREE.Group(); head.position.set(0.22, 0.33, 0); g.add(head); cat.head = head;
+  S(head, 0.135, fawn, 0, 0, 0).scale.set(0.95, 0.95, 1.05);
+  S(head, 0.075, mask, 0.1, -0.03, 0).scale.set(0.7, 0.85, 1.15);
+  S(head, 0.022, mask, 0.155, 0.0, 0).scale.set(0.8, 0.8, 1.3);
+  for (const z of [-0.035, 0.035]) S(head, 0.03, fawnL, 0.12, 0.05, z).scale.set(0.6, 0.35, 1);
+  for (const sz of [-1, 1]) {
+    S(head, 0.034, eye, 0.085, 0.045, sz * 0.068); S(head, 0.009, shine, 0.112, 0.06, sz * 0.068);
+    const ear = S(head, 0.05, mask, -0.01, 0.1, sz * 0.105); ear.scale.set(0.9, 0.45, 0.9); ear.rotation.x = sz * 0.6;
+  }
+  S(head, 0.022, M(0xFF8FA3), 0.135, -0.085, 0.01).scale.set(0.8, 0.5, 1);
+  const tail = add(g, new THREE.TorusGeometry(0.045, 0.02, 8, 18, PI * 1.6), fawn, -0.24, 0.33, 0); tail.rotation.y = PI / 2; cat.tail = tail;
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.42), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; g.add(blob);
+  g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; });
   scene.add(g);
 })();
 function cellBlocked(x, z) {
@@ -1420,7 +1468,7 @@ function updateCat(dt) {
   } else { cat.wait = 1.5 + Math.random() * 3; catTarget(); }
   if (cat.jump > 0) cat.jump = Math.max(0, cat.jump - dt * 1.8);
   cat.g.position.set(cat.x, (moving ? Math.abs(Math.sin(cat.t * 12)) * 0.03 : 0) + Math.sin(cat.jump * PI) * 0.45, cat.z);
-  cat.tail.rotation.z = 0.7 + Math.sin(cat.t * (moving ? 8 : 2)) * 0.25;
+  cat.tail.rotation.x = Math.sin(cat.t * (moving ? 14 : 5)) * 0.35; cat.g.rotation.x = moving ? Math.sin(cat.t * 10) * 0.05 : 0; cat.head.rotation.z = moving ? 0 : Math.sin(cat.t * 0.8) * 0.12;
 }
 
 /* ---------- day / night ---------- */
@@ -1942,7 +1990,7 @@ canvas.addEventListener('pointerdown', e => {
   if (e.button === 2 || e.shiftKey) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: 99 }; return; }
   if (BM && tool) { const p = floorPoint(e); gesture = { kind: 'tool', a: p, b: p, before: snap(), x0: e.clientX, y0: e.clientY }; toolMove(gesture, e); return; }
   const it = pick(e);
-  if (it === 'cat') { cat.jump = 1; toast('Miso: ¡miau!'); buzz(20); gesture = null; return; }
+  if (it === 'cat') { cat.jump = 1; toast('Milo: ¡guau, guau!'); buzz(20); gesture = null; return; }
   if (it) {
     if (sel !== it) select(it);
     const before = snap();
