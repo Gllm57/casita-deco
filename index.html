@@ -102,7 +102,15 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 
 /* camera rotate pair, floating just above the catalog */
 .cam { position: absolute; bottom: calc(var(--sheet-h) + 10px); display: flex; gap: 8px; transition: opacity .2s; }
-.cam.l { left: max(12px, env(safe-area-inset-left, 0px)); }
+.histbar { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(var(--sheet-h) + 10px); display: flex; gap: 2px; padding: 4px; border-radius: 999px; transition: bottom .2s, opacity .2s; }
+.histbar button { border: 0; background: transparent; height: 38px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px; font: 800 13px var(--body); cursor: pointer; }
+.histbar button + button { padding: 0 11px; box-shadow: -1px 0 0 rgba(124,113,148,.25); border-radius: 0 999px 999px 0; }
+.histbar button svg { width: 18px; height: 18px; }
+.histbar button[disabled] { opacity: .35; cursor: default; }
+.histbar .n { min-width: 18px; height: 18px; border-radius: 9px; background: var(--coral); color: #fff; font-size: 10.5px; display: grid; place-items: center; padding: 0 5px; }
+.histbar .n:empty { display: none; }
+.app.has-sel .histbar { bottom: calc(var(--sheet-h) + 106px); }
+.app.tool-on .histbar { bottom: calc(var(--sheet-h) + 76px); }
 .cam.r { right: calc(var(--panel-w) + max(12px, env(safe-area-inset-right, 0px))); }
 .app.has-sel .cam { opacity: 0; pointer-events: none; }
 
@@ -162,8 +170,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .hint.gone { opacity: 0; }
 
 /* photo mode hides every control */
-.app.in-menu .hud, .app.in-menu .sheet, .app.in-menu .cam, .app.in-menu .hint, .app.in-menu .tools, .app.in-menu .sel-name { opacity: 0 !important; pointer-events: none !important; }
-.app.photo .hud, .app.photo .sheet, .app.photo .cam, .app.photo .tools, .app.photo .sel-name, .app.photo .hint, .app.photo .palette { opacity: 0 !important; pointer-events: none !important; }
+.app.in-menu .hud, .app.in-menu .sheet, .app.in-menu .cam, .app.in-menu .histbar, .app.in-menu .hint, .app.in-menu .tools, .app.in-menu .sel-name { opacity: 0 !important; pointer-events: none !important; }
+.app.photo .hud, .app.photo .sheet, .app.photo .cam, .app.photo .histbar, .app.photo .tools, .app.photo .sel-name, .app.photo .hint, .app.photo .palette { opacity: 0 !important; pointer-events: none !important; }
 .photo-exit { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); border: 0; border-radius: 999px; padding: 9px 14px; font: 800 13px var(--body); cursor: pointer; display: none; }
 .app.photo .photo-exit { display: block; }
 
@@ -295,7 +303,6 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
         <button class="deliver" id="deliver" disabled>Entregar habitación</button>
       </div>
       <div class="side">
-        <button class="round glass" id="undoBtn" aria-label="Deshacer" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
         <button class="round glass" id="nightBtn" aria-label="Cambiar a noche"></button>
         <div class="floors glass build-only" id="floorSel" role="group" aria-label="Piso"><button data-lv="1">1º</button><button data-lv="0">PB</button></div>
         <button class="round glass build-only" id="wallModeBtn" aria-label="Altura de las paredes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 20h18M5 20V9h5v11M14 20v-6h5v6"/></svg></button>
@@ -304,8 +311,11 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     </div>
   </div>
 
-  <div class="cam l"><button class="round glass" id="rotL" aria-label="Girar cámara a la izquierda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 1 1 2.3 5.7"/><path d="M4 4v7h7"/></svg></button></div>
-  <div class="cam r"><button class="round glass" id="rotR" aria-label="Girar cámara a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div>
+  <div class="histbar glass" id="histbar" role="group" aria-label="Historial">
+    <button id="undoBtn" disabled aria-label="Deshacer (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Deshacer<span class="n" id="undoCount"></span></button>
+    <button id="redoBtn" disabled aria-label="Rehacer (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+  </div>
+  <div class="cam r"><button class="round glass" id="rotL" aria-label="Girar cámara a la izquierda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 1 1 2.3 5.7"/><path d="M4 4v7h7"/></svg></button><button class="round glass" id="rotR" aria-label="Girar cámara a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div>
 
   <div class="sel-name" id="selName">Sofá</div>
   <div class="palette glass" id="palette">
@@ -1067,15 +1077,31 @@ function placeNew(it) {
 const history = [];
 const houseJSON = () => JSON.stringify({ cur: HOUSE.cur, levels: HOUSE.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, items: lv.items.map(({ group, ...i }) => i) })) });
 const snap = () => (BM ? { id: L.id, house: houseJSON() } : { id: L.id, wall: R.wall, floor: R.floor, items: JSON.stringify(R.items.map(({ group, ...i }) => i)) });
-function pushUndo(s = snap()) { history.push(s); if (history.length > 40) history.shift(); $('undoBtn').disabled = false; }
-function undo() {
-  const s = history.pop(); $('undoBtn').disabled = !history.length;
-  if (!s || s.id !== L.id) return;
-  if (s.house) { clearItems(); const d = JSON.parse(s.house); HOUSE.levels = d.levels; HOUSE.cur = d.cur; rebuildHouse(); select(null); toast('Deshecho'); buzz(); return; }
+const future = [];
+function updHistory() { $('undoBtn').disabled = !history.length; $('redoBtn').disabled = !future.length; $('undoCount').textContent = history.length || ''; }
+function pushUndo(s = snap()) { history.push(s); if (history.length > 40) history.shift(); future.length = 0; updHistory(); }
+function restore(s) {
+  if (s.house) { clearItems(); const d = JSON.parse(s.house); HOUSE.levels = d.levels; HOUSE.cur = d.cur; rebuildHouse(); select(null); return; }
   clearItems(); R.wall = s.wall; R.floor = s.floor; R.items = JSON.parse(s.items);
-  applySurfaces(); R.items.forEach(buildItem); select(null); refreshHud(); toast('Deshecho'); buzz();
+  applySurfaces(); R.items.forEach(buildItem); select(null); refreshHud();
+}
+function undo() {
+  const s = history.pop();
+  if (s && s.id === L.id) { future.push(snap()); restore(s); toast(`Deshecho · quedan ${history.length}`); buzz(); }
+  updHistory();
+}
+function redo() {
+  const s = future.pop();
+  if (s && s.id === L.id) { history.push(snap()); restore(s); toast('Rehecho'); buzz(); }
+  updHistory();
 }
 $('undoBtn').addEventListener('click', undo);
+$('redoBtn').addEventListener('click', redo);
+document.addEventListener('keydown', e => {
+  if (state.menu || !(e.ctrlKey || e.metaKey)) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+});
 function buzz(ms = 12) { if (settings.vibrate === '1' && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} }
 
 /* ---------- scoring & HUD ---------- */
@@ -1606,7 +1632,7 @@ function loadRoom(id) {
   view.az = PI / 4; view.azGoal = null; view.el = BM ? 0.7 : 0.62; view.zoom = BM ? 1.35 : 1;
   for (const w of Object.values(walls)) w.h = 1;
   app.classList.toggle('build', BM); tab = BM ? 'obra' : tab === 'obra' ? 'muebles' : tab; renderTabs();
-  history.length = 0; $('undoBtn').disabled = true;
+  history.length = 0; future.length = 0; updHistory();
   resetCat(); applyNight();
   app.classList.toggle('home', !!L.home);
   const idx = LEVELS.indexOf(L);
