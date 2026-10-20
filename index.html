@@ -481,7 +481,27 @@ const app = $('app');
 const WOOD = 0xB98552, DARK = 0x3B3448, LINEN = 0xF6F1EA, WHITE = 0xFFFFFF, CERAMIC = 0xF7F7F4, METAL = 0xB8BCC6, LEAF = 0x5FA35B, LEAF2 = 0x7DBF6E, GOLD = 0xE0B04A;
 const std = o => new THREE.MeshStandardMaterial({ roughness: 0.78, metalness: 0, ...o });
 const matCache = {};
-const M = hex => matCache[hex] || (matCache[hex] = std({ color: hex, roughness: hex === METAL || hex === GOLD ? 0.32 : 0.78 }));
+// tiling surface textures are near-white, so they keep each material's colour and only add texture
+const surfTex = (n, rep, draw) => { const c = document.createElement('canvas'); c.width = c.height = n; draw(c.getContext('2d'), n); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.anisotropy = 4; return t; };
+const grainTex = surfTex(256, 1, (x, n) => {
+  x.fillStyle = '#fff'; x.fillRect(0, 0, n, n);
+  for (let i = 0; i < 46; i++) { const y0 = Math.random() * n, a = 2 + Math.random() * 6, f = 0.01 + Math.random() * 0.02, ph = Math.random() * 6;
+    x.strokeStyle = `rgba(70,40,20,${0.05 + Math.random() * 0.09})`; x.lineWidth = 0.6 + Math.random() * 1.8; x.beginPath();
+    for (let u = 0; u <= n; u += 8) x.lineTo(u, y0 + Math.sin(u * f + ph) * a); x.stroke(); } });
+const weaveTex = surfTex(128, 3, (x, n) => {
+  x.fillStyle = '#fff'; x.fillRect(0, 0, n, n);
+  for (let i = 0; i < n; i += 4) { x.fillStyle = 'rgba(0,0,0,.045)'; x.fillRect(i, 0, 2, n); x.fillStyle = 'rgba(0,0,0,.035)'; x.fillRect(0, i + 2, n, 2); }
+  for (let i = 0; i < 900; i++) { x.fillStyle = Math.random() < 0.5 ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.4)'; x.fillRect(Math.random() * n, Math.random() * n, 1.5, 1.5); } });
+const WOODS = new Set([0xB98552, 0x6B4630, 0xC99A6B, 0x7A5136, 0x8A5E40, 0xE6D3B3]), FABRICS = new Set([0xF6F1EA, 0xCDBB9E, 0xE8D9C0]);
+function surface(hex, kind) {
+  if (kind === 'wood') return std({ color: hex, map: grainTex, roughness: 0.62 });
+  if (kind === 'fabric') return std({ color: hex, map: weaveTex, roughness: 0.96 });
+  if (kind === 'gloss') return std({ color: hex, roughness: 0.22 });
+  return std({ color: hex, roughness: kind === 'metal' ? 0.32 : 0.78 });
+}
+const M = hex => matCache[hex] || (matCache[hex] = surface(hex, WOODS.has(hex) ? 'wood' : FABRICS.has(hex) ? 'fabric' : hex === CERAMIC ? 'gloss' : hex === METAL || hex === GOLD ? 'metal' : ''));
+const ROLE_KIND = { madera: 'wood', marco: 'wood', tela: 'fabric', ceramica: 'gloss', cocina: 'gloss' };
+const roleMat = (D, hex) => (D.glow ? G(hex) : surface(hex, ROLE_KIND[D.role] || ''));
 const glowMats = new Set();
 function G(hex) { const m = std({ color: hex, emissive: hex, emissiveIntensity: 0.5 }); glowMats.add(m); return m; }
 const glassMat = std({ color: 0xD6F1FF, transparent: true, opacity: 0.3, roughness: 0.08, depthWrite: false });
@@ -510,8 +530,8 @@ function roundBox(w, h, d, r) {
 }
 const B = (g, w, h, d, mat, x, y, z) => add(g, roundBox(w, h, d, Math.min(0.06, Math.min(w, h, d) * 0.35)), mat, x, y, z);
 const SB = (g, w, h, d, mat, x, y, z) => add(g, roundBox(w, h, d, Math.min(w, h, d) * 0.48), mat, x, y, z); // soft, pillowy parts
-const C = (g, rt, rb, h, mat, x, y, z, s = 18) => add(g, new THREE.CylinderGeometry(rt, rb, h, s), mat, x, y, z);
-const S = (g, r, mat, x, y, z) => add(g, new THREE.SphereGeometry(r, 18, 14), mat, x, y, z);
+const C = (g, rt, rb, h, mat, x, y, z, s = 24) => add(g, new THREE.CylinderGeometry(rt, rb, h, s), mat, x, y, z);
+const S = (g, r, mat, x, y, z) => add(g, new THREE.SphereGeometry(r, 24, 18), mat, x, y, z);
 const K = (g, r, h, mat, x, y, z) => add(g, new THREE.ConeGeometry(r, h, 14), mat, x, y, z);
 const disc = (g, r, h, mat, x, y, z, s = 28) => { const m = C(g, r, r, h, mat, x, y, z, s); m.rotation.x = PI / 2; return m; }; // faces +z
 function legs(g, w, d, h, mat, inset = 0.08, oz = 0) {
@@ -559,40 +579,67 @@ const aoMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false
    floor items: w × d cells.  wall items: w cells along the wall, built facing +z at world height. */
 const CAT = {
   sofa: { name: 'Sofá', tab: 'muebles', tags: 'salon', w: 2, d: 1, price: 450, comfort: 9, style: 4, role: 'tela',
-    build(g, m) { legs(g, 1.9, 0.85, 0.12, M(DARK), 0.12, 0.03); B(g, 1.9, 0.3, 0.85, m, 0, 0.27, 0.03);
-      SB(g, 1.6, 0.5, 0.24, m, 0, 0.66, -0.31); for (const s of [-1, 1]) { SB(g, 0.24, 0.36, 0.86, m, s * 0.84, 0.52, 0.03); SB(g, 0.76, 0.16, 0.62, m, s * 0.37, 0.48, 0.1); }
-      SB(g, 0.34, 0.32, 0.12, M(LINEN), -0.45, 0.66, -0.15).rotation.z = 0.15; } },
+    build(g, m) { const wd = M(WOOD); for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = C(g, 0.034, 0.02, 0.15, wd, sx * 0.82, 0.072, 0.03 + sz * 0.3, 12); l.rotation.set(sz * 0.14, 0, -sx * 0.14); }
+      SB(g, 1.9, 0.26, 0.86, m, 0, 0.27, 0.03); SB(g, 1.88, 0.5, 0.2, m, 0, 0.6, -0.32);
+      for (const s of [-1, 1]) { SB(g, 0.22, 0.4, 0.88, m, s * 0.84, 0.48, 0.03); SB(g, 0.25, 0.11, 0.9, m, s * 0.84, 0.68, 0.03);
+        SB(g, 0.72, 0.15, 0.62, m, s * 0.37, 0.47, 0.1); SB(g, 0.72, 0.42, 0.16, m, s * 0.37, 0.73, -0.17).rotation.x = -0.18; }
+      SB(g, 0.34, 0.32, 0.12, M(LINEN), -0.47, 0.7, -0.04).rotation.set(-0.25, 0.3, 0.15);
+      SB(g, 0.3, 0.28, 0.11, M(0xE8D9C0), 0.5, 0.68, -0.03).rotation.set(-0.25, -0.25, -0.1); } },
   sillon: { name: 'Sillón', tab: 'muebles', tags: 'salon bebe', w: 1, d: 1, price: 260, comfort: 6, style: 4, role: 'tela',
-    build(g, m) { legs(g, 0.85, 0.8, 0.12, M(WOOD), 0.1, 0.03); B(g, 0.85, 0.28, 0.8, m, 0, 0.26, 0.03);
-      SB(g, 0.8, 0.58, 0.22, m, 0, 0.64, -0.29); for (const s of [-1, 1]) SB(g, 0.2, 0.32, 0.8, m, s * 0.34, 0.5, 0.03); SB(g, 0.52, 0.14, 0.56, m, 0, 0.45, 0.08); } },
+    build(g, m) { const wd = M(WOOD); for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = C(g, 0.034, 0.02, 0.15, wd, sx * 0.33, 0.072, 0.03 + sz * 0.28, 12); l.rotation.set(sz * 0.14, 0, -sx * 0.14); }
+      SB(g, 0.86, 0.26, 0.8, m, 0, 0.27, 0.03); SB(g, 0.84, 0.66, 0.2, m, 0, 0.68, -0.29).rotation.x = -0.1;
+      for (const s of [-1, 1]) { SB(g, 0.18, 0.38, 0.8, m, s * 0.35, 0.48, 0.03); SB(g, 0.21, 0.1, 0.82, m, s * 0.35, 0.67, 0.03); }
+      SB(g, 0.52, 0.15, 0.58, m, 0, 0.46, 0.08); SB(g, 0.48, 0.36, 0.14, m, 0, 0.72, -0.15).rotation.x = -0.2;
+      SB(g, 0.26, 0.24, 0.1, M(LINEN), 0.1, 0.66, -0.04).rotation.set(-0.3, -0.3, -0.15); } },
   cama: { name: 'Cama doble', tab: 'muebles', tags: 'dorm', w: 2, d: 2, price: 620, comfort: 14, style: 4, role: 'tela',
-    build(g, m) { const w = M(WOOD); B(g, 1.8, 0.28, 1.85, w, 0, 0.2, 0.05); SB(g, 1.72, 0.22, 1.78, M(LINEN), 0, 0.44, 0.06);
-      SB(g, 1.78, 0.1, 1.15, m, 0, 0.56, 0.38); add(g, roundBox(1.9, 1.0, 0.1, 0.05), w, 0, 0.55, -0.93);
-      for (const s of [-1, 1]) SB(g, 0.62, 0.16, 0.34, M(WHITE), s * 0.42, 0.6, -0.6); } },
+    build(g, m) { const w = M(WOOD), W = 1.84;
+      B(g, W, 0.22, 1.88, w, 0, 0.19, 0.04); for (const sx of [-1, 1]) for (const sz of [-1, 1]) C(g, 0.04, 0.034, 0.1, w, sx * (W / 2 - 0.06), 0.05, 0.04 + sz * 0.86, 12);
+      SB(g, W - 0.08, 0.22, 1.8, M(LINEN), 0, 0.4, 0.05); SB(g, W - 0.02, 0.1, 1.22, m, 0, 0.545, 0.35); SB(g, W - 0.02, 0.12, 0.22, M(LINEN), 0, 0.565, -0.29);
+      SB(g, W, 0.05, 0.42, M(0xE8D9C0), 0, 0.615, 0.68);
+      add(g, roundBox(W + 0.08, 1.05, 0.12, 0.05), w, 0, 0.6, -0.93); add(g, roundBox(W - 0.24, 0.56, 0.05, 0.04), m, 0, 0.74, -0.86);
+      for (const s of [-1, 1]) SB(g, 0.66, 0.18, 0.38, M(WHITE), s * 0.42, 0.61, -0.62).rotation.x = -0.25;
+      SB(g, 0.42, 0.15, 0.14, m, 0.12, 0.64, -0.43).rotation.set(-0.3, 0.1, 0); } },
   camaInd: { name: 'Cama individual', tab: 'muebles', tags: 'dorm', w: 1, d: 2, price: 380, comfort: 10, style: 3, role: 'tela',
-    build(g, m) { const w = M(WOOD); B(g, 0.95, 0.28, 1.85, w, 0, 0.2, 0.05); SB(g, 0.88, 0.22, 1.78, M(LINEN), 0, 0.44, 0.06);
-      SB(g, 0.92, 0.1, 1.1, m, 0, 0.56, 0.4); add(g, roundBox(1.0, 0.9, 0.1, 0.05), w, 0, 0.5, -0.93); SB(g, 0.6, 0.16, 0.32, M(WHITE), 0, 0.6, -0.6); } },
+    build(g, m) { const w = M(WOOD), W = 0.96;
+      B(g, W, 0.22, 1.88, w, 0, 0.19, 0.04); for (const sx of [-1, 1]) for (const sz of [-1, 1]) C(g, 0.04, 0.034, 0.1, w, sx * (W / 2 - 0.06), 0.05, 0.04 + sz * 0.86, 12);
+      SB(g, W - 0.08, 0.22, 1.8, M(LINEN), 0, 0.4, 0.05); SB(g, W - 0.02, 0.1, 1.22, m, 0, 0.545, 0.35); SB(g, W - 0.02, 0.12, 0.22, M(LINEN), 0, 0.565, -0.29);
+      SB(g, W, 0.05, 0.42, M(0xE8D9C0), 0, 0.615, 0.68);
+      add(g, roundBox(W + 0.08, 1.05, 0.12, 0.05), w, 0, 0.6, -0.93); add(g, roundBox(W - 0.24, 0.56, 0.05, 0.04), m, 0, 0.74, -0.86);
+      SB(g, 0.62, 0.18, 0.36, M(WHITE), 0, 0.61, -0.62).rotation.x = -0.25; } },
   mesita: { name: 'Mesita de noche', tab: 'muebles', tags: 'dorm', w: 1, d: 1, price: 90, comfort: 1, style: 3, role: 'madera',
-    build(g, m) { legs(g, 0.6, 0.5, 0.1, M(DARK), 0.08, -0.2); B(g, 0.6, 0.45, 0.5, m, 0, 0.32, -0.2); S(g, 0.035, M(GOLD), 0, 0.36, 0.06);
-      B(g, 0.26, 0.06, 0.18, M(0xFF7A59), 0.1, 0.575, -0.22); C(g, 0.05, 0.05, 0.1, M(WHITE), -0.15, 0.6, -0.15, 12); } },
+    build(g, m) { legs(g, 0.6, 0.5, 0.12, M(WOOD), 0.07, -0.2);
+      B(g, 0.6, 0.42, 0.5, m, 0, 0.33, -0.2); B(g, 0.64, 0.04, 0.54, m, 0, 0.56, -0.2);
+      for (const y of [0.43, 0.24]) { B(g, 0.52, 0.16, 0.02, m, 0, y, 0.055); B(g, 0.12, 0.02, 0.03, M(GOLD), 0, y, 0.075); }
+      C(g, 0.06, 0.07, 0.03, M(GOLD), -0.15, 0.595, -0.27); C(g, 0.01, 0.01, 0.14, M(GOLD), -0.15, 0.68, -0.27, 8); C(g, 0.07, 0.1, 0.1, G(0xFFE3A8), -0.15, 0.78, -0.27);
+      B(g, 0.2, 0.04, 0.15, M(0xFF7A59), 0.12, 0.6, -0.17); B(g, 0.18, 0.035, 0.14, M(0x5B7FA6), 0.13, 0.637, -0.18).rotation.y = 0.2; } },
   comoda: { name: 'Cómoda', tab: 'muebles', tags: 'dorm bebe', w: 2, d: 1, price: 300, comfort: 1, style: 5, role: 'madera',
-    build(g, m) { legs(g, 1.6, 0.5, 0.1, M(DARK), 0.1, -0.2); B(g, 1.6, 0.75, 0.5, m, 0, 0.48, -0.2);
-      for (const y of [0.3, 0.5, 0.7]) { for (const x of [-0.4, 0.4]) S(g, 0.035, M(GOLD), x, y, 0.06); B(g, 1.5, 0.012, 0.02, M(0xC9C0B4), 0, y + 0.1, 0.05); }
-      S(g, 0.13, M(LEAF), 0.5, 0.99, -0.2); C(g, 0.08, 0.07, 0.14, M(0xD9776B), 0.5, 0.92, -0.2, 12);
-      const f = B(g, 0.32, 0.38, 0.03, M(DARK), -0.35, 1.05, -0.36); f.rotation.x = -0.15; } },
+    build(g, m) { legs(g, 1.6, 0.5, 0.12, M(WOOD), 0.1, -0.2);
+      B(g, 1.6, 0.72, 0.5, m, 0, 0.48, -0.2); B(g, 1.66, 0.04, 0.55, m, 0, 0.86, -0.2);
+      for (const y of [0.27, 0.49, 0.71]) for (const x of [-0.39, 0.39]) { B(g, 0.74, 0.19, 0.025, m, x, y, 0.06); B(g, 0.16, 0.022, 0.03, M(GOLD), x, y + 0.02, 0.08); }
+      C(g, 0.08, 0.065, 0.13, M(0xD9776B), 0.52, 0.945, -0.2, 18); for (let i = 0; i < 6; i++) { const a = i * 1.05; leafBlob(g, 0.52 + Math.cos(a) * 0.08, 1.06 + (i % 2) * 0.05, -0.2 + Math.sin(a) * 0.08, 0.6, -a, 0.5); }
+      const fr = new THREE.Group(); fr.position.set(-0.4, 1.06, -0.34); fr.rotation.x = -0.15; g.add(fr); B(fr, 0.3, 0.36, 0.03, M(DARK), 0, 0, 0); BX(fr, 0.24, 0.3, 0.005, M(0x9CC7E8), 0, 0, 0.017); } },
   armario: { name: 'Armario', tab: 'muebles', tags: 'dorm', w: 2, d: 1, price: 520, comfort: 0, style: 4, role: 'madera',
-    build(g, m) { B(g, 1.7, 0.06, 0.6, M(DARK), 0, 0.03, -0.18); B(g, 1.7, 1.96, 0.6, m, 0, 1.03, -0.18);
-      B(g, 0.015, 1.86, 0.02, M(0x8D8496), 0, 1.03, 0.13); for (const s of [-1, 1]) C(g, 0.015, 0.015, 0.3, M(GOLD), s * 0.08, 1.05, 0.15, 8); } },
+    build(g, m) { B(g, 1.66, 0.08, 0.56, m, 0, 0.04, -0.18); B(g, 1.7, 1.9, 0.58, m, 0, 1.03, -0.19); B(g, 1.78, 0.07, 0.64, m, 0, 2.0, -0.19);
+      for (const s of [-1, 1]) { B(g, 0.8, 1.78, 0.025, m, s * 0.42, 1.03, 0.11); B(g, 0.62, 0.72, 0.02, m, s * 0.42, 1.47, 0.125); B(g, 0.62, 0.72, 0.02, m, s * 0.42, 0.6, 0.125);
+        C(g, 0.014, 0.014, 0.32, M(GOLD), s * 0.07, 1.04, 0.14, 10); } } },
   escritorio: { name: 'Escritorio', tab: 'muebles', tags: 'dorm musica', w: 2, d: 1, price: 340, comfort: 2, style: 5, role: 'madera',
     build(g, m) { B(g, 1.8, 0.06, 0.78, m, 0, 0.75, 0); legs(g, 1.8, 0.78, 0.72, M(DARK), 0.06);
       B(g, 0.5, 0.32, 0.7, m, 0.6, 0.55, 0); B(g, 0.42, 0.02, 0.3, M(0x9A98A6), -0.3, 0.79, 0.08);
       const s = B(g, 0.42, 0.28, 0.02, M(0x2B2638), -0.3, 0.93, -0.08); s.rotation.x = -0.2;
       C(g, 0.06, 0.05, 0.14, M(0xFF7A59), 0.45, 0.85, -0.2, 12); } },
   silla: { name: 'Silla', tab: 'muebles', tags: 'cocina', w: 1, d: 1, price: 90, comfort: 2, style: 2, role: 'madera',
-    build(g, m) { B(g, 0.48, 0.06, 0.48, m, 0, 0.46, 0); legs(g, 0.48, 0.48, 0.44, m, 0.04); B(g, 0.48, 0.42, 0.05, m, 0, 0.72, -0.22); } },
+    build(g, m) { for (const sx of [-1, 1]) for (const sz of [-1, 1]) C(g, 0.024, 0.018, 0.44, m, sx * 0.2, 0.22, sz * 0.2, 12);
+      for (const sz of [-1, 1]) B(g, 0.38, 0.025, 0.025, m, 0, 0.14, sz * 0.2);
+      B(g, 0.48, 0.05, 0.48, m, 0, 0.465, 0); SB(g, 0.42, 0.05, 0.42, M(LINEN), 0, 0.5, 0.02);
+      for (const sx of [-1, 1]) B(g, 0.04, 0.5, 0.04, m, sx * 0.2, 0.74, -0.21);
+      B(g, 0.44, 0.1, 0.03, m, 0, 0.94, -0.21); for (const x of [-0.1, 0, 0.1]) B(g, 0.03, 0.34, 0.02, m, x, 0.72, -0.21); } },
   mesa: { name: 'Mesa baja', tab: 'muebles', tags: 'salon', w: 1, d: 1, price: 120, comfort: 1, style: 3, role: 'madera',
-    build(g, m) { C(g, 0.42, 0.42, 0.05, m, 0, 0.42, 0, 28); C(g, 0.05, 0.05, 0.4, M(DARK), 0, 0.2, 0, 10); C(g, 0.22, 0.24, 0.03, M(DARK), 0, 0.015, 0, 20);
-      C(g, 0.08, 0.07, 0.1, M(WHITE), 0.12, 0.5, 0.05, 12); } },
+    build(g, m) { C(g, 0.42, 0.42, 0.045, m, 0, 0.43, 0, 48); add(g, new THREE.TorusGeometry(0.42, 0.022, 8, 56), m, 0, 0.43, 0).rotation.x = PI / 2;
+      for (let i = 0; i < 3; i++) { const a = i * 2 * PI / 3, l = C(g, 0.025, 0.018, 0.44, M(DARK), Math.cos(a) * 0.25, 0.21, Math.sin(a) * 0.25, 12); l.rotation.set(-Math.sin(a) * 0.2, 0, Math.cos(a) * 0.2); }
+      C(g, 0.3, 0.3, 0.02, m, 0, 0.16, 0, 40); B(g, 0.22, 0.04, 0.16, M(0x5B7FA6), -0.05, 0.19, 0.02); B(g, 0.2, 0.035, 0.15, M(0xE0B04A), -0.04, 0.228, 0.01).rotation.y = 0.3;
+      C(g, 0.045, 0.04, 0.08, M(WHITE), 0.14, 0.49, 0.06, 18); C(g, 0.04, 0.04, 0.004, M(0x6B4630), 0.14, 0.531, 0.06, 18);
+      add(g, new THREE.TorusGeometry(0.022, 0.007, 6, 14), M(WHITE), 0.19, 0.49, 0.06); C(g, 0.1, 0.1, 0.012, M(WHITE), -0.12, 0.458, -0.1, 24);
+      for (const [x, z, c] of [[-0.14, -0.08, 0xF39A2B], [-0.1, -0.12, 0xE5533D], [-0.09, -0.07, 0x7DBF6E]]) S(g, 0.035, M(c), x, 0.495, z); } },
   estanteria: { name: 'Estantería', tab: 'muebles', tags: 'salon musica', w: 2, d: 1, price: 280, comfort: 0, style: 7, role: 'madera',
     build(g, m) { for (const s of [-1, 1]) B(g, 0.06, 1.8, 0.4, m, s * 0.9, 0.9, -0.28); B(g, 1.86, 1.8, 0.03, m, 0, 0.9, -0.47);
       const books = [0xFF7A59, 0x5B7FA6, 0xE0B04A, 0x7FA87A, 0xB99BD0, 0xF6F1EA]; let k = 0;
@@ -602,8 +649,14 @@ const CAT = {
           B(g, bw, bh, 0.28, M(books[k % books.length]), x + bw / 2, y + 0.025 + bh / 2, -0.28); x += bw + 0.01; k++; }
         S(g, 0.1, M(LEAF), 0.7, y + 0.15, -0.28); } } },
   tv: { name: 'Mueble TV', tab: 'muebles', tags: 'salon', w: 2, d: 1, price: 520, comfort: 5, style: 3, role: 'madera',
-    build(g, m) { B(g, 1.7, 0.4, 0.45, m, 0, 0.32, -0.2); legs(g, 1.7, 0.45, 0.13, M(DARK), 0.12, -0.2); B(g, 1.3, 0.76, 0.05, M(0x1C1828), 0, 0.88, -0.32);
-      B(g, 1.22, 0.68, 0.01, G(0x2B3D63), 0, 0.88, -0.29); } },
+    build(g, m) { legs(g, 1.7, 0.45, 0.13, M(WOOD), 0.12, -0.2);
+      B(g, 1.7, 0.4, 0.45, m, 0, 0.33, -0.2); B(g, 1.74, 0.035, 0.48, m, 0, 0.545, -0.2);
+      BX(g, 0.76, 0.3, 0.02, M(0x2A2333), 0, 0.33, 0.021); B(g, 0.3, 0.08, 0.2, M(0x3B3448), -0.15, 0.23, -0.06); B(g, 0.2, 0.12, 0.16, m, 0.2, 0.25, -0.07);
+      for (const x of [-0.62, 0.62]) { B(g, 0.4, 0.3, 0.02, m, x, 0.33, 0.035); S(g, 0.02, M(GOLD), x - Math.sign(x) * 0.15, 0.33, 0.055); }
+      B(g, 0.42, 0.02, 0.2, M(DARK), 0, 0.572, -0.3); C(g, 0.03, 0.03, 0.12, M(DARK), 0, 0.64, -0.32, 10);
+      B(g, 1.32, 0.78, 0.045, M(0x15121E), 0, 1.08, -0.33); B(g, 1.25, 0.71, 0.01, G(0x2B3D63), 0, 1.08, -0.305);
+      B(g, 0.7, 0.06, 0.09, M(DARK), 0, 0.592, -0.08);
+      C(g, 0.06, 0.05, 0.1, M(WHITE), 0.72, 0.613, -0.27, 18); for (let i = 0; i < 4; i++) leafBlob(g, 0.72 + Math.cos(i * 1.6) * 0.06, 0.7 + (i % 2) * 0.04, -0.27 + Math.sin(i * 1.6) * 0.06, 0.45, -i * 1.6, 0.5); } },
   chimenea: { name: 'Chimenea', tab: 'muebles', tags: 'salon', w: 2, d: 1, price: 900, comfort: 8, style: 8, light: { y: 0.45, z: 0.3, color: 0xFF9A4A, power: 1.6 }, role: 'piedra',
     build(g, m) { B(g, 1.7, 1.1, 0.5, m, 0, 0.55, -0.22); B(g, 0.9, 0.62, 0.1, M(0x2A2333), 0, 0.4, 0.03);
       B(g, 1.9, 0.08, 0.6, M(WOOD), 0, 1.14, -0.2); for (const x of [-0.2, 0.15]) C(g, 0.05, 0.05, 0.5, M(0x6B4630), x, 0.16, 0.0, 10).rotation.z = PI / 2 + x;
@@ -642,8 +695,14 @@ const CAT = {
       B(g, 0.35, 0.03, 0.25, M(WOOD), -0.15, 0.925, -0.12); const bowl = S(g, 0.13, M(WHITE), 0.22, 0.95, -0.2); bowl.scale.set(1, 0.45, 1);
       S(g, 0.05, M(0xF39A2B), 0.2, 1.0, -0.2); S(g, 0.05, M(0xE5533D), 0.27, 1.0, -0.16); S(g, 0.045, M(LEAF2), 0.17, 1.0, -0.14); } },
   mesaComedor: { name: 'Mesa de comedor', tab: 'cocina', tags: 'cocina salon', w: 2, d: 1, price: 420, comfort: 3, style: 5, role: 'madera',
-    build(g, m) { B(g, 1.7, 0.06, 0.85, m, 0, 0.76, 0); legs(g, 1.7, 0.85, 0.73, m, 0.1); B(g, 1.0, 0.01, 0.3, M(0xF2C4CE), 0, 0.795, 0);
-      C(g, 0.06, 0.05, 0.18, M(0x9FD4C4), 0, 0.88, 0, 12); for (const [x, c] of [[-0.05, 0xFF7A59], [0.05, 0xE0B04A], [0, 0xF2A99A]]) S(g, 0.05, M(c), x, 1.02, 0); } },
+    build(g, m) { B(g, 1.74, 0.06, 0.88, m, 0, 0.76, 0); B(g, 1.56, 0.1, 0.72, m, 0, 0.68, 0);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) C(g, 0.04, 0.028, 0.66, m, sx * 0.76, 0.33, sz * 0.34, 12);
+      B(g, 1.2, 0.008, 0.3, M(0xE8D9C0), 0, 0.794, 0);
+      for (const x of [-0.55, 0.55]) { C(g, 0.13, 0.12, 0.014, M(WHITE), x, 0.797, 0.05, 28); C(g, 0.09, 0.09, 0.016, M(WHITE), x, 0.806, 0.05, 24); }
+      C(g, 0.06, 0.045, 0.18, M(0x9FD4C4), 0, 0.88, 0, 20);
+      for (let i = 0; i < 6; i++) { const a = i * 1.1, x = Math.cos(a) * 0.05, z = Math.sin(a) * 0.05, y = 1.02 + (i % 3) * 0.035;
+        C(g, 0.004, 0.004, 0.16, M(0x4E8A4A), x * 0.5, 0.96, z * 0.5, 4); S(g, 0.035, M([0xFF7A59, 0xE0B04A, 0xF2A99A, 0xFFFFFF, 0xC9B5E8, 0xFF7A59][i]), x, y, z); }
+      leafBlob(g, 0.07, 0.98, 0.02, 0.35, 0.3, 0.6); leafBlob(g, -0.07, 0.97, -0.02, 0.35, 3.4, 0.6); } },
   taburete: { name: 'Taburete', tab: 'cocina', tags: 'cocina', w: 1, d: 1, price: 70, comfort: 1, style: 2, role: 'acento',
     build(g, m) { SB(g, 0.42, 0.08, 0.42, m, 0, 0.66, 0); C(g, 0.03, 0.03, 0.62, M(METAL), 0, 0.32, 0, 10); C(g, 0.2, 0.2, 0.025, M(METAL), 0, 0.015, 0, 20);
       const r = add(g, new THREE.TorusGeometry(0.14, 0.012, 6, 20), M(METAL), 0, 0.28, 0); r.rotation.x = PI / 2; } },
@@ -668,8 +727,10 @@ const CAT = {
       B(g, 0.08, 0.02, 0.04, M(METAL), 0.12, 0.85, -0.3); } },
   // deco
   planta: { name: 'Planta', tab: 'deco', tags: 'dorm salon bano cocina', w: 1, d: 1, price: 60, comfort: 1, style: 5, role: 'maceta',
-    build(g, m) { C(g, 0.2, 0.15, 0.36, m, 0, 0.18, 0); C(g, 0.18, 0.18, 0.02, M(0x5A4032), 0, 0.35, 0);
-      S(g, 0.24, M(LEAF), 0, 0.62, 0); S(g, 0.18, M(LEAF2), 0.14, 0.82, 0.05); S(g, 0.17, M(LEAF), -0.12, 0.88, -0.06); S(g, 0.13, M(LEAF2), 0.02, 1.02, 0.02); } },
+    build(g, m) { C(g, 0.2, 0.15, 0.34, m, 0, 0.17, 0); add(g, new THREE.TorusGeometry(0.2, 0.024, 8, 36), m, 0, 0.34, 0).rotation.x = PI / 2; C(g, 0.185, 0.185, 0.02, M(0x5A4032), 0, 0.33, 0);
+      S(g, 0.1, M(0x4E8A4A), 0, 0.42, 0).scale.set(1, 0.9, 1);
+      for (let i = 0; i < 22; i++) { const a = i * 2.4, t = i / 22, r = 0.08 + t * 0.16, h = 0.46 + (1 - t) * 0.42 + (i % 3) * 0.035;
+        const l = S(g, 0.13, M(i % 2 ? LEAF : LEAF2), Math.cos(a) * r, h, Math.sin(a) * r); l.scale.set(1, 0.17, 0.52); l.rotation.set(0, -a, 0.15 - t * 0.75); } } },
   monstera: { name: 'Planta alta', tab: 'deco', tags: 'salon musica', w: 1, d: 1, price: 140, comfort: 1, style: 7, role: 'maceta',
     build(g, m) { C(g, 0.24, 0.18, 0.42, m, 0, 0.21, 0); C(g, 0.22, 0.22, 0.02, M(0x5A4032), 0, 0.41, 0);
       for (let i = 0; i < 7; i++) { const a = i * 2.4, h = 0.75 + (i % 3) * 0.28, r = 0.18 + (i % 2) * 0.08;
@@ -681,13 +742,23 @@ const CAT = {
       C(g, 0.05, 0.05, 0.16, c, 0.13, 0.5, 0, 10); S(g, 0.05, c, 0.13, 0.58, 0); C(g, 0.05, 0.05, 0.06, c, 0.09, 0.42, 0, 10).rotation.z = PI / 2;
       S(g, 0.035, M(0xFF7A9A), 0, 0.78, 0); } },
   lampara: { name: 'Lámpara de pie', tab: 'deco', tags: 'dorm salon bebe musica', w: 1, d: 1, price: 110, comfort: 3, style: 4, glow: true, light: { y: 1.3, color: 0xFFD9A0, power: 1.2 }, role: 'luz',
-    build(g, m) { C(g, 0.18, 0.2, 0.05, M(DARK), 0, 0.025, 0); C(g, 0.025, 0.025, 1.3, M(DARK), 0, 0.68, 0, 8); C(g, 0.16, 0.28, 0.34, m, 0, 1.42, 0, 20); } },
+    build(g, m) { const dk = M(DARK); C(g, 0.17, 0.2, 0.04, dk, 0, 0.02, 0, 36); C(g, 0.06, 0.08, 0.05, dk, 0, 0.065, 0, 20);
+      C(g, 0.016, 0.016, 1.2, M(GOLD), 0, 0.69, 0, 10); S(g, 0.028, M(GOLD), 0, 0.72, 0);
+      m.side = THREE.DoubleSide; add(g, new THREE.CylinderGeometry(0.17, 0.27, 0.36, 40, 1, true), m, 0, 1.43, 0);
+      for (const [y, r] of [[1.25, 0.27], [1.61, 0.17]]) add(g, new THREE.TorusGeometry(r, 0.009, 6, 48), M(GOLD), 0, y, 0).rotation.x = PI / 2;
+      S(g, 0.055, G(0xFFF4D6), 0, 1.36, 0); C(g, 0.01, 0.01, 0.06, M(GOLD), 0, 1.3, 0, 6); } },
   alfombra: { name: 'Alfombra', tab: 'deco', tags: 'salon dorm', w: 2, d: 2, price: 150, comfort: 3, style: 5, flat: true, role: 'tela',
-    build(g, m) { for (const [s, h, c] of [[1.9, 0.02, m], [1.5, 0.022, M(LINEN)], [1.1, 0.024, m]]) { const a = B(g, s, h, s, c, 0, 0.012, 0); a.castShadow = false; } } },
+    build(g, m) { B(g, 1.86, 0.02, 1.7, m, 0, 0.012, 0); B(g, 1.56, 0.022, 1.4, M(LINEN), 0, 0.013, 0); B(g, 1.3, 0.024, 1.14, m, 0, 0.014, 0);
+      B(g, 0.52, 0.026, 0.52, M(LINEN), 0, 0.015, 0).rotation.y = PI / 4; B(g, 0.26, 0.028, 0.26, m, 0, 0.016, 0).rotation.y = PI / 4;
+      for (const sz of [-1, 1]) for (let i = 0; i < 17; i++) BX(g, 0.022, 0.008, 0.1, M(LINEN), -0.86 + i * 0.1075, 0.006, sz * 0.9);
+      g.traverse(o => { if (o.isMesh) o.castShadow = false; }); } },
   alfombraRedonda: { name: 'Alfombra redonda', tab: 'deco', tags: 'bebe bano musica', w: 2, d: 2, price: 160, comfort: 3, style: 5, flat: true, role: 'tela',
-    build(g, m) { for (const [r, h, c] of [[0.92, 0.02, m], [0.68, 0.022, M(LINEN)], [0.4, 0.024, m]]) C(g, r, r, h, c, 0, 0.012, 0, 40).castShadow = false; } },
+    build(g, m) { for (const [r, h, c] of [[0.9, 0.02, m], [0.7, 0.022, M(LINEN)], [0.5, 0.024, m], [0.3, 0.026, M(LINEN)]]) C(g, r, r, h, c, 0, 0.012, 0, 56);
+      for (let i = 0; i < 30; i++) { const a = i / 30 * PI * 2; S(g, 0.035, M(LINEN), Math.cos(a) * 0.92, 0.015, Math.sin(a) * 0.92).scale.set(1, 0.45, 1); }
+      g.traverse(o => { if (o.isMesh) o.castShadow = false; }); } },
   puff: { name: 'Puf', tab: 'deco', tags: 'dorm bebe salon', w: 1, d: 1, price: 70, comfort: 3, style: 3, role: 'tela',
-    build(g, m) { S(g, 0.32, m, 0, 0.2, 0).scale.set(1, 0.62, 1); S(g, 0.05, M(LINEN), 0, 0.4, 0).scale.set(1, 0.4, 1); } },
+    build(g, m) { S(g, 0.32, m, 0, 0.21, 0).scale.set(1, 0.62, 1); add(g, new THREE.TorusGeometry(0.318, 0.016, 8, 48), m, 0, 0.2, 0).rotation.x = PI / 2;
+      add(g, new THREE.TorusGeometry(0.11, 0.012, 8, 32), m, 0, 0.385, 0).rotation.x = PI / 2; S(g, 0.035, m, 0, 0.395, 0).scale.set(1, 0.55, 1); } },
   guitarra: { name: 'Guitarra', tab: 'deco', tags: 'musica dorm', w: 1, d: 1, price: 240, comfort: 0, style: 7, role: 'acento',
     build(g, m) { for (const a of [0, 2.1, 4.2]) { const l = C(g, 0.012, 0.012, 0.5, M(DARK), Math.cos(a) * 0.12, 0.22, Math.sin(a) * 0.12 - 0.05, 6); l.rotation.set(Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4); }
       const gg = new THREE.Group(); gg.position.set(0, 0, 0); gg.rotation.x = -0.22; g.add(gg);
@@ -794,7 +865,8 @@ Object.assign(CAT, {
   esterilla: { name: 'Esterilla de yoga', tab: 'deco', tags: 'yoga', w: 1, d: 2, price: 45, comfort: 3, style: 3, flat: true, role: 'acento',
     build(g, m) { const a = B(g, 0.7, 0.02, 1.6, m, 0, 0.012, 0.12); a.castShadow = false; const r = C(g, 0.08, 0.08, 0.7, m, 0, 0.08, -0.78, 18); r.rotation.z = PI / 2; } },
   cojinSuelo: { name: 'Cojín de suelo', tab: 'deco', tags: 'yoga dorm bebe gamer', w: 1, d: 1, price: 55, comfort: 3, style: 3, role: 'tela',
-    build(g, m) { SB(g, 0.72, 0.2, 0.72, m, 0, 0.1, 0); S(g, 0.035, M(LINEN), 0, 0.2, 0).scale.set(1, 0.5, 1); SB(g, 0.42, 0.12, 0.42, M(LINEN), 0.1, 0.26, 0.08).rotation.y = 0.5; } },
+    build(g, m) { SB(g, 0.72, 0.2, 0.72, m, 0, 0.1, 0); for (const [x, z] of [[0, 0], [0.18, 0.18], [-0.18, 0.18], [0.18, -0.18], [-0.18, -0.18]]) S(g, 0.022, M(LINEN), x, 0.198, z).scale.set(1, 0.5, 1);
+      SB(g, 0.42, 0.12, 0.42, M(LINEN), 0.1, 0.26, 0.08).rotation.y = 0.5; } },
   perchero: { name: 'Perchero', tab: 'deco', tags: 'recibidor dorm', w: 1, d: 1, price: 90, comfort: 0, style: 4, role: 'madera',
     build(g, m) { C(g, 0.22, 0.25, 0.04, m, 0, 0.02, 0, 22); C(g, 0.03, 0.035, 1.8, m, 0, 0.92, 0, 10); S(g, 0.05, m, 0, 1.84, 0);
       for (let i = 0; i < 4; i++) { const a = i * PI / 2 + 0.4; const h = C(g, 0.015, 0.015, 0.2, m, Math.cos(a) * 0.08, 1.72, Math.sin(a) * 0.08, 6); h.rotation.set(Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9); }
@@ -1133,7 +1205,7 @@ function placeMesh(it, lift = 0) {
 function buildItem(it) {
   if (it.group && it.group.parent) it.group.parent.remove(it.group);
   const D = def(it), hex = itemHex(it);
-  const m = D.glow ? G(hex) : std({ color: hex });
+  const m = roleMat(D, hex);
   const g = new THREE.Group(); D.build(g, m);
   if (!D.wall && !D.flat) {
     const blob = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), blobMat); blob.rotation.x = -PI / 2; blob.scale.set(D.w * 1.25, D.d * 1.25, 1); blob.position.y = 0.028; blob.renderOrder = 1; g.add(blob);
@@ -1259,7 +1331,7 @@ const thumbs = {};
     const dl = new THREE.DirectionalLight(0xFFFFFF, 0.6); dl.position.set(3, 6, 4); ts.add(dl);
     const tc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50);
     for (const [k, D] of Object.entries(CAT)) {
-      const g = new THREE.Group(); D.build(g, D.glow ? G(D.colors[0]) : std({ color: D.colors[0] }));
+      const g = new THREE.Group(); D.build(g, roleMat(D, D.colors[0]));
       ts.add(g);
       const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
       const r = Math.max(sz.x, sz.y, sz.z) * 0.68;
