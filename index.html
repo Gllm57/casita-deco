@@ -203,6 +203,26 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 /* photo mode hides every control */
 .app.in-menu .hud, .app.in-menu .sheet, .app.in-menu .cam, .app.in-menu .histbar, .app.in-menu .tools, .app.in-menu .sel-name { opacity: 0 !important; pointer-events: none !important; }
 .app.photo .hud, .app.photo .sheet, .app.photo .cam, .app.photo .histbar, .app.photo .tools, .app.photo .sel-name, .app.photo .palette { opacity: 0 !important; pointer-events: none !important; }
+.viewpop { position: absolute; z-index: 30; width: 230px; border-radius: 22px; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+.viewpop[hidden] { display: none; }
+.viewpop button { border: 0; background: transparent; border-radius: 16px; padding: 9px 10px; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; color: inherit; }
+.viewpop button:active { background: rgba(124,113,148,.16); }
+.viewpop button.on { background: var(--ink); color: #fff; }
+.viewpop svg { width: 24px; height: 24px; flex: none; }
+.viewpop b { display: block; font: 800 15px var(--display); }
+.viewpop small { display: block; font: 700 11.5px var(--body); opacity: .7; }
+.top-exit { display: none !important; }
+.app.topview .top-exit { display: block !important; }
+.walkui { position: absolute; inset: 0; pointer-events: none; display: none; }
+.app.walk .walkui { display: block; }
+.app.walk .walkui > * { pointer-events: auto; }
+.app.walk .walkui .photo-exit { display: block; }
+.app.walk .hud, .app.walk .sheet, .app.walk .cam, .app.walk .histbar, .app.walk .tools, .app.walk .toolpill, .app.walk .dpad, .app.walk .palette { opacity: 0 !important; pointer-events: none !important; }
+.joy { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); width: 128px; height: 128px; border-radius: 50%; touch-action: none; }
+.joy i { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: var(--ink); opacity: .85; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+.walk-hint { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); border-radius: 999px; padding: 8px 14px; font: 800 12px var(--body); white-space: nowrap; pointer-events: none !important; }
+.app.walk .walkui .photo-exit { top: auto; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+.share-img { width: 100%; border-radius: 14px; margin: 6px 0 12px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .photo-exit { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); border: 0; border-radius: 999px; padding: 9px 14px; font: 800 13px var(--body); cursor: pointer; display: none; }
 .app.photo .photo-exit { display: block; }
 
@@ -250,6 +270,11 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .mode.wide .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .mode .mi.retos { background: linear-gradient(135deg, #F2B33D, #E0803A); }
 .retos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+.lv.proj { display: flex; align-items: stretch; padding: 0; gap: 0; }
+.lv.proj .pmain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; border: 0; background: transparent; padding: inherit; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.pacts { display: flex; align-items: center; gap: 4px; padding-right: 8px; }
+.pact { width: 36px; height: 36px; border: 0; border-radius: 12px; background: rgba(124,113,148,.12); display: grid; place-items: center; cursor: pointer; color: inherit; }
+.pact svg { width: 17px; height: 17px; }
 .rare-item { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 14px; background: rgba(124,113,148,.1); font: 800 12px var(--body); }
 .rare-item img { width: 44px; height: 40px; object-fit: contain; border-radius: 10px; background: var(--thumb); }
 .rare-item.locked img { filter: grayscale(1); opacity: .5; }
@@ -414,7 +439,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
           <button id="roofViewBtn" class="build-only" title="Ver la casa con los techos puestos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-7 9 7"/><path d="M6 10v9h12v-9"/></svg><span>Techos</span></button>
           <button id="wallModeBtn" class="build-only" title="Altura de las paredes"></button>
           <button id="lockAllBtn" title="Fijar los objetos: solo se mueve la cámara"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg><span>Mover</span></button>
-          <button id="photoBtn" title="Modo foto: oculta los botones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Foto</span></button>
+          <button id="photoBtn" title="Foto, compartir, paseo y plano" aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Ver</span></button>
         </div>
       </div>
     </div>
@@ -468,6 +493,14 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <div class="strip" id="strip"></div>
   </div>
 
+  <div class="viewpop glass" id="viewPop" hidden>
+    <button data-v="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span><b>Foto</b><small>Oculta los botones</small></span></button>
+    <button data-v="share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span><b>Compartir</b><small>Imagen con marco</small></span></button>
+    <button data-v="walk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M9 21l3-6 3 3v3M7 12l3-4 4 1 2 4M12 15l-1-6"/></svg><span><b>Paseo</b><small>Recorre la casa por dentro</small></span></button>
+    <button data-v="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h10v9M13 3v5"/></svg><span><b>Plano</b><small>Vista desde arriba</small></span></button>
+  </div>
+  <button class="photo-exit glass top-exit" id="topExit">Salir del plano</button>
+  <div class="walkui" id="walkUI"><div class="joy glass" id="joy"><i id="joyKnob"></i></div><div class="walk-hint glass">Joystick para andar · arrastra para mirar</div><button class="photo-exit glass" id="walkExit">Salir del paseo</button></div>
   <button class="photo-exit glass" id="photoExit">Salir del modo foto · o toca la pantalla</button>
 
   <div class="menu" id="menu">
@@ -513,9 +546,10 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></span><p><b>Mover la vista</b>Arrastra con un dedo para girar. Con dos dedos: pellizca para acercar, arrastra para desplazarte y gira los dedos para rotar. Abajo a la derecha: girar de 90 en 90 y centrar.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg></span><p><b>Añadir y colocar</b>Elige un objeto del catálogo (o búscalo con la lupa) y toca en la sala dónde lo quieres. Para moverlo, tócalo para elegirlo y arrástralo: así no se mueve nada sin querer. Las flechas curvas de arriba lo inclinan de 15 en 15 grados. Si se pone rojo, ahí no cabe. Con el candado lo bloqueas, y las flechas que salen a la derecha lo mueven casilla a casilla. El botón Mover/Fijado de la derecha fija todos los objetos para que solo se mueva la cámara. Lo de la pestaña Encima va sobre mesas, encimeras, islas y cómodas, y viaja con ellas.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/></svg></span><p><b>Editar</b>Con un objeto seleccionado puedes girarlo, cambiarle el color, copiarlo o quitarlo. Deshacer y Rehacer están abajo a la izquierda.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><p><b>Ver y usar</b>Toca otra vez algo elegido para usarlo: enciende lámparas, abre puertas y corre cortinas. El botón de la luz cambia entre día, tarde, noche y ciclo automático. En Ver tienes foto, compartir, paseo en primera persona y plano desde arriba.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4 6.8 19.2l1-5.9L3.5 9.2l5.9-.8z"/></svg></span><p><b>Encargos y estrellas</b>Cumple la lista del cliente y pulsa Entregar. Más estilo y comodidad dan más estrellas, que abren encargos, salas de Mi casa y suben tu rango.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8-16 8 16z"/><path d="M8 13h8"/></svg></span><p><b>Ganar estilo</b>Variedad de objetos, cosas propias de la sala, tres o más de la misma colección y pared y suelo que combinan.</p></div>
-        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/></svg></span><p><b>Constructor</b>En Obra: Habitación, Pared, Puerta y Ventana. Cada cara de una pared se pinta por separado. Cambia de piso con 1º y PB y sube con la escalera. Pon tejados desde Obra y míralos con el botón Techos. Con una herramienta activa, gira con dos dedos.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/></svg></span><p><b>Constructor</b>En Obra: habitación, pared, media pared, copiar y pegar zonas, escaleras y tejados. Puertas y ventanas están en su pestaña y abren un hueco de verdad. Cada cara de una pared se pinta por separado (también con papel pintado, azulejo o ladrillo). Hay tres pisos: cámbialos con PB, 1º y 2º. Fuera, pon césped y decora el jardín. Puedes tener varios proyectos y enviarlos con Ver · Compartir.</p></div>
       </div>
     </div>
   </div>
@@ -544,6 +578,19 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="lvgrid" id="retosList"></div>
       <h3 class="sec">Objetos raros</h3>
       <div class="retos-grid" id="rareList"></div>
+    </div>
+  </div>
+  <div class="overlay" id="shareOv" hidden>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Compartir</h2><p class="sub" id="shareSub">Guárdala o mándala a quien quieras.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <img class="share-img" id="shareImg" alt="Foto de tu casa">
+      <div class="btn-row"><button class="btn primary" id="shareSave">Compartir imagen</button><button class="btn" id="shareLink">Enviar la casa</button></div>
+    </div>
+  </div>
+  <div class="overlay" id="importOv" hidden>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Te han enviado una casa</h2><p class="sub" id="importSub">Se guardará como un proyecto nuevo del Constructor. Lo tuyo no se toca.</p></div></div>
+      <div class="btn-row"><button class="btn" id="importNo">No, gracias</button><button class="btn primary" id="importGo">Abrirla</button></div>
     </div>
   </div>
   <div class="overlay" id="settingsOv" hidden>
@@ -1851,6 +1898,7 @@ const BUILD_DEF = { id: 'build', build: true, home: true, room: 'Mi proyecto', k
 const ALL = [...LEVELS, ...HOMES, ...RETOS, BUILD_DEF];
 const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, key: L.key, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
 const rooms = {}; for (const L of ALL) rooms[L.id] = L.build ? { cur: 0, best: 0, levels: exampleHouse() } : freshRoom(L);
+let projects = [], projCur = 0;
 const settings = { quality: 'alta', cat: '1', luna: '1', visita: '1', vibrate: '1', sound: '1', music: '0' };
 
 // saved game lives in this browser only (v1 = earlier versions of the game)
@@ -1864,6 +1912,13 @@ if (saved && saved.rooms) for (const L of ALL) {
   rooms[L.id] = { wall: r.wall || L.wall, floor: r.floor || L.floor, best: r.best || 0, op: r.op, key: r.key, items: (r.items || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length })) };
 }
 if (saved && saved.settings) Object.assign(settings, saved.settings);
+// projects: every house kept in the Constructor; the open one lives in rooms.build
+const plainLevels = levels => levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) }));
+if (saved && saved.projects && saved.projects.length) { projects = saved.projects; projCur = Math.min(saved.projCur || 0, projects.length - 1); }
+else projects = [{ name: 'Mi proyecto', levels: plainLevels(rooms.build.levels) }];
+projects.forEach(pr => { pr.levels = fillLevels(migrateOpenings(pr.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))); });
+rooms.build = { cur: 0, best: 0, levels: JSON.parse(JSON.stringify(projects[projCur].levels)) };
+BUILD_DEF.room = projects[projCur].name;
 const totalStars = () => LEVELS.reduce((a, l) => a + rooms[l.id].best, 0);
 const points = () => totalStars() + (settings.trofeos || 0); // stars from encargos plus trophies from challenges
 const rareLocked = D => !!D.rare && points() < D.rare;
@@ -1947,7 +2002,7 @@ function paintFloor(f, cv = floorCanvas) {
 
 /* ---------- room building ---------- */
 let L = LEVELS[0], R = rooms[L.id], GW = 8, GD = 8;
-let roomGroup = null, grid = null;
+let roomGroup = null, grid = null, walkCeil = null;
 const walls = {};
 const WALL_SPEC = {
   N: { s: 1, rot: 0, normal: new THREE.Vector3(0, 0, -1) }, S: { s: -1, rot: PI, normal: new THREE.Vector3(0, 0, 1) },
@@ -1990,6 +2045,7 @@ function buildRoom() {
   const plinth = new THREE.Mesh(roundBox(GW + 1.1, 0.25, GD + 1.1, 0.12), M(0x73689A)); plinth.position.y = -0.55; roomGroup.add(plinth);
   for (const k of ['N', 'S', 'W', 'E']) makeWall(k);
   grid = makeGrid(); roomGroup.add(grid);
+  walkCeil = new THREE.Mesh(new THREE.PlaneGeometry(GW + 0.3, GD + 0.3), M(0xF6F1EA)); walkCeil.rotation.x = PI / 2; walkCeil.position.y = WALL_H; walkCeil.visible = false; roomGroup.add(walkCeil);
   const m = Math.max(GW, GD) * 0.85;
   Object.assign(sun.shadow.camera, { left: -m, right: m, top: m, bottom: -m, near: 1, far: 40 }); sun.shadow.camera.updateProjectionMatrix();
 }
@@ -2491,7 +2547,7 @@ function resetPet(c) {
   c.x = c.tx = p[0]; c.z = c.tz = p[1]; c.wait = 1;
 }
 function updatePet(c, dt) {
-  c.g.visible = settings[c.key] === '1' && !state.walk; if (!c.g.visible) return;
+  c.g.visible = settings[c.key] === '1'; if (!c.g.visible) return;
   c.t += dt;
   if (cellBlocked(c.x, c.z)) resetPet(c);
   const dx = c.tx - c.x, dz = c.tz - c.z, dist = Math.hypot(dx, dz);
@@ -2592,7 +2648,115 @@ function renderLockAll() {
   $('lockAllBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${on ? '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' : '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/>'}</svg><span>${on ? 'Fijado' : 'Mover'}</span>`;
 }
 $('lockAllBtn').addEventListener('click', () => { state.lockAll = !state.lockAll; if (state.lockAll) select(null); settings.lockAll = state.lockAll ? 1 : 0; save(); renderLockAll(); buzz(); });
-$('photoBtn').addEventListener('click', () => { select(null); app.classList.add('photo'); });
+$('photoBtn').addEventListener('click', e => {
+  e.stopPropagation(); const pop = $('viewPop'); if (!pop.hidden) return closeViewPop();
+  const r = $('photoBtn').getBoundingClientRect(), a = app.getBoundingClientRect();
+  pop.style.right = (a.right - r.left + 8) + 'px'; pop.style.top = Math.min(r.top - a.top - 60, a.height - 300) + 'px';
+  pop.querySelector('[data-v="top"]').classList.toggle('on', !!state.top); pop.hidden = false; buzz(6);
+});
+function closeViewPop() { $('viewPop').hidden = true; }
+let shareBlob = null;
+function sharePhoto() {
+  renderer.render(scene, camera); // read the picture straight after drawing it
+  const src = renderer.domElement, pad = Math.round(Math.min(src.width, src.height) * 0.05), foot = pad * 2.6, c = document.createElement('canvas');
+  c.width = src.width + pad * 2; c.height = src.height + pad + foot; const x = c.getContext('2d');
+  const bg = x.createLinearGradient(0, 0, 0, c.height); bg.addColorStop(0, '#FFF8F1'); bg.addColorStop(1, '#F3E9F7'); x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height);
+  const sky = x.createLinearGradient(0, pad, 0, pad + src.height); sky.addColorStop(0, state.night ? '#433C7A' : '#F6D9C9'); sky.addColorStop(1, state.night ? '#161331' : '#B7A6DC');
+  x.fillStyle = sky; x.fillRect(pad, pad, src.width, src.height); x.drawImage(src, pad, pad);
+  x.fillStyle = '#2B2140'; x.font = `800 ${Math.round(foot * 0.34)}px Baloo 2, system-ui, sans-serif`; x.textBaseline = 'middle';
+  x.fillText(BM ? (projects[projCur] || {}).name || 'Mi proyecto' : L.room, pad, pad + src.height + foot * 0.4);
+  x.fillStyle = '#8A7FA6'; x.font = `700 ${Math.round(foot * 0.2)}px Nunito, system-ui, sans-serif`; x.fillText('Hecho con Casita Deco · ' + new Date().toLocaleDateString('es-ES'), pad, pad + src.height + foot * 0.72);
+  x.fillStyle = '#FF7A59'; x.beginPath(); const hx = c.width - pad - foot * 0.5, hy = pad + src.height + foot * 0.5, hs = foot * 0.28; x.moveTo(hx, hy - hs); x.lineTo(hx + hs, hy - hs * 0.1); x.lineTo(hx + hs * 0.7, hy + hs); x.lineTo(hx - hs * 0.7, hy + hs); x.lineTo(hx - hs, hy - hs * 0.1); x.fill();
+  c.toBlob(b => { shareBlob = b; $('shareImg').src = URL.createObjectURL(b); }, 'image/png');
+  $('shareLink').hidden = !BM; $('shareSub').textContent = BM ? 'Manda la imagen, o la casa entera para que la abran en su Casita Deco.' : 'Guárdala o mándala a quien quieras.';
+  $('shareOv').hidden = false;
+}
+$('shareSave').addEventListener('click', async () => {
+  if (!shareBlob) return; const file = new File([shareBlob], 'casita-deco.png', { type: 'image/png' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Mi Casita Deco' }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(shareBlob); a.download = 'casita-deco.png'; a.click(); toast('Imagen guardada');
+});
+const b64u = { enc: u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), dec: s2 => Uint8Array.from(atob(s2.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)) };
+async function packHouse() {
+  const json = new TextEncoder().encode(JSON.stringify({ n: (projects[projCur] || {}).name, l: JSON.parse(houseJSON()).levels }));
+  if (window.CompressionStream) { const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer(); return 'z' + b64u.enc(new Uint8Array(buf)); }
+  return 'j' + b64u.enc(json);
+}
+async function unpackHouse(code) {
+  const bytes = b64u.dec(code.slice(1));
+  const raw = code[0] === 'z' ? new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()) : bytes;
+  return JSON.parse(new TextDecoder().decode(raw));
+}
+$('shareLink').addEventListener('click', async () => {
+  const url = location.origin + location.pathname + '#casa=' + await packHouse();
+  try { if (navigator.share) { await navigator.share({ title: 'Mira mi casa en Casita Deco', url }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(url); toast('Enlace copiado'); } catch (e) { prompt('Copia este enlace:', url); }
+});
+document.addEventListener('pointerdown', e => { if (!$('viewPop').hidden && !e.target.closest('#viewPop, #photoBtn')) closeViewPop(); }, true);
+$('viewPop').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]'); if (!b) return; closeViewPop(); select(null); sfx('click');
+  const v = b.dataset.v;
+  if (v === 'photo') app.classList.add('photo');
+  else if (v === 'share') sharePhoto();
+  else if (v === 'walk') startWalk();
+  else if (v === 'top') setTopView(!state.top);
+});
+// plan view: straight down, walls kept low, so the layout reads like a floor plan
+let topSaved = null;
+function setTopView(on) {
+  if (on === !!state.top) return; state.top = on; app.classList.toggle('topview', on);
+  if (on) { topSaved = { el: view.el, mode: wallMode }; view.elGoal = 1.53; if (BM) { wallMode = 'bajas'; renderWallMode(); } if (grid) grid.material.opacity = 0.35; }
+  else { view.elGoal = topSaved ? topSaved.el : 0.62; if (BM && topSaved) { wallMode = topSaved.mode; renderWallMode(); } if (grid) grid.material.opacity = tool ? 0.45 : 0; }
+}
+$('topExit').addEventListener('click', () => setTopView(false));
+// walking tour: a person's-eye camera, a joystick to walk and a drag to look around
+const walkCam = new THREE.PerspectiveCamera(70, 1, 0.05, 80), walk = { x: 0, z: 0, yaw: 0, pitch: -0.05, jx: 0, jy: 0, bob: 0 };
+function startWalk() {
+  setTopView(false); select(null); if (placing) startPlacing(null); if (tool) setTool(null);
+  walk.x = view.target.x; walk.z = view.target.z; walk.yaw = view.az + PI; walk.pitch = -0.05;
+  if (BM) { // start in the free spot of this floor's rooms that is closest to their middle
+    const cells = Object.keys(R.tiles).map(k => k.split(',').map(Number));
+    if (cells.length) { const mx = cells.reduce((a, c) => a + c[0], 0) / cells.length, mz = cells.reduce((a, c) => a + c[1], 0) / cells.length;
+      const best = cells.filter(([x, z]) => !walkBlocked(x + 0.5 - GW / 2, z + 0.5 - GD / 2)).sort((a, b) => Math.hypot(a[0] - mx, a[1] - mz) - Math.hypot(b[0] - mx, b[1] - mz))[0];
+      if (best) { walk.x = best[0] + 0.5 - GW / 2; walk.z = best[1] + 0.5 - GD / 2; } } }
+  state.walk = true; app.classList.add('walk'); setRoofView(false); showCeilings(true); resize();
+}
+function stopWalk() { state.walk = false; app.classList.remove('walk'); showCeilings(false); walk.jx = walk.jy = 0; $('joyKnob').style.transform = ''; resize(); }
+$('walkExit').addEventListener('click', stopWalk);
+function showCeilings(on) { // walking around you want a ceiling: the floor above and the roofs, or a plain ceiling in a single room
+  if (BM) levelGroups.forEach((lg, j) => { lg.root.visible = on ? j <= HOUSE.cur + 1 : j <= HOUSE.cur; lg.roof.visible = on && j === HOUSE.cur; });
+  if (walkCeil) walkCeil.visible = on && !BM;
+}
+function walkBlocked(x, z) {
+  if (Math.abs(x) > GW / 2 - 0.2 || Math.abs(z) > GD / 2 - 0.2) return true;
+  const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2), list = BM ? HOUSE.levels[HOUSE.cur].items : R.items;
+  return list.some(o => { const D = def(o); if (D.wall || D.flat || D.top || D.ceil || D.stairs) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; });
+}
+function wallBetween(x1, z1, x2, z2) { // walls (but not doorways) between two points on the current floor
+  if (!BM) return false;
+  const lv = HOUSE.levels[HOUSE.cur], doors = new Set(); for (const o of lv.items) if (def(o).opening === 'door') for (let n = 0; n < def(o).w; n++) doors.add(edgeShift(o.edge, n));
+  const a = [Math.floor(x1 + GW / 2), Math.floor(z1 + GD / 2)], b = [Math.floor(x2 + GW / 2), Math.floor(z2 + GD / 2)], blk = k => lv.walls[k] && !doors.has(k);
+  if (a[0] !== b[0] && blk(ekey('v', Math.max(a[0], b[0]), a[1]))) return true;
+  if (a[1] !== b[1] && blk(ekey('h', a[0], Math.max(a[1], b[1])))) return true;
+  return false;
+}
+function updateWalk(dt) {
+  const sp = 1.7 * dt, fx = Math.sin(walk.yaw), fz = Math.cos(walk.yaw), mx = (fx * -walk.jy - fz * walk.jx) * sp, mz = (fz * -walk.jy + fx * walk.jx) * sp;
+  // -jy is forward on the stick; slide along walls when going straight in is blocked
+  for (const [dx, dz] of [[mx, mz], [mx, 0], [0, mz]]) { const nx = walk.x + dx, nz = walk.z + dz; if ((dx || dz) && !walkBlocked(nx, nz) && !wallBetween(walk.x, walk.z, nx, nz)) { walk.x = nx; walk.z = nz; break; } }
+  const moving = Math.hypot(walk.jx, walk.jy) > 0.1; walk.bob += moving ? dt * 9 : 0;
+  const y = (BM ? HOUSE.cur * LEVEL_H : 0) + 1.55 + (moving ? Math.sin(walk.bob) * 0.025 : 0);
+  walkCam.position.set(walk.x, y, walk.z);
+  walkCam.lookAt(walk.x + Math.sin(walk.yaw) * Math.cos(walk.pitch), y + Math.sin(walk.pitch), walk.z + Math.cos(walk.yaw) * Math.cos(walk.pitch));
+}
+(() => { // joystick
+  const joy = $('joy'), knob = $('joyKnob'); let id = null;
+  const move = e => { const r = joy.getBoundingClientRect(), dx = e.clientX - r.left - r.width / 2, dy = e.clientY - r.top - r.height / 2, R0 = r.width / 2 - 14, d = Math.min(R0, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+    walk.jx = Math.cos(a) * d / R0; walk.jy = Math.sin(a) * d / R0; knob.style.transform = `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px)`; };
+  joy.addEventListener('pointerdown', e => { id = e.pointerId; joy.setPointerCapture(id); move(e); });
+  joy.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+  for (const ev of ['pointerup', 'pointercancel']) joy.addEventListener(ev, e => { if (e.pointerId !== id) return; id = null; walk.jx = walk.jy = 0; knob.style.transform = ''; });
+})();
 $('photoExit').addEventListener('click', () => app.classList.remove('photo'));
 canvas.addEventListener('click', () => { if (app.classList.contains('photo')) app.classList.remove('photo'); });
 const snapAz = dir => { const base = view.azGoal ?? view.az; view.azGoal = Math.round((base - PI / 4) / (PI / 2)) * (PI / 2) + PI / 4 + dir * PI / 2; };
@@ -2607,6 +2771,8 @@ const TOOLS = [
   { id: 'wall', name: 'Pared', hint: 'Arrastra de un punto a otro de la cuadrícula', svg: '<path d="M5 18L19 6"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/>' },
   { id: 'half', name: 'Media pared', hint: 'Arrastra: un murete a media altura, para barras y separaciones', svg: '<path d="M3 20h18"/><path d="M5 20v-7h14v7"/><path d="M5 13l3-3M10 13l3-3M15 13l3-3"/>' },
   { id: 'erase', name: 'Quitar pared', hint: 'Arrastra sobre las paredes que quieras quitar', svg: '<path d="M5 18L19 6"/><path d="M9 5l7 14" stroke="#D9433A"/>' },
+  { id: 'copy', name: 'Copiar zona', hint: 'Arrastra sobre lo que quieras copiar: suelo, paredes y objetos', svg: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>' },
+  { id: 'paste', name: 'Pegar zona', hint: 'Toca donde va la esquina de la copia · funciona en cualquier piso', svg: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 12h6M9 16h4"/>' },
   { id: 'floor', name: 'Poner suelo', hint: 'Arrastra para cubrir un área · el tipo se elige en Suelo', svg: '<path d="M3 14l9-5 9 5-9 5z"/><path d="M7 12l9 5M11 10l9 5"/>' },
   { id: 'roofTeja', roof: 'teja', name: 'Tejado de teja', hint: 'Arrastra sobre las habitaciones para taparlas', svg: '<path d="M3 12l9-7 9 7"/><path d="M6 10v9h12v-9"/>' },
   { id: 'roofPizarra', roof: 'pizarra', name: 'Tejado de pizarra', hint: 'Arrastra sobre las habitaciones para taparlas', svg: '<path d="M3 12l9-7 9 7"/><path d="M5 12h14M7 9h10"/>' },
@@ -2785,7 +2951,7 @@ function updateBuildWalls(dt) {
     const runT = new Map();
     for (const wm of Object.values(wallMeshes[i])) {
       let target = 1;
-      if (state.showRoof) target = 1;
+      if (state.showRoof || state.walk) target = 1;
       else if (i === HOUSE.cur && wallMode === 'bajas') target = 0;
       else if (i === HOUSE.cur && wallMode === 'auto') { if (!runT.has(wm.run)) runT.set(wm.run, (wm.run || [wm.key]).some(q => segLow(i, q)) ? 0 : 1); target = runT.get(wm.run); }
       wm.h += (target - wm.h) * k; applyH(wm);
@@ -2795,7 +2961,7 @@ function updateBuildWalls(dt) {
   for (const it of allItems()) if (def(it).wall && it.group) { const wm = wallMeshes[it.lv][it.edge]; it.group.visible = !!wm && wm.h > 0.5; }
   for (const it of allItems()) if (def(it).partition && it.group && (!popAnim || popAnim.it !== it)) {
     const near = it.group.position.x * camDir.x + it.group.position.z * camDir.z - (view.target.x * camDir.x + view.target.z * camDir.z) > 0.3;
-    const tgt = state.showRoof || wallMode === 'altas' ? 1 : it.lv === HOUSE.cur && (wallMode === 'bajas' || near) ? 0.1 : 1;
+    const tgt = state.showRoof || state.walk || wallMode === 'altas' ? 1 : it.lv === HOUSE.cur && (wallMode === 'bajas' || near) ? 0.1 : 1;
     it.group.scale.y += (tgt - it.group.scale.y) * k; }
 }
 function setLevel(i, quiet) {
@@ -2966,8 +3132,11 @@ function rectEdges(r) { const out = []; for (let x = r.x0; x < r.x1; x++) out.pu
 function clearPreview() { if (preview) { if (preview.parent) preview.parent.remove(preview); preview = null; } }
 function ghostEdge(pv, k, bad) { const [t] = parseE(k), [cx, cz] = edgeCenter(k); const m = new THREE.Mesh(boxGeo(t === 'h' ? 1.05 : 0.2, WALL_H, t === 'h' ? 0.2 : 1.05), bad ? ghostBad : ghostOk); m.position.set(cx, WALL_H / 2, cz); pv.add(m); }
 function ghostCells(pv, x0, z0, x1, z1, bad, y = 0.05) { const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 + 1, z1 - z0 + 1), bad ? ghostBad : ghostOk); m.rotation.x = -PI / 2; m.position.set((x0 + x1 + 1) / 2 - GW / 2, y, (z0 + z1 + 1) / 2 - GD / 2); pv.add(m); }
+let clip = null;
 function toolMove(g, e) {
   const id = tool.id;
+  if (id === 'paste') { const p = floorPoint(e); clearPreview(); if (!p || !clip) return; g.b = p; const c = cellPt(p); preview = new THREE.Group(); preview.position.y = HOUSE.cur * LEVEL_H; roomGroup.add(preview);
+    ghostCells(preview, c.x, c.z, Math.min(GW - 1, c.x + clip.w - 1), Math.min(GD - 1, c.z + clip.d - 1), c.x + clip.w > GW || c.z + clip.d > GD); return; }
   if (id === 'paint') { const f = faceAt(e), w = f && R.walls[f.k]; if (w) { const cur = f.face > 0 ? w.c : (w.b || w.c); if (cur !== brush.wall) { if (f.face > 0) w.c = brush.wall; else { w.b = brush.wall; } repaintEdge(f.k, f.face); g.changed = true; buzz(4); } } return; }
   const p = floorPoint(e); if (!p) return; g.b = p; if (!g.a) g.a = p;
   clearPreview(); preview = new THREE.Group(); preview.position.y = HOUSE.cur * LEVEL_H; roomGroup.add(preview);
@@ -2977,6 +3146,24 @@ function toolMove(g, e) {
 }
 function toolEnd(g) {
   const id = tool.id; clearPreview();
+  if (id === 'copy') { if (!g.a || !g.b) return; const a = cellPt(g.a), b = cellPt(g.b), x0 = Math.min(a.x, b.x), z0 = Math.min(a.z, b.z), x1 = Math.max(a.x, b.x) + 1, z1 = Math.max(a.z, b.z) + 1;
+    clip = { w: x1 - x0, d: z1 - z0, tiles: {}, walls: {}, roof: {}, items: [] };
+    for (let x = x0; x < x1; x++) for (let z = z0; z < z1; z++) { const k = ckey(x, z); if (R.tiles[k]) clip.tiles[ckey(x - x0, z - z0)] = R.tiles[k]; if (R.roof && R.roof[k]) clip.roof[ckey(x - x0, z - z0)] = R.roof[k]; }
+    for (const [k, w] of Object.entries(R.walls)) { const [t, x, z] = parseE(k); if (t === 'h' ? x >= x0 && x < x1 && z >= z0 && z <= z1 : x >= x0 && x <= x1 && z >= z0 && z < z1) clip.walls[ekey(t, x - x0, z - z0)] = { ...w }; }
+    for (const it of R.items) { const D = def(it); const { group, lv, lifting, _a, _moved, ...o } = it;
+      if (D.wall) { const [t, x, z] = parseE(it.edge); if (clip.walls[ekey(t, x - x0, z - z0)]) clip.items.push({ ...o, edge: ekey(t, x - x0, z - z0) }); }
+      else { const [w, d] = fp(it); if (it.gx >= x0 && it.gz >= z0 && it.gx + w <= x1 && it.gz + d <= z1) clip.items.push({ ...o, gx: it.gx - x0, gz: it.gz - z0 }); } }
+    toast(`Copiado: ${clip.w}×${clip.d}, ${clip.items.length} objetos`); setTool('paste'); return; }
+  if (id === 'paste') { if (!clip) return toast('Primero copia una zona'); const p = g.b || g.a; if (!p) return; const c = cellPt(p), before = g.before; let skipped = 0;
+    if (c.x + clip.w > GW || c.z + clip.d > GD) return toast('No cabe ahí: acércala al centro');
+    for (const [k, f] of Object.entries(clip.tiles)) { const [x, z] = k.split(',').map(Number); R.tiles[ckey(x + c.x, z + c.z)] = f; }
+    for (const [k, f] of Object.entries(clip.roof)) { const [x, z] = k.split(',').map(Number); (R.roof = R.roof || {})[ckey(x + c.x, z + c.z)] = f; }
+    for (const [k, w] of Object.entries(clip.walls)) { const [t, x, z] = parseE(k); R.walls[ekey(t, x + c.x, z + c.z)] = { ...w }; }
+    const added = [];
+    for (const o of clip.items) { const it = { ...o, lv: HOUSE.cur }; if (def(it).wall) { const [t, x, z] = parseE(o.edge); it.edge = ekey(t, x + c.x, z + c.z); } else { it.gx += c.x; it.gz += c.z; }
+      if (def(it).wall ? (R.walls[it.edge] && fitsWallB(it, it.edge, it.side)) : fitsB(it, it.gx, it.gz, it.r)) { R.items.push(it); added.push(it); } else skipped++; }
+    pushUndo(before); buildLevelGeo(HOUSE.cur); if (HOUSE.cur > 0) buildLevelGeo(HOUSE.cur - 1); for (const it of added) buildItem(it); buildLevelGeo(HOUSE.cur);
+    refreshHud(); buzz(); sfx('pop'); toast(skipped ? `Pegado · ${skipped} objetos no cabían` : 'Pegado'); return; }
   if (id === 'paint') { if (g.changed) pushUndo(g.before); return; }
   if (!g.a || !g.b) return;
   let changed = false;
@@ -3028,8 +3215,8 @@ function loadRoom(id) {
 }
 
 /* ---------- menus ---------- */
-function openMenu() { if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; paintChrome(); app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
-function closeMenu() { state.menu = false; paintChrome(); app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv', 'retosOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
+function openMenu() { if (state.walk) stopWalk(); setTopView(false); closeViewPop(); if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; paintChrome(); app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
+function closeMenu() { state.menu = false; paintChrome(); app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv', 'retosOv', 'shareOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
 const RANKS = [[0, 'Aprendiz'], [4, 'Decorador'], [10, 'Interiorista'], [18, 'Diseñador'], [27, 'Arquitecto estrella'], [40, 'Leyenda del diseño']];
 function renderMenu() {
   const t = totalStars(), max = LEVELS.length * 3, homes = HOMES.filter(homeUnlocked).length;
@@ -3043,7 +3230,7 @@ function renderMenu() {
   $('mRetosSub').textContent = `${settings.trofeos || 0} trofeos · ${Object.values(CAT).filter(D => D.rare && !rareLocked(D)).length} de ${Object.values(CAT).filter(D => D.rare).length} objetos raros`; $('mRetosNew').hidden = rooms.reto_d.best > 0;
   $('mHomeSub').textContent = `${homes} de ${HOMES.length} salas`; $('mHomeBar').style.width = homes / HOMES.length * 100 + '%';
   const bw = rooms.build.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0);
-  $('mBuildSub').textContent = bw ? `${bw} paredes` : 'Tu casa, 3 pisos'; $('mBuildBar').style.width = Math.min(100, bw / 80 * 100) + '%';
+  $('mBuildSub').textContent = projects.length > 1 ? `${projects.length} proyectos` : bw ? `${bw} paredes` : 'Tu casa, 3 pisos'; $('mBuildBar').style.width = Math.min(100, bw / 80 * 100) + '%';
 }
 $('mHelp').addEventListener('click', () => { $('helpOv').hidden = false; });
 function renderStory() {
@@ -3073,21 +3260,33 @@ function renderRetos() {
 $('mHome').addEventListener('click', () => { renderHomes(); $('homeOv').hidden = false; });
 $('mBuild').addEventListener('click', () => { renderBuildList(); $('buildOv').hidden = false; });
 function renderBuildList() {
-  const b = rooms.build, walls0 = b.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0), items0 = b.levels.reduce((a, l) => a + l.items.length, 0);
+  if (rooms.build) projects[projCur].levels = plainLevels(rooms.build.levels);
   const band = (bg, svg) => `<span class="band" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" style="width:26px;height:26px">${svg}</svg></span>`;
-  $('buildList').innerHTML = `
-    <button class="lv" data-b="open">${band('linear-gradient(135deg,#F2B33D,#E0803A)', '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>')}<span class="body"><b>Mi proyecto</b><small>${walls0} paredes · ${items0} objetos · ${GWB}×${GDB} casillas</small></span></button>
-    <button class="lv" data-b="example">${band('linear-gradient(135deg,#8F74E0,#6A4FC2)', '<path d="M4 21V11l8-6 8 6v10z"/><path d="M4 15h16"/>')}<span class="body"><b>Casita de ejemplo</b><small>Dos pisos ya montados para inspirarte</small></span></button>
-    <button class="lv" data-b="empty">${band('linear-gradient(135deg,#4CC9A0,#2F9E7C)', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16" stroke-dasharray="2 2"/>')}<span class="body"><b>Parcela vacía</b><small>Empieza de cero sobre el césped</small></span></button>`;
+  const mini = (act, i, svg, label) => `<button class="pact" data-act="${act}" data-i="${i}" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg></button>`;
+  $('buildList').innerHTML = projects.map((pr, i) => { const w0 = pr.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0), n0 = pr.levels.reduce((a, l) => a + l.items.length, 0);
+    return `<div class="lv proj ${i === projCur ? 'current' : ''}"><button class="pmain" data-b="open" data-i="${i}">${band('linear-gradient(135deg,#F2B33D,#E0803A)', '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>')}<span class="body"><b>${pr.name.replace(/</g, '&lt;')}</b><small>${w0} paredes · ${n0} objetos${i === projCur ? ' · abierto' : ''}</small></span></button>
+      <span class="pacts">${mini('rename', i, '<path d="M4 20h4L19 9l-4-4L4 16z"/>', 'Cambiar nombre')}${mini('dup', i, '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>', 'Duplicar')}${projects.length > 1 ? mini('del', i, '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', 'Borrar') : ''}</span></div>`; }).join('') + `
+    <button class="lv" data-b="example">${band('linear-gradient(135deg,#8F74E0,#6A4FC2)', '<path d="M4 21V11l8-6 8 6v10z"/><path d="M4 15h16"/>')}<span class="body"><b>Nueva: casita de ejemplo</b><small>Dos pisos ya montados para inspirarte</small></span></button>
+    <button class="lv" data-b="empty">${band('linear-gradient(135deg,#4CC9A0,#2F9E7C)', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16" stroke-dasharray="2 2"/>')}<span class="body"><b>Nueva: parcela vacía</b><small>Empieza de cero sobre el césped · ${GWB}×${GDB} casillas</small></span></button>`;
 }
+function openProject(i) {
+  if (rooms.build) projects[projCur].levels = plainLevels(rooms.build.levels);
+  projCur = i; rooms.build = { cur: 0, best: 0, levels: JSON.parse(JSON.stringify(projects[i].levels)) }; BUILD_DEF.room = projects[i].name;
+  history.length = 0; future.length = 0; updHistory(); save();
+}
+function addProject(name, levels) { projects.push({ name, levels: plainLevels(levels) }); openProject(projects.length - 1); }
 const GWB = BUILD_DEF.w, GDB = BUILD_DEF.d;
 $('buildList').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]');
+  if (act) { const i = +act.dataset.i;
+    if (act.dataset.act === 'rename') { const n = prompt('Nombre del proyecto', projects[i].name); if (n && n.trim()) { projects[i].name = n.trim().slice(0, 40); if (i === projCur) BUILD_DEF.room = projects[i].name; save(); renderBuildList(); if (BM) refreshHud(); } }
+    if (act.dataset.act === 'dup') { if (i === projCur) projects[i].levels = plainLevels(rooms.build.levels); projects.splice(i + 1, 0, { name: projects[i].name + ' (copia)', levels: JSON.parse(JSON.stringify(projects[i].levels)) }); if (projCur > i) projCur++; save(); renderBuildList(); toast('Duplicado'); }
+    if (act.dataset.act === 'del') { if (act.dataset.armed !== '1') { act.dataset.armed = '1'; act.style.background = '#D9433A'; act.style.color = '#fff'; toast('Toca otra vez para borrar'); return; }
+      const wasOpen = i === projCur; projects.splice(i, 1); if (projCur >= i && projCur > 0) projCur--; if (wasOpen) { openProject(projCur); if (BM) loadRoom('build'); } save(); renderBuildList(); }
+    return; }
   const b = e.target.closest('[data-b]'); if (!b) return;
-  if (b.dataset.b !== 'open') {
-    const has = rooms.build.levels.some(l => Object.keys(l.walls).length || l.items.length);
-    if (has && b.dataset.armed !== '1') { b.dataset.armed = '1'; b.querySelector('small').textContent = 'Toca otra vez: sustituye tu proyecto actual'; return; }
-    rooms.build = { cur: 0, best: 0, levels: b.dataset.b === 'example' ? exampleHouse() : fillLevels([]) };
-  }
+  if (b.dataset.b === 'open') { if (+b.dataset.i !== projCur || !BM) openProject(+b.dataset.i); }
+  else addProject(b.dataset.b === 'example' ? 'Casita de ejemplo' : `Proyecto ${projects.length + 1}`, b.dataset.b === 'example' ? exampleHouse() : fillLevels([]));
   $('buildOv').hidden = true; loadRoom('build'); closeMenu();
   if (b.dataset.b === 'empty') 0;
 });
@@ -3152,7 +3351,7 @@ function confetti() {
 /* ---------- camera fit: keep the room centred in the space the UI leaves free ---------- */
 const fit = { cx: 0, cy: 0, ppu: 40, tcx: 0, tcy: 0, tppu: 40, ready: false };
 let W = 1, H = 1, layoutQueued = false;
-function resize() { W = app.clientWidth; H = app.clientHeight; renderer.setSize(W, H, false); queueLayout(); }
+function resize() { W = app.clientWidth; H = app.clientHeight; renderer.setSize(W, H, false); walkCam.aspect = W / H; walkCam.updateProjectionMatrix(); queueLayout(); }
 function queueLayout() { if (!layoutQueued) { layoutQueued = true; requestAnimationFrame(() => { layoutQueued = false; layoutView(); }); } }
 function layoutView() {
   const a = app.getBoundingClientRect(), side = matchMedia('(min-aspect-ratio: 5/4) and (min-width: 760px)').matches;
@@ -3256,6 +3455,7 @@ canvas.addEventListener('pointerdown', e => {
   if (state.menu) return;
   canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   dismissHint(); closePalette();
+  if (state.walk) { gesture = { kind: 'look', x: e.clientX, y: e.clientY }; return; }
   if (pointers.size === 2) {
     if (gesture && /drag/.test(gesture.kind)) endDrag(gesture);
     clearPreview(); const [a, b] = [...pointers.values()];
@@ -3263,7 +3463,7 @@ canvas.addEventListener('pointerdown', e => {
   }
   if (pointers.size > 2) return;
   if (e.button === 2 || e.shiftKey) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: 99 }; return; }
-  if (BM && tool) { const p = floorPoint(e); gesture = { kind: 'tool', a: p, b: p, before: snap(), x0: e.clientX, y0: e.clientY }; toolMove(gesture, e); return; }
+  if (BM && tool) { const p = floorPoint(e); gesture = { kind: 'tool', a: tool.id === 'paste' ? null : p, b: p, before: snap(), x0: e.clientX, y0: e.clientY }; if (tool.id === 'paste') gesture.a = p; toolMove(gesture, e); return; }
   const it = pick(e);
   if (it && it.isPet) { it.jump = 1; buzz(20); sfx(it === cat ? 'bark' : it === luna ? 'meow' : 'hi'); gesture = null; return; }
   if (state.lockAll) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, moved: 0, tapItem: null }; return; }
@@ -3275,6 +3475,7 @@ canvas.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return;
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!gesture) return;
+  if (gesture.kind === 'look') { walk.yaw -= (e.clientX - gesture.x) * 0.006; walk.pitch = THREE.MathUtils.clamp(walk.pitch - (e.clientY - gesture.y) * 0.005, -1.1, 0.9); gesture.x = e.clientX; gesture.y = e.clientY; return; }
   if (gesture.kind === 'pinch' && pointers.size === 2) {
     const [a, b] = [...pointers.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, ang = Math.atan2(b.y - a.y, b.x - a.x);
     view.zoom = THREE.MathUtils.clamp(gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0, 0.6, 3.4);
@@ -3293,7 +3494,7 @@ canvas.addEventListener('pointermove', e => {
     const dx = e.clientX - gesture.x, dy = e.clientY - gesture.y; gesture.x = e.clientX; gesture.y = e.clientY;
     if (gesture.moved < 99 && Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) < TAP) return;
     gesture.moved = 99; view.azGoal = null;
-    view.az -= dx * 0.008; view.el = THREE.MathUtils.clamp(view.el + dy * 0.005, 0.35, 1.2);
+    view.az -= dx * 0.008; if (!state.top) view.el = THREE.MathUtils.clamp(view.el + dy * 0.005, 0.35, 1.2);
   } else if (gesture.kind === 'drag') {
     const p = floorPoint(e); if (!p) return;
     const it = gesture.it, [w, d] = fp(it);
@@ -3338,7 +3539,8 @@ function save() {
   try {
     const out = {};
     for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, op: r.op, key: r.key, items: r.items.map(({ group, _a, _moved, ...i }) => i) };
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, settings }));
+    projects[projCur].levels = out.build.levels;
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, settings, projects, projCur }));
   } catch (e) { /* storage blocked: the game still plays, it just won't remember */ }
 }
 setInterval(save, 3000);
@@ -3351,10 +3553,12 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (state.menu && !reduce) view.az += dt * 0.12;
   if (view.azGoal != null) { view.az += (view.azGoal - view.az) * Math.min(1, dt * 8); if (Math.abs(view.azGoal - view.az) < 0.002) { view.az = view.azGoal; view.azGoal = null; } }
+  if (view.elGoal != null) { view.el += (view.elGoal - view.el) * Math.min(1, dt * 6); if (Math.abs(view.elGoal - view.el) < 0.002) { view.el = view.elGoal; view.elGoal = null; } }
   updateCamera(dt);
+  if (state.walk) updateWalk(dt);
   if (BM) updateBuildWalls(dt);
   for (const w of Object.values(walls)) {
-    const facing = w.normal.dot(camDir) > 0.15;
+    const facing = state.top || (!state.walk && w.normal.dot(camDir) > 0.15);
     w.h += ((facing ? 0 : 1) - w.h) * Math.min(1, dt * (reduce ? 60 : 10));
     applyH(w);
   }
@@ -3373,7 +3577,7 @@ function frame(now) {
   if (sel && !(gesture && /drag/.test(gesture.kind))) markerMat.opacity = 0.32 + Math.sin(now / 260) * 0.12;
   updateCat(dt);
   if (state.sky === 'auto' && !state.menu && (frameN = (frameN + 1) % 6) === 0) setSky(skyPhase());
-  renderer.render(scene, camera);
+  renderer.render(scene, state.walk ? walkCam : camera);
   requestAnimationFrame(frame);
 }
 
@@ -3384,6 +3588,17 @@ applyQuality();
 const PHONE = matchMedia('(pointer: coarse)').matches;
 if (settings.metersMin ?? (PHONE ? 1 : 0)) $('meters').classList.add('min');
 loadRoom(saved && ALL.some(l => l.id === saved.level) ? saved.level : 'lucia');
+let incoming = null;
+if (location.hash.startsWith('#casa=')) unpackHouse(location.hash.slice(6)).then(d => {
+  if (!d || !Array.isArray(d.l)) return; incoming = d; const n = d.l.reduce((a, l) => a + (l.items || []).length, 0);
+  $('importSub').textContent = `«${d.n || 'Una casa'}» · ${n} objetos. Se guardará como un proyecto nuevo del Constructor; lo tuyo no se toca.`; $('importOv').hidden = false;
+}).catch(() => toast('Ese enlace no se pudo abrir'));
+$('importNo').addEventListener('click', () => { $('importOv').hidden = true; window.history.replaceState(null, '', location.pathname); });
+$('importGo').addEventListener('click', () => {
+  $('importOv').hidden = true; window.history.replaceState(null, '', location.pathname); if (!incoming) return;
+  addProject(incoming.n ? incoming.n + ' (recibida)' : 'Casa recibida', fillLevels(migrateOpenings(incoming.l.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))));
+  loadRoom('build'); closeMenu();
+});
 openMenu();
 requestAnimationFrame(frame);
 })();
