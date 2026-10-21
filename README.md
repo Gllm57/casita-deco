@@ -27,3 +27,17 @@ Abre el enlace en el móvil. Para tenerlo como app, usa **Añadir a pantalla de 
 - En pantallas horizontales o de ordenador el catálogo pasa a un panel lateral.
 
 Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
+
+## Novedades
+
+- **Construcción:** escaleras en L y en U, barandillas (para balcones: pon suelo en el piso de arriba y rodéalo), media pared, tabiques sueltos y paredes en diagonal, papel pintado, azulejo, ladrillo, friso y piedra, tercer piso, puerta de garaje y coche.
+- **Jardín:** césped, camino de piedra, tarima y grava; árboles, palmera, setos, flores, vallas, piscina, tumbona, mesa con sombrilla, barbacoa, farola, columpio, fuente y caseta para Milo.
+- **Usar las cosas:** toca otra vez un objeto elegido (o el botón Usar) para encender o apagar lámparas, abrir puertas y correr cortinas, estores y persianas. Las puertas se abren solas cuando pasa Milo.
+- **Tamaños y formas:** alfombras rectangulares, ovaladas, circulares, orgánicas y de pasillo; sofá modular, mesa de madera y estantería abierta cambian de tamaño con el botón Tamaño. En las estanterías abiertas se pueden poner cosas en cada balda.
+- **Color de la luz** de cada lámpara, en la paleta.
+- **Encargos de estilo** (18 en total) que piden cosas de una colección, **reto del día** y **reto semanal** que dan trofeos, y **objetos raros** (piano de cola, acuario gigante, jukebox, bola de discoteca, sillón trono, escultura y cerezo) que se abren con estrellas y trofeos.
+- **Mascotas:** Milo, Luna la gata y Nico de visita (se activan en Ajustes); Kiwi el loro y un hámster con rueda.
+- **Luz:** el botón de la luz pasa por día, tarde, noche y ciclo automático.
+- **Ver:** foto sin botones, compartir una imagen con marco (o la casa entera con un enlace), paseo en primera persona con joystick y plano desde arriba.
+- **Constructor:** varios proyectos (duplicar, renombrar, borrar) y copiar y pegar zonas, incluso de un piso a otro.
+- **Gráficos y sonido:** espejos que reflejan de verdad, brillo en suelos de mármol y azulejo, sombras y halos de las lámparas de noche, sonidos y música suave (se apagan en Ajustes).
