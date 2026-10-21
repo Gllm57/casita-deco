@@ -46,6 +46,7 @@ button { font-family: var(--body); color: inherit; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
 .app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #F6D9C9 0%, #DFCDEC 50%, #B7A6DC 100%); transition: background .6s; }
+.app.dusk { background: radial-gradient(130% 90% at 50% 15%, #FFC9A0 0%, #E8A8B8 45%, #8E74B8 100%); }
 .app.night { background: radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
 canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 45%, transparent 60%, rgba(43,33,64,.18) 100%); }
@@ -192,6 +193,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .card .pr { font-weight: 800; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
 .card .pr .coin { width: 10px; height: 10px; }
 .card.active { box-shadow: 0 0 0 3px var(--coral), 0 6px 16px rgba(43,33,64,.12); }
+.card.locked img { filter: grayscale(1) brightness(1.15); opacity: .55; }
+.card .want.rare { background: var(--gold); color: var(--ink); }
 .card .want { position: absolute; top: 4px; right: 4px; background: var(--coral); color: #fff; font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; }
 
 .toast { position: absolute; left: calc((100% - var(--panel-w)) / 2); top: calc(env(safe-area-inset-top, 0px) + 104px); transform: translate(-50%, -6px); background: rgba(43,33,64,.86); color: #fff; font: 800 12px var(--body); padding: 5px 11px; border-radius: 999px; opacity: 0; transition: .2s; pointer-events: none; white-space: nowrap; max-width: 80%; overflow: hidden; text-overflow: ellipsis; z-index: 30; }
@@ -243,6 +246,14 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .mode b { font: 800 16px var(--display); line-height: 1.05; }
 .mode small { font-size: 11.5px; font-weight: 700; color: #CFC6E6; line-height: 1.2; }
 .mode .track { width: 100%; margin-top: auto; }
+.mode.wide { flex-direction: row; align-items: center; gap: 12px; width: 100%; margin-top: 8px; }
+.mode.wide .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mode .mi.retos { background: linear-gradient(135deg, #F2B33D, #E0803A); }
+.retos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+.rare-item { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 14px; background: rgba(124,113,148,.1); font: 800 12px var(--body); }
+.rare-item img { width: 44px; height: 40px; object-fit: contain; border-radius: 10px; background: var(--thumb); }
+.rare-item.locked img { filter: grayscale(1); opacity: .5; }
+.rare-item small { display: block; color: var(--muted); font-weight: 700; }
 .mode .new { position: absolute; top: 8px; right: 8px; background: var(--gold); color: var(--ink); font: 900 9px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 999px; }
 .mi.story { background: linear-gradient(135deg, #8F74E0, #6A4FC2); }
 .mi.house { background: linear-gradient(135deg, #4CC9A0, #2F9E7C); }
@@ -487,6 +498,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
         <button class="mode" id="mHome"><span class="mi house"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9H3z"/><path d="M10 20v-6h4v6"/></svg></span><b>Mi casa</b><small id="mHomeSub">1 de 6 salas</small><span class="track" style="color:#7FE0BE"><i id="mHomeBar"></i></span></button>
         <button class="mode" id="mBuild"><span class="mi build"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg></span><b>Constructor</b><small id="mBuildSub">2 pisos</small><span class="track" style="color:#FFC86B"><i id="mBuildBar"></i></span><span class="new">Nuevo</span></button>
       </div>
+      <button class="mode wide" id="mRetos"><span class="mi retos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg></span><span class="grow"><b>Retos y objetos raros</b><small id="mRetosSub">Reto del día · Reto semanal</small></span><span class="new" id="mRetosNew">Hoy</span></button>
       <div class="mrow">
         <button class="mslim" id="mHelp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg>Cómo jugar</button>
         <button class="mslim" id="mSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>Ajustes</button>
@@ -526,11 +538,21 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="lvgrid" id="buildList"></div>
     </div>
   </div>
+  <div class="overlay" id="retosOv" hidden>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Retos</h2><p class="sub" id="retosSub">Cada día y cada semana, una sala nueva.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="lvgrid" id="retosList"></div>
+      <h3 class="sec">Objetos raros</h3>
+      <div class="retos-grid" id="rareList"></div>
+    </div>
+  </div>
   <div class="overlay" id="settingsOv" hidden>
     <div class="panel">
       <div class="panel-head"><div><h2>Ajustes</h2><p class="sub">Se guardan en este dispositivo.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="setting"><span>Calidad gráfica<small>Ahorro va más fluido en móviles antiguos</small></span><div class="seg" data-setting="quality"><button data-v="alta">Alta</button><button data-v="ahorro">Ahorro</button></div></div>
       <div class="setting"><span>Milo, el pug<small>Pasea por las habitaciones</small></span><div class="seg" data-setting="cat"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Luna, la gata<small>Curiosa y dormilona</small></span><div class="seg" data-setting="luna"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Nico, de visita<small>Un amigo que pasea por la casa</small></span><div class="seg" data-setting="visita"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Vibración<small>Al colocar objetos (Android)</small></span><div class="seg" data-setting="vibrate"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <button class="danger" id="wipe">Borrar toda la partida</button>
     </div>
@@ -1398,6 +1420,44 @@ const SHELF_YS = [0.1, 0.5, 0.9, 1.3, 1.7];
 ['baldas1', 'baldas2', 'baldas3'].forEach((k, i, keys) => { const w = i + 1; CAT[k] = { name: `Estantería abierta ${w} módulo${w > 1 ? 's' : ''}`, short: 'Estantería abierta', tab: 'muebles', tags: 'salon dorm oficina musica recibidor', w, d: 1, price: 120 + w * 80, comfort: 1, style: 5, role: 'madera', family: keys, hidden: i > 0, surface: SHELF_YS[4], shelves: SHELF_YS,
   build(g, m) { for (const y of SHELF_YS) B(g, w - 0.06, 0.04, 0.42, m, 0, y - 0.02, -0.26); for (let j = 0; j <= w; j++) B(g, 0.04, 1.72, 0.42, m, -w / 2 + 0.03 + j * (w - 0.06) / w, 0.86, -0.26); B(g, w - 0.06, 1.7, 0.02, m, 0, 0.86, -0.46); } }; });
 
+/* ---------- rare pieces: unlocked with stars from encargos and trophies from challenges ---------- */
+Object.assign(CAT, {
+  pianoCola: { name: 'Piano de cola', tab: 'muebles', tags: 'musica salon', w: 2, d: 2, price: 4200, comfort: 2, style: 18, role: 'acento', rare: 6,
+    build(g, m) { const sh = new THREE.Shape(); sh.moveTo(-0.75, -0.8); sh.lineTo(0.75, -0.8); sh.lineTo(0.75, 0.1); sh.bezierCurveTo(0.75, 0.6, 0.2, 0.5, 0.1, 0.9); sh.lineTo(-0.75, 0.9); sh.lineTo(-0.75, -0.8);
+      const body = new THREE.ExtrudeGeometry(sh, { depth: 0.32, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2 }); body.rotateX(PI / 2); const pb = std({ color: 0xFBFBF8, roughness: 0.15 });
+      add(g, body, pb, 0, 0.98, 0); const lid = new THREE.Mesh(new THREE.ShapeGeometry(sh), pb); lid.rotation.set(-PI / 2, 0, 0); const lg = new THREE.Group(); lg.position.set(0.75, 1.0, 0); lg.rotation.z = 0.55; g.add(lg); lid.position.x = -0.75; lg.add(lid); lid.material.side = THREE.DoubleSide;
+      rod(g, V3(-0.2, 0.98, 0.2), V3(0.45, 1.6, 0.2), 0.01, M(GOLD)); B(g, 1.5, 0.06, 0.25, pb, 0, 0.72, -0.93); B(g, 1.4, 0.03, 0.18, M(WHITE), 0, 0.77, -0.95);
+      for (let i = 0; i < 14; i++) if (i % 7 !== 2 && i % 7 !== 6) BX(g, 0.04, 0.03, 0.1, M(0x111111), -0.62 + i * 0.095, 0.795, -0.98);
+      for (const [x, z] of [[-0.65, -0.7], [0.65, -0.7], [-0.6, 0.75]]) C(g, 0.05, 0.035, 0.66, pb, x, 0.33, z, 12); B(g, 0.8, 0.45, 0.35, m, 0, 0.23, -1.3 + 0.35); } },
+  acuarioGigante: { name: 'Acuario gigante', tab: 'deco', tags: 'salon oficina recibidor', w: 2, d: 1, price: 2600, comfort: 4, style: 14, role: 'marco', rare: 10, glow: false, light: { y: 1.1, color: 0x7FD3F0, power: 0.8 },
+    build(g, m) { B(g, 1.9, 0.6, 0.7, m, 0, 0.3, 0); const t = std({ color: 0xBFE8F7, transparent: true, opacity: 0.35, roughness: 0.05 }); BX(g, 1.86, 0.9, 0.66, t, 0, 1.06, 0).castShadow = false;
+      BX(g, 1.8, 0.82, 0.6, std({ color: 0x5FB8DA, transparent: true, opacity: 0.35, emissive: 0x2F7FA8, emissiveIntensity: 0.3 }), 0, 1.03, 0).castShadow = false; B(g, 1.92, 0.06, 0.7, m, 0, 1.53, 0); BX(g, 1.8, 0.06, 0.6, M(0xE8D9B0), 0, 0.64, 0);
+      for (const x of [-0.7, -0.45, 0.6]) leafBlob(g, x, 0.85, -0.1, 0.8, 0, 1.4); const fish = new THREE.Group(); fish.name = 'swim'; g.add(fish);
+      [[0xFF8A3D, -0.4, 1.1, 0.1], [0xFFD43B, 0.2, 0.95, -0.1], [0x5B9BFF, 0.5, 1.2, 0.05], [0xFF5E8A, -0.1, 1.28, -0.15]].forEach(([c, x, y, z]) => { const f = S(fish, 0.05, M(c), x, y, z); f.scale.set(1.6, 1, 0.6); K(fish, 0.035, 0.06, M(c), x - 0.09, y, z).rotation.z = PI / 2; }); } },
+  jukebox: { name: 'Jukebox', tab: 'deco', glow: true, tags: 'musica cafe salon gamer', w: 1, d: 1, price: 1800, comfort: 2, style: 14, role: 'neon', rare: 14, light: { y: 1.2, color: 0xFF8FD8, power: 0.8 },
+    build(g, m) { B(g, 0.8, 1.1, 0.5, M(0x7A2E3A), 0, 0.55, -0.1); add(g, new THREE.CylinderGeometry(0.4, 0.4, 0.5, 32, 1, false, 0, PI), M(0x7A2E3A), 0, 1.1, -0.1).rotation.set(0, PI / 2, PI / 2);
+      add(g, new THREE.TorusGeometry(0.34, 0.03, 8, 30, PI), m, 0, 1.1, 0.16); for (const sx of [-1, 1]) BX(g, 0.05, 0.9, 0.03, m, sx * 0.34, 0.6, 0.16); BX(g, 0.5, 0.3, 0.02, G(0xFFE7A0), 0, 0.85, 0.16); BX(g, 0.5, 0.2, 0.02, M(GOLD), 0, 0.4, 0.16); } },
+  bolaDisco: { name: 'Bola de discoteca', tab: 'luces', ceil: true, tags: 'musica gamer salon', w: 1, d: 1, price: 900, comfort: 1, style: 12, role: 'acento', rare: 18, spin: true, light: { y: 2.0, color: 0xD8A8FF, power: 1.3 },
+    build(g, m) { cord(g, 2.25); const b = new THREE.Group(); b.name = 'blades'; g.add(b); add(b, new THREE.IcosahedronGeometry(0.22, 2), std({ color: 0xE8EEF6, metalness: 0.9, roughness: 0.15, flatShading: true, emissive: 0x6A6A88, emissiveIntensity: 0.4 }), 0, 2.03, 0); } },
+  trono: { name: 'Sillón trono', tab: 'muebles', tags: 'salon dorm musica', w: 1, d: 1, price: 1600, comfort: 6, style: 13, role: 'tela', rare: 22,
+    build(g, m) { const gold = M(GOLD); B(g, 0.8, 0.12, 0.7, gold, 0, 0.42, 0.02); SB(g, 0.7, 0.14, 0.6, m, 0, 0.52, 0.04); B(g, 0.8, 1.2, 0.12, gold, 0, 1.0, -0.3); SB(g, 0.62, 1.0, 0.08, m, 0, 1.02, -0.24);
+      S(g, 0.08, gold, 0, 1.68, -0.3); for (const sx of [-1, 1]) { B(g, 0.1, 0.35, 0.66, gold, sx * 0.38, 0.65, 0.02); S(g, 0.06, gold, sx * 0.38, 1.62, -0.3); C(g, 0.035, 0.03, 0.4, gold, sx * 0.33, 0.2, 0.3, 10); C(g, 0.035, 0.03, 0.4, gold, sx * 0.33, 0.2, -0.26, 10); } } },
+  escultura: { name: 'Escultura dorada', tab: 'deco', tags: 'salon recibidor oficina', w: 1, d: 1, price: 1300, comfort: 0, style: 12, role: 'piedra', rare: 26,
+    build(g, m) { B(g, 0.5, 0.9, 0.5, m, 0, 0.45, 0); add(g, new THREE.TorusKnotGeometry(0.17, 0.045, 96, 12, 2, 3), std({ color: GOLD, metalness: 0.8, roughness: 0.25 }), 0, 1.15, 0); } },
+  cerezo: { name: 'Cerezo en flor', tab: 'jardin', tags: 'exterior yoga salon', w: 1, d: 1, price: 900, comfort: 2, style: 12, role: 'madera', rare: 30,
+    build(g, m) { C(g, 0.07, 0.11, 1.3, M(0x5A3B2C), 0, 0.65, 0, 12); for (const a of [0.6, 2.4, 4.2]) rod(g, V3(0, 1.1, 0), V3(Math.cos(a) * 0.4, 1.55, Math.sin(a) * 0.4), 0.035, M(0x5A3B2C));
+      [[0, 1.85, 0, 0.5], [0.35, 1.62, 0.2, 0.36], [-0.35, 1.65, -0.1, 0.38], [0.1, 2.15, -0.1, 0.34], [-0.15, 1.5, 0.32, 0.3]].forEach(([x, y, z, r], i) => { S(g, r, M(i % 2 ? 0xF7C6D9 : 0xF2A7C3), x, y, z).scale.y = 0.8; }); } },
+  // ---- small animated pets ----
+  loro: { name: 'Kiwi el loro', tab: 'deco', tags: 'salon musica cafe bebe', w: 1, d: 1, price: 260, comfort: 2, style: 7, role: 'madera',
+    build(g, m) { C(g, 0.2, 0.22, 0.04, m, 0, 0.02, 0, 24); C(g, 0.02, 0.02, 1.3, m, 0, 0.67, 0, 8); const bar = C(g, 0.015, 0.015, 0.5, m, 0, 1.3, 0, 8); bar.rotation.z = PI / 2;
+      const b = new THREE.Group(); b.name = 'bob'; b.position.set(0.05, 1.33, 0); g.add(b); S(b, 0.08, M(0x3FB86A), 0, 0.09, 0).scale.set(0.9, 1.3, 0.8); S(b, 0.06, M(0x52C878), 0.02, 0.22, 0); K(b, 0.025, 0.06, M(0xF2B33D), 0.08, 0.21, 0).rotation.z = -PI / 2;
+      S(b, 0.012, M(DARK), 0.05, 0.24, 0.04); S(b, 0.012, M(DARK), 0.05, 0.24, -0.04); K(b, 0.04, 0.2, M(0xE5533D), -0.1, -0.02, 0).rotation.z = 2.4; for (const z of [-0.07, 0.07]) S(b, 0.045, M(0x2F9E7C), -0.01, 0.09, z).scale.set(1, 1.6, 0.4); } },
+  hamster: { name: 'Hámster con rueda', tab: 'deco', top: true, tags: 'bebe dorm', w: 1, d: 1, price: 120, comfort: 2, style: 6, role: 'acento',
+    build(g, m) { B(g, 0.5, 0.06, 0.36, m, 0, 0.03, 0); const cage = std({ color: 0xDDE3EA, transparent: true, opacity: 0.25 }); BX(g, 0.5, 0.32, 0.36, cage, 0, 0.22, 0).castShadow = false;
+      const w = new THREE.Group(); w.name = 'wheel'; w.position.set(-0.08, 0.18, 0); g.add(w); add(w, new THREE.TorusGeometry(0.11, 0.01, 6, 24), M(0xF2B33D), 0, 0, 0); for (let i = 0; i < 4; i++) BX(w, 0.22, 0.008, 0.01, M(0xF2B33D), 0, 0, 0).rotation.z = i * PI / 4;
+      S(g, 0.05, M(0xE6B48F), 0.13, 0.1, 0).scale.set(1.3, 0.9, 1); S(g, 0.012, M(DARK), 0.19, 0.12, 0.025); } },
+});
+
 /* ---------- lights: ceiling lamps hang over furniture without taking floor space ---------- */
 const TOP = WALL_H;
 const crystalMat = std({ color: 0xEAF6FF, transparent: true, opacity: 0.75, roughness: 0.02, emissive: 0x9FB6CC, emissiveIntensity: 0.35 });
@@ -1630,6 +1690,7 @@ const HARMONY = new Set(['hueso|marmol', 'cielo|marmol', 'rosa|terrazo', 'salvia
 
 /* ---------- encargos (story) and Mi casa (sandbox) ---------- */
 const need = (label, types, n = 1) => ({ label, types: types.split(' '), n });
+const needSet = (label, coll, n) => ({ label, types: [], coll, n });
 const win = (wall, u, w) => ({ wall, u, w, type: 'window' }), door = (wall, u) => ({ wall, u, w: 1, type: 'door' });
 const LEVELS = [
   { id: 'lucia', client: 'Lucía', color: '#FF7A59', room: 'Dormitorio de Lucía', kind: 'Dormitorio', tag: 'dorm', w: 8, d: 8, wall: 'salvia', floor: 'roble',
@@ -1693,6 +1754,30 @@ const LEVELS = [
     needs: [need('Dos sillones', 'sillon', 2), need('Mesa de comedor', 'mesaComedor'), need('Cuatro sillas', 'silla', 4), need('Chimenea', 'chimenea'), need('Un reloj', 'reloj'), need('Tres cuadros', 'cuadro cuadroGrande', 3), need('Pecera', 'pecera')],
     s2: 100, s3: 140, c3: 52, quotes: ['Gracias, cariño, está apañado.', '¡Qué alegría de casa! Te hago croquetas.', '¡La familia entera va a venir a verla!'],
     start: [] },
+  { id: 'bruno', client: 'Bruno', color: '#5E6A7A', room: 'Loft de Bruno', kind: 'Salón industrial', tag: 'salon', w: 9, d: 7, wall: 'ladrillo', floor: 'hormigon',
+    open: [win('N', 1, 3), win('N', 5, 3), door('W', 3)],
+    needs: [need('Un sofá grande', 'sofa sofaL sofaModular2 sofaModular3 sofaModular4'), need('Luz industrial', 'colganteIndustrial focosCarril'), need('Estantería abierta', 'baldas1 baldas2 baldas3 estanteria'), needSet('Cinco cosas del estilo Nórdico', 2, 5)],
+    s2: 70, s3: 104, c3: 28, quotes: ['Vale, sirve para vivir.', '¡Esto tiene carácter! Me encanta el ladrillo.', '¡Parece una revista de diseño! Voy a dar una fiesta.'], start: [] },
+  { id: 'aitana', client: 'Aitana', color: '#C9714F', room: 'Rincón boho de Aitana', kind: 'Dormitorio boho', tag: 'dorm', w: 7, d: 7, wall: 'terracota', floor: 'pino',
+    open: [win('N', 2, 2), door('W', 4)],
+    needs: [need('Una cama', 'cama camaInd'), need('Macramé', 'macrame'), need('Lámpara de fibra o papel', 'lamparaRatan lamparaPapel'), need('Alfombra orgánica', 'alfOrg2x2 alfOrg3x2 alfOrg4x3'), needSet('Cinco cosas Terracota', 3, 5)],
+    s2: 62, s3: 92, c3: 28, quotes: ['Está bien, aunque le falta alma.', '¡Qué calidez! Huele a vacaciones.', '¡Es mi refugio perfecto! Gracias de corazón.'], start: [] },
+  { id: 'ingrid', client: 'Ingrid', color: '#8FA3B8', room: 'Habitación nórdica de Ingrid', kind: 'Dormitorio nórdico', tag: 'dorm', w: 7, d: 6, wall: 'hueso', floor: 'pino',
+    open: [win('N', 2, 2), door('E', 3)],
+    needs: [need('Una cama', 'cama camaInd'), need('Estor o persiana', 'estor persiana'), need('Lámpara de techo', 'plafon lamparaPapel lamparaColgante'), need('Mucha luz natural', 'ventana ventanaDoble ventanaTriple ventanal ventanalPanoramico'), needSet('Seis cosas Nórdicas', 2, 6)],
+    s2: 58, s3: 86, c3: 26, quotes: ['Funciona, gracias.', '¡Qué calma! Todo blanco y madera.', '¡Hygge total! Me quedo a vivir en esta luz.'], start: [] },
+  { id: 'carmen', client: 'Carmen', color: '#3F7CB8', room: 'Salón mediterráneo de Carmen', kind: 'Salón mediterráneo', tag: 'salon', w: 9, d: 8, wall: 'cielo', floor: 'baldosa',
+    open: [win('N', 3, 2), door('W', 4)],
+    needs: [need('Un ventanal al mar', 'ventanal ventanalPanoramico ventanalArco'), need('Cortinas', 'cortinas'), need('Sofá modular', 'sofaModular2 sofaModular3 sofaModular4'), need('Mesa de madera', 'mesaMadera2 mesaMadera3 mesaMadera4'), needSet('Seis cosas Océano', 4, 6)],
+    s2: 76, s3: 112, c3: 34, quotes: ['Cumple, pero me falta el mar.', '¡Huele a sal y a verano!', '¡Es como vivir en una isla griega! Os invito a cenar.'], start: [] },
+  { id: 'sofia', client: 'Sofía', color: '#F2A7C3', room: 'Cuarto pastel de Sofía', kind: 'Cuarto infantil', tag: 'bebe', w: 6, d: 6, wall: 'rosa', floor: 'moqueta',
+    open: [win('N', 2, 2), door('W', 3)],
+    needs: [need('Una cuna', 'cuna'), need('Juguetes', 'cajaJuguetes caballito peluche'), need('Lámpara de seta o de papel', 'lamparaSeta lamparaPapel'), need('Alfombra redonda', 'alfombraRedonda alfCirc1x1 alfCirc2x2 alfCirc3x3'), needSet('Cinco cosas Pastel', 1, 5)],
+    s2: 52, s3: 78, c3: 24, quotes: ['Gracias, cumple.', '¡Qué dulce! Parece una nube.', '¡El cuarto más bonito del mundo! Mi bebé va a soñar aquí.'], start: [] },
+  { id: 'julian', client: 'Don Julián', color: '#7A5136', room: 'Biblioteca de Don Julián', kind: 'Biblioteca', tag: 'oficina', w: 8, d: 7, wall: 'friso', floor: 'nogal',
+    open: [win('N', 3, 2), door('E', 3)],
+    needs: [need('Dos estanterías', 'estanteria baldas1 baldas2 baldas3 estanteriaEscalera', 2), need('Un sillón para leer', 'sillon mecedora trono'), need('Lámpara de pie', 'lampara lamparaArco lamparaTripode lamparaGlobo'), need('Escritorio', 'escritorio'), need('Libros por todas partes', 'libros', 3), needSet('Seis cosas Natural', 0, 6)],
+    s2: 72, s3: 106, c3: 32, quotes: ['Hmm, aceptable.', '¡Por fin un sitio digno para mis libros!', '¡Es la biblioteca de mis sueños! Te dedicaré mi próxima novela.'], start: [] },
 ];
 const HOMES = [
   { id: 'h_salon', room: 'Salón', kind: 'Mi casa', tag: 'salon', w: 9, d: 8, wall: 'hueso', floor: 'roble', unlock: 0, open: [win('N', 2, 2), win('N', 5, 2), door('E', 3)] },
@@ -1740,11 +1825,33 @@ function exampleHouse() {
   for (const k of Object.keys(g.tiles)) if (!u.tiles[k]) g.roof[k] = 'pizarra';
   return fillLevels(migrateOpenings([g, u]));
 }
+/* ---------- daily and weekly challenges: a new room every day and every week, the same for everyone ---------- */
+function rng(seed) { let h = 2166136261; for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+const weekKey = () => { const d = new Date(), mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7)); return `S${mon.getFullYear()}-${mon.getMonth() + 1}-${mon.getDate()}`; };
+const CH_CLIENTS = ['Lola', 'Mateo', 'Irene', 'Hugo', 'Nora', 'Leo', 'Vera', 'Dani', 'Alba', 'Pablo', 'Rocío', 'Iker'];
+const CH_POOL = {
+  dorm: ['Dormitorio', [['Una cama', 'cama camaInd'], ['Mesita de noche', 'mesita'], ['Armario', 'armario armarioAlto'], ['Lámpara de mesa', 'lamparaMesa lamparaSeta'], ['Espejo', 'espejo espejoPie'], ['Alfombra', 'alfombra alfombraRedonda alfRect2x1 alfRect2x2 alfOval2x1 alfCirc2x2 alfOrg2x2'], ['Cortinas o estor', 'cortinas estor persiana']]],
+  salon: ['Salón', [['Sofá', 'sofa sofaL sofaModular2 sofaModular3 sofaModular4'], ['Tele', 'tv telePared'], ['Mesa de centro', 'mesa mesaCafe'], ['Lámpara de pie', 'lampara lamparaArco lamparaTripode lamparaGlobo'], ['Dos plantas', 'planta monstera cactus', 2], ['Dos cuadros', 'cuadro cuadroGrande galeriaFotos', 2], ['Lámpara de techo', 'plafon lamparaColgante candelabroCristal trioColgantes lamparaPapel']]],
+  cocina: ['Cocina', [['Nevera', 'nevera'], ['Fogones', 'fogon islaPlaca'], ['Fregadero', 'fregadero'], ['Cafetera', 'cafetera'], ['Isla de cocina', 'isla islaPlaca'], ['Dos taburetes', 'taburete', 2], ['Frutero', 'frutero']]],
+  bano: ['Baño', [['Bañera o ducha', 'banera ducha'], ['Lavabo', 'lavabo lavaboDoble'], ['Inodoro', 'inodoro'], ['Toallero', 'toallero'], ['Espejo', 'espejo espejoPie'], ['Algo verde', 'planta suculenta cactus']]],
+  oficina: ['Estudio', [['Escritorio', 'escritorio escritorioGamer'], ['Silla', 'silla sillaGamer sillaDiseno'], ['Flexo', 'flexo lamparaMesa'], ['Portátil', 'portatil'], ['Estantería', 'estanteria baldas1 baldas2 baldas3'], ['Pizarra', 'pizarra']]],
+};
+function makeChallenge(kind) {
+  const key = kind === 'd' ? dayKey() : weekKey(), r = rng(kind + key), pick = a => a[Math.floor(r() * a.length)], big = kind === 'w';
+  const tag = pick(Object.keys(CH_POOL)), [roomName, pool] = CH_POOL[tag], client = pick(CH_CLIENTS), coll = Math.floor(r() * 5), collName = ['Natural', 'Pastel', 'Nórdico', 'Terracota', 'Océano'][coll];
+  const needs = pool.slice().sort(() => r() - 0.5).slice(0, big ? 5 : 3).map(([l, t, n]) => need(l, t, n || 1)); needs.push(needSet(`${big ? 6 : 4} cosas ${collName}`, coll, big ? 6 : 4));
+  const walls = ['salvia', 'lavanda', 'melocoton', 'cielo', 'hueso', 'menta', 'rosa', 'rayas', 'flores', 'metro', 'ladrillo', 'friso'], floors = ['roble', 'nogal', 'espiga', 'baldosa', 'marmol', 'hormigon', 'terrazo', 'pino', 'moqueta'];
+  return { id: 'reto_' + kind, challenge: kind, key, client, color: big ? '#8F74E0' : '#F2B33D', room: `${roomName} de ${client}`, kind: big ? 'Reto semanal' : 'Reto del día', tag, w: big ? 9 : 6 + Math.floor(r() * 2), d: big ? 8 : 6,
+    wall: pick(walls), floor: pick(floors), open: [win('N', 1, 2), door('W', 2)], needs, s2: big ? 74 : 44, s3: big ? 104 : 64, c3: big ? 30 : 16, start: [],
+    quotes: ['¡Gracias! Cumple lo que pedí.', '¡Qué bien te ha quedado!', '¡Perfecto! Eres un genio del diseño.'] };
+}
+const RETOS = [makeChallenge('d'), makeChallenge('w')];
 const BUILD_DEF = { id: 'build', build: true, home: true, room: 'Mi proyecto', kind: 'Constructor', tag: 'salon', color: '#E0803A', w: 16, d: 14, wall: 'hueso', floor: 'roble', needs: [], open: [], start: [], s3: 150, c3: 70 };
-const ALL = [...LEVELS, ...HOMES, BUILD_DEF];
-const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
+const ALL = [...LEVELS, ...HOMES, ...RETOS, BUILD_DEF];
+const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, key: L.key, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
 const rooms = {}; for (const L of ALL) rooms[L.id] = L.build ? { cur: 0, best: 0, levels: exampleHouse() } : freshRoom(L);
-const settings = { quality: 'alta', cat: '1', vibrate: '1' };
+const settings = { quality: 'alta', cat: '1', luna: '1', visita: '1', vibrate: '1', sound: '1', music: '0' };
 
 // saved game lives in this browser only (v1 = earlier versions of the game)
 const SAVE_KEY = 'casita-deco-v2';
@@ -1753,11 +1860,13 @@ try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || JSON.parse
 const cleanItems = list => (list || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length }));
 if (saved && saved.rooms && saved.rooms.build && saved.rooms.build.levels) rooms.build = { cur: 0, best: 0, levels: fillLevels(migrateOpenings(saved.rooms.build.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))) };
 if (saved && saved.rooms) for (const L of ALL) {
-  const r = saved.rooms[L.id]; if (!r || L.build) continue;
-  rooms[L.id] = { wall: r.wall || L.wall, floor: r.floor || L.floor, best: r.best || 0, op: r.op, items: (r.items || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length })) };
+  const r = saved.rooms[L.id]; if (!r || L.build || (L.challenge && r.key !== L.key)) continue; // yesterday's challenge starts over
+  rooms[L.id] = { wall: r.wall || L.wall, floor: r.floor || L.floor, best: r.best || 0, op: r.op, key: r.key, items: (r.items || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length })) };
 }
 if (saved && saved.settings) Object.assign(settings, saved.settings);
 const totalStars = () => LEVELS.reduce((a, l) => a + rooms[l.id].best, 0);
+const points = () => totalStars() + (settings.trofeos || 0); // stars from encargos plus trophies from challenges
+const rareLocked = D => !!D.rare && points() < D.rare;
 const storyUnlocked = i => i === 0 || rooms[LEVELS[i - 1].id].best >= 1;
 const homeUnlocked = h => totalStars() >= h.unlock;
 
@@ -2033,6 +2142,7 @@ const starSvg = on => `<svg viewBox="0 0 24 24" class="${on ? 'star-on' : 'star-
 const starsHtml = n => `<span class="stars">${[0, 1, 2].map(i => starSvg(i < n)).join('')}</span>`;
 const lockSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const countOf = types => R.items.filter(i => types.includes(i.type)).length;
+const needCount = n => (n.coll != null ? R.items.filter(i => !i.pre && i.hex == null && i.ci === n.coll).length : countOf(n.types));
 function mainSet() {
   const counts = COLLECTIONS.map(() => 0); for (const it of R.items) if (it.hex == null && !it.pre) counts[it.ci]++;
   const i = counts.indexOf(Math.max(...counts));
@@ -2044,7 +2154,7 @@ function score() {
   style += new Set(R.items.filter(i => !i.pre).map(i => i.type)).size * 2;
   if (HARMONY.has(R.wall + '|' + R.floor)) style += 8;
   style += mainSet().bonus;
-  const needsMet = L.needs.every(n => countOf(n.types) >= n.n);
+  const needsMet = L.needs.every(n => needCount(n) >= n.n);
   const stars = L.home || !needsMet ? 0 : 1 + (style >= L.s2 ? 1 : 0) + (style >= L.s3 && comfort >= L.c3 ? 1 : 0);
   return { comfort, style, value, needsMet, stars };
 }
@@ -2059,8 +2169,8 @@ function refreshHud() {
   $('metersMini').innerHTML = `<i title="Comodidad"><b class="dot" style="background:var(--mint)"></b>${s.comfort}</i><i title="Estilo"><b class="dot" style="background:var(--coral)"></b>${s.style}</i><i title="Conjunto ${c.name}"><b class="dot" style="background:${hexCss(c.tela)}"></b>${set.n >= 3 ? '+' + set.bonus : set.n}</i>`;
   $('roomValue').textContent = 'Sala: ' + s.value.toLocaleString('es-ES');
   if (!L.home) {
-    const done = L.needs.map(n => countOf(n.types) >= n.n);
-    $('mList').innerHTML = L.needs.map((n, i) => `<li class="${done[i] ? 'ok' : ''}">${n.label}${n.n > 1 ? ` (${Math.min(countOf(n.types), n.n)}/${n.n})` : ''}</li>`).join('');
+    const done = L.needs.map(n => needCount(n) >= n.n);
+    $('mList').innerHTML = L.needs.map((n, i) => `<li class="${done[i] ? 'ok' : ''}">${n.label}${n.n > 1 ? ` (${Math.min(needCount(n), n.n)}/${n.n})` : ''}</li>`).join('');
     $('mCount').textContent = `${done.filter(Boolean).length}/${L.needs.length}`;
     $('mGoal').innerHTML = `${starsHtml(s.stars)} &nbsp;${s.stars < 1 ? 'Cumple la lista' : s.stars < 2 ? `Estilo ${L.s2} para 2 estrellas` : s.stars < 3 ? `Estilo ${L.s3} y comodidad ${L.c3} para 3` : '¡Tres estrellas!'}`;
     $('deliver').disabled = !s.needsMet;
@@ -2104,7 +2214,7 @@ function renderTabs() {
 renderTabs();
 const wanted = new Set();
 function renderStrip() {
-  wanted.clear(); for (const n of L.needs) if (countOf(n.types) < n.n) n.types.forEach(t => wanted.add(t));
+  wanted.clear(); for (const n of L.needs) if (needCount(n) < n.n) n.types.forEach(t => wanted.add(t));
   const el = $('strip'); let html = '';
   if (tab === 'obra') {
     html = TOOLS.map(t => `<button class="card ${tool && tool.id === t.id ? 'active' : ''}" data-tool="${t.id}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></span><span class="nm">${t.name}</span><span class="pr">Obra</span></button>`).join('')
@@ -2121,7 +2231,7 @@ function renderStrip() {
     if (tab === 'buscar' && q) list.sort((a, b) => fold(a[1].name).indexOf(q) === 0 ? -1 : fold(b[1].name).indexOf(q) === 0 ? 1 : 0);
     if (tab === 'buscar' && !list.length) html = `<div class="empty">No hay nada con «${$('search').value.trim()}». Prueba con otra palabra.</div>`;
     else html = list.map(([k, D]) =>
-      `<button class="card ${placing === k ? 'active' : ''}" data-buy="${k}">${wanted.has(k) ? '<span class="want">lo pide</span>' : ''}${getThumb(k) ? `<img src="${thumbs[k]}" alt="">` : '<span class="sw"></span>'}<span class="nm">${D.name}</span><span class="pr"><span class="coin"></span>${D.price}</span></button>`).join('');
+      `<button class="card ${placing === k ? 'active' : ''} ${rareLocked(D) ? 'locked' : ''}" data-buy="${k}">${wanted.has(k) ? '<span class="want">lo pide</span>' : D.rare ? `<span class="want rare">${rareLocked(D) ? '★ ' + D.rare : 'raro'}</span>` : ''}${getThumb(k) ? `<img src="${thumbs[k]}" alt="">` : '<span class="sw"></span>'}<span class="nm">${D.name}</span><span class="pr"><span class="coin"></span>${D.price}</span></button>`).join('');
   }
   const sx = el.scrollLeft, sy = el.scrollTop; el.innerHTML = html; el.scrollLeft = sx; el.scrollTop = sy;
 }
@@ -2138,6 +2248,7 @@ $('strip').addEventListener('click', e => {
   if (BM && b.dataset.floor) { setTool('floor', { floor: b.dataset.floor }); return; }
   if (b.dataset.buy) {
     if (tool) setTool(null);
+    if (rareLocked(CAT[b.dataset.buy])) { buzz(30); return toast(`Objeto raro: consigue ${CAT[b.dataset.buy].rare} entre estrellas y trofeos (tienes ${points()})`); }
     if (state.lockAll) { state.lockAll = false; settings.lockAll = 0; renderLockAll(); }
     startPlacing(placing === b.dataset.buy ? null : b.dataset.buy); return;
   } else if (b.dataset.wall && b.dataset.wall !== R.wall) {
@@ -2289,7 +2400,7 @@ $('tSize').addEventListener('click', () => {
 });
 
 /* ---------- cat ---------- */
-const cat = { g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 1, jump: 0, t: 0 };
+const cat = { key: 'cat', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 1, jump: 0, t: 0, speed: 0.9, rest: 1.5, bounce: 0.03, hop: 0.45 };
 // Milo the pug: fawn coat, black mask, rose ears, forehead wrinkles, curly tail and a red collar. Faces +x.
 (function buildPug() {
   const fawn = M(0xD9B07E), fawnL = M(0xEACFA6), fawnD = M(0xC39563), mask = std({ color: 0x241E2E, roughness: 0.55 }), nose = std({ color: 0x15111C, roughness: 0.25 });
@@ -2350,27 +2461,12 @@ function stepBlocked(x1, z1, x2, z2) {
   if (a[1] !== b[1] && blk(ekey('h', b[0], Math.max(a[1], b[1])))) return true;
   return false;
 }
-function catTarget() {
-  for (let k = 0; k < 14; k++) {
-    const tx = Math.floor(Math.random() * GW) - GW / 2 + 0.5, tz = Math.floor(Math.random() * GD) - GD / 2 + 0.5;
-    const steps = Math.ceil(Math.hypot(tx - cat.x, tz - cat.z) / 0.2); let clear = true;
-    for (let i = 1; i <= steps && clear; i++) clear = !stepBlocked(cat.x + (tx - cat.x) * (i - 1) / steps, cat.z + (tz - cat.z) * (i - 1) / steps, cat.x + (tx - cat.x) * i / steps, cat.z + (tz - cat.z) * i / steps);
-    if (clear) { cat.tx = tx; cat.tz = tz; return; }
-  }
-  cat.wait = 1;
-}
-function resetCat() {
-  const free = [];
-  for (let x = 0; x < GW; x++) for (let z = 0; z < GD; z++) if (!cellBlocked(x - GW / 2 + 0.5, z - GD / 2 + 0.5)) free.push([x - GW / 2 + 0.5, z - GD / 2 + 0.5]);
-  const p = free[Math.floor(Math.random() * free.length)] || [0, 0];
-  cat.x = cat.tx = p[0]; cat.z = cat.tz = p[1]; cat.wait = 1;
-}
 const doorPos = new THREE.Vector3();
 function animateDoors(dt) {
   for (const it of allItems()) {
     const D = def(it); if (!D.swing || !it.group) continue;
     let want = it.open ? 1 : 0;
-    if (!want && cat.g.visible && (!BM || it.lv === 0)) { it.group.getWorldPosition(doorPos); if (Math.hypot(doorPos.x + (D.hole.x || 0) - cat.x, doorPos.z - cat.z) < 1.0) want = 1; }
+    if (!want && (!BM || it.lv === 0)) { it.group.getWorldPosition(doorPos); if (pets.some(c => c.g.visible && Math.hypot(doorPos.x + (D.hole.x || 0) - c.x, doorPos.z - c.z) < 1.0)) want = 1; }
     const a = it._a = (it._a || 0) + (want - (it._a || 0)) * Math.min(1, dt * 5); if (a < 0.002 && !want && !it._moved) continue; it._moved = a > 0.002;
     const L1 = it.group.getObjectByName('leaf'), Ll = it.group.getObjectByName('leafL'), Lr = it.group.getObjectByName('leafR');
     if (D.swing === 'hinge' && L1) L1.rotation.y = -a * 1.45;
@@ -2379,27 +2475,72 @@ function animateDoors(dt) {
     if (D.swing === 'up' && L1) { L1.scale.y = 1 - a * 0.9; L1.position.y = D.hole.y1 * a * 0.9; }
   }
 }
-function updateCat(dt) {
-  cat.g.visible = settings.cat === '1'; if (!cat.g.visible) return;
-  cat.t += dt;
-  if (cellBlocked(cat.x, cat.z)) resetCat();
-  const dx = cat.tx - cat.x, dz = cat.tz - cat.z, dist = Math.hypot(dx, dz);
-  let moving = false;
-  if (cat.wait > 0) cat.wait -= dt;
-  else if (dist > 0.03) {
-    const step = Math.min(dist, dt * 0.9), nx = cat.x + dx / dist * step, nz = cat.z + dz / dist * step;
-    if (stepBlocked(cat.x, cat.z, nx, nz)) { cat.tx = cat.x; cat.tz = cat.z; cat.wait = 0.6; }
-    else { cat.x = nx; cat.z = nz; moving = true; cat.g.rotation.y = Math.atan2(-dz, dx); }
-  } else { cat.wait = 1.5 + Math.random() * 3; catTarget(); }
-  if (cat.jump > 0) cat.jump = Math.max(0, cat.jump - dt * 1.8);
-  cat.g.position.set(cat.x, (moving ? Math.abs(Math.sin(cat.t * 12)) * 0.03 : 0) + Math.sin(cat.jump * PI) * 0.45, cat.z);
-  cat.tail.rotation.x = Math.sin(cat.t * (moving ? 16 : 6)) * 0.4;
-  cat.body.rotation.x = moving ? Math.sin(cat.t * 10) * 0.07 : 0;
-  cat.head.rotation.x = moving ? 0 : Math.sin(cat.t * 0.7) * 0.18; cat.head.rotation.z = moving ? Math.sin(cat.t * 10) * 0.05 : 0;
-  cat.tongue.scale.y = moving ? 1 + Math.abs(Math.sin(cat.t * 12)) * 0.8 : 1;
-  const blink = cat.t > cat.blinkAt && cat.t < cat.blinkAt + 0.13; if (cat.t > cat.blinkAt + 0.13) cat.blinkAt = cat.t + 2 + Math.random() * 3;
-  for (const e of cat.eyes) e.scale.y = blink ? 0.12 : 1;
+function petTarget(c) {
+  for (let k = 0; k < 14; k++) {
+    const tx = Math.floor(Math.random() * GW) - GW / 2 + 0.5, tz = Math.floor(Math.random() * GD) - GD / 2 + 0.5;
+    const steps = Math.ceil(Math.hypot(tx - c.x, tz - c.z) / 0.2); let clear = true;
+    for (let i = 1; i <= steps && clear; i++) clear = !stepBlocked(c.x + (tx - c.x) * (i - 1) / steps, c.z + (tz - c.z) * (i - 1) / steps, c.x + (tx - c.x) * i / steps, c.z + (tz - c.z) * i / steps);
+    if (clear) { c.tx = tx; c.tz = tz; return; }
+  }
+  c.wait = 1;
 }
+function resetPet(c) {
+  const free = [];
+  for (let x = 0; x < GW; x++) for (let z = 0; z < GD; z++) if (!cellBlocked(x - GW / 2 + 0.5, z - GD / 2 + 0.5)) free.push([x - GW / 2 + 0.5, z - GD / 2 + 0.5]);
+  const p = free[Math.floor(Math.random() * free.length)] || [0, 0];
+  c.x = c.tx = p[0]; c.z = c.tz = p[1]; c.wait = 1;
+}
+function updatePet(c, dt) {
+  c.g.visible = settings[c.key] === '1' && !state.walk; if (!c.g.visible) return;
+  c.t += dt;
+  if (cellBlocked(c.x, c.z)) resetPet(c);
+  const dx = c.tx - c.x, dz = c.tz - c.z, dist = Math.hypot(dx, dz);
+  let moving = false;
+  if (c.wait > 0) c.wait -= dt;
+  else if (dist > 0.03) {
+    const step = Math.min(dist, dt * c.speed), nx = c.x + dx / dist * step, nz = c.z + dz / dist * step;
+    if (stepBlocked(c.x, c.z, nx, nz)) { c.tx = c.x; c.tz = c.z; c.wait = 0.6; }
+    else { c.x = nx; c.z = nz; moving = true; c.g.rotation.y = Math.atan2(-dz, dx); }
+  } else { c.wait = c.rest + Math.random() * 3; petTarget(c); }
+  if (c.jump > 0) c.jump = Math.max(0, c.jump - dt * 1.8);
+  c.g.position.set(c.x, (moving ? Math.abs(Math.sin(c.t * 12)) * c.bounce : 0) + Math.sin(c.jump * PI) * c.hop, c.z);
+  if (c.tail) c.tail.rotation.x = Math.sin(c.t * (moving ? 16 : 6)) * 0.4;
+  if (c.body) c.body.rotation.x = moving ? Math.sin(c.t * 10) * 0.07 : 0;
+  if (c.head) { c.head.rotation.x = moving ? 0 : Math.sin(c.t * 0.7) * 0.18; c.head.rotation.z = moving ? Math.sin(c.t * 10) * 0.05 : 0; }
+  if (c.tongue) c.tongue.scale.y = moving ? 1 + Math.abs(Math.sin(c.t * 12)) * 0.8 : 1;
+  if (c.legs) c.legs.forEach((l, i) => { l.rotation.z = moving ? Math.sin(c.t * 9 + i * PI) * 0.45 : 0; });
+  if (c.arm) c.arm.rotation.x = c.jump > 0 ? -2.6 * Math.sin(c.jump * PI) : moving ? Math.sin(c.t * 9) * 0.3 : 0; // waves when tapped
+  if (c.eyes) { const blink = c.t > c.blinkAt && c.t < c.blinkAt + 0.13; if (c.t > c.blinkAt + 0.13) c.blinkAt = c.t + 2 + Math.random() * 3; for (const e of c.eyes) e.scale.y = blink ? 0.12 : 1; }
+}
+function updateCat(dt) { for (const c of pets) updatePet(c, dt); }
+// Luna, a grey cat, and Nico, a friend who drops by; both face +x like Milo
+const luna = { key: 'luna', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 2, jump: 0, t: 0, speed: 0.75, rest: 2.5, bounce: 0.02, hop: 0.6, blinkAt: 3, eyes: [] };
+(function buildLuna() {
+  const fur = M(0x9A9AA6), furL = M(0xD8D8DE), pink = M(0xF2A7B8), body = new THREE.Group(); luna.g.add(body); luna.body = body;
+  S(body, 0.14, fur, 0, 0.2, 0).scale.set(1.5, 0.85, 0.85); S(body, 0.09, furL, 0.07, 0.17, 0).scale.set(1.2, 0.8, 0.7);
+  for (const [x, z] of [[0.13, 0.06], [0.13, -0.06], [-0.13, 0.06], [-0.13, -0.06]]) C(body, 0.028, 0.024, 0.14, fur, x, 0.07, z, 8);
+  const head = new THREE.Group(); head.position.set(0.22, 0.3, 0); body.add(head); luna.head = head; S(head, 0.1, fur, 0, 0, 0).scale.set(1, 0.92, 1.05); S(head, 0.05, furL, 0.07, -0.03, 0).scale.set(0.8, 0.7, 1.1);
+  for (const sz of [-1, 1]) { K(head, 0.04, 0.08, fur, -0.01, 0.1, sz * 0.055).rotation.x = sz * 0.3; K(head, 0.022, 0.05, pink, 0.0, 0.1, sz * 0.055).rotation.x = sz * 0.3;
+    const e = new THREE.Group(); e.position.set(0.085, 0.02, sz * 0.042); head.add(e); luna.eyes.push(e); S(e, 0.022, M(0x8FD06A), 0, 0, 0); S(e, 0.012, M(0x15111C), 0.012, 0, 0).scale.set(0.6, 1.4, 1); }
+  S(head, 0.012, pink, 0.105, -0.015, 0);
+  const tail = new THREE.Group(); tail.position.set(-0.2, 0.22, 0); body.add(tail); luna.tail = tail; rod(tail, V3(0, 0, 0), V3(-0.1, 0.18, 0), 0.02, fur); rod(tail, V3(-0.1, 0.18, 0), V3(-0.06, 0.3, 0), 0.018, fur);
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.32), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; luna.g.add(blob);
+  luna.g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; }); scene.add(luna.g);
+})();
+const nico = { key: 'visita', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 3, jump: 0, t: 0, speed: 0.6, rest: 3, bounce: 0.015, hop: 0, legs: [], blinkAt: 2, eyes: [] };
+(function buildNico() {
+  const skin = M(0xE8B896), shirt = M(0xFF7A59), jeans = M(0x4F6A9A), hair = M(0x3B2A22), shoe = M(0xF4F1EA), body = new THREE.Group(); nico.g.add(body); nico.body = body;
+  for (const sz of [-1, 1]) { const leg = new THREE.Group(); leg.position.set(0, 0.72, sz * 0.09); body.add(leg); nico.legs.push(leg); C(leg, 0.06, 0.05, 0.66, jeans, 0, -0.35, 0, 12); B(leg, 0.16, 0.07, 0.1, shoe, 0.03, -0.69, 0); }
+  add(body, roundBox(0.24, 0.5, 0.34, 0.1), shirt, 0, 0.97, 0); S(body, 0.05, skin, 0, 1.24, 0);
+  const head = new THREE.Group(); head.position.set(0, 1.4, 0); body.add(head); nico.head = head; S(head, 0.14, skin, 0, 0, 0).scale.set(0.95, 1.05, 0.95);
+  S(head, 0.145, hair, -0.02, 0.05, 0).scale.set(0.95, 0.8, 1); S(head, 0.06, hair, 0.06, 0.1, 0.04);
+  for (const sz of [-1, 1]) { const e = new THREE.Group(); e.position.set(0.13, 0.01, sz * 0.05); head.add(e); nico.eyes.push(e); S(e, 0.018, M(0x2B2140), 0, 0, 0); S(head, 0.02, M(0xF2A7B8), 0.125, -0.04, sz * 0.08).scale.set(0.5, 0.6, 1); }
+  BX(head, 0.01, 0.012, 0.05, M(0xB0584A), 0.135, -0.06, 0);
+  for (const sz of [-1, 1]) { const arm = new THREE.Group(); arm.position.set(0, 1.18, sz * 0.21); body.add(arm); if (sz > 0) nico.arm = arm; C(arm, 0.045, 0.04, 0.42, shirt, 0, -0.2, 0, 10); S(arm, 0.045, skin, 0, -0.44, 0); }
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; nico.g.add(blob);
+  nico.g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; }); scene.add(nico.g);
+})();
+const pets = [cat, luna, nico];
 
 /* ---------- day / night ---------- */
 const state = { night: false, menu: true };
@@ -2411,24 +2552,41 @@ function updateLights() {
   const list = state.night ? allItems().filter(it => def(it).light && !it.off && it.group && it.group.parent && (!BM || it.lv <= HOUSE.cur)) : [];
   list.sort((a, b) => a.group.position.lengthSq() - b.group.position.lengthSq());
   lightPool.forEach((l, i) => { const it = list[i]; if (!it) { l.intensity = 0; return; } const Lc = def(it).light; it.group.updateWorldMatrix(true, false);
-    l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(it.lc ?? Lc.color); l.intensity = Lc.power; });
+    l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(it.lc ?? Lc.color); l.intensity = Lc.power * (state.lampK ?? 1); });
 }
 function paintChrome() { // what shows around and under the game: browser bar, iPhone home strip, overscroll
-  const c = state.menu ? '#1E1830' : state.night ? '#1D1A3A' : '#EEE4F3';
+  const c = state.menu ? '#1E1830' : state.night ? '#1D1A3A' : app.classList.contains('dusk') ? '#E9C9CF' : '#EEE4F3';
   document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', c);
 }
-function applyNight() {
-  const n = state.night;
-  hemi.intensity = n ? 0.42 : 0.56; hemi.color.setHex(n ? 0x9DA6E8 : 0xFFF2E6); hemi.groundColor.setHex(n ? 0x8E83B0 : 0x6F6396);
-  sun.intensity = n ? 0.1 : 0.92; sun.color.setHex(n ? 0x8C9BE8 : 0xFFEBD2); fill.intensity = n ? 0.06 : 0.14;
-  windowMat.color.setHex(n ? 0x2C3570 : 0xA9D6EE); windowMat.emissive.setHex(n ? 0x1B2150 : 0x5E9CC4);
-  glowMats.forEach(m => { m.emissiveIntensity = m.userData.off ? 0 : n ? 1.1 : 0.5; });
+// each look is [hemi, hemiSky, hemiGround, sun, sunColor, fill, windowColor, windowGlow, lampGlow]
+const SKY_KEYS = [[0.56, 0xFFF2E6, 0x6F6396, 0.92, 0xFFEBD2, 0.14, 0xA9D6EE, 0x5E9CC4, 0.5], [0.46, 0xFFC9A8, 0x6A4F7A, 0.72, 0xFF9455, 0.1, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
+const SKY_MODES = ['dia', 'tarde', 'noche', 'auto'], SKY_P = { dia: 0, tarde: 0.5, noche: 1 };
+const sunsetIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 7v2M5.6 11.6l1.4 1.4M18.4 11.6L17 13M7 21h10"/></svg>';
+const autoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M21 3v6h-6"/><circle cx="12" cy="12" r="3"/></svg>';
+function skyPhase() { if (state.sky !== 'auto') return SKY_P[state.sky] ?? 0; const u = (performance.now() / 1000 / 240 + 0.2) % 1; // four minutes a day
+  return u < 0.4 ? 0 : u < 0.5 ? (u - 0.4) * 5 : u < 0.55 ? 0.5 + (u - 0.5) * 10 : u < 0.88 ? 1 : u < 0.94 ? 1 - (u - 0.88) * 8.33 : 0.5 - (u - 0.94) * 8.33; }
+const cA = new THREE.Color(), cB = new THREE.Color();
+const mixHex = (a, b, t, out) => out.copy(cA.setHex(a)).lerp(cB.setHex(b), t);
+let skyP = -1;
+function setSky(p) {
+  p = Math.max(0, Math.min(1, p)); const i = p < 0.5 ? 0 : 1, t = (p - i * 0.5) * 2, A = SKY_KEYS[i], Bk = SKY_KEYS[i + 1], L2 = (a, b) => a + (b - a) * t;
+  hemi.intensity = L2(A[0], Bk[0]); mixHex(A[1], Bk[1], t, hemi.color); mixHex(A[2], Bk[2], t, hemi.groundColor);
+  sun.intensity = L2(A[3], Bk[3]); mixHex(A[4], Bk[4], t, sun.color); fill.intensity = L2(A[5], Bk[5]); sun.position.set(6, 11 - Math.min(p, 0.5) * 10, 5);
+  mixHex(A[6], Bk[6], t, windowMat.color); mixHex(A[7], Bk[7], t, windowMat.emissive);
+  const glow = L2(A[8], Bk[8]); glowMats.forEach(m => { m.emissiveIntensity = m.userData.off ? 0 : glow; });
+  const night = p > 0.6, dusk = p > 0.25 && !night, changed = night !== state.night || skyP < 0;
+  state.night = night; state.lampK = Math.max(0, Math.min(1, (p - 0.45) * 2.5)); skyP = p;
+  app.classList.toggle('night', night); app.classList.toggle('dusk', dusk); if (changed) paintChrome();
   updateLights();
-  app.classList.toggle('night', n); paintChrome();
-  $('nightBtn').innerHTML = (n ? sunIcon : moonIcon) + `<span>${n ? 'Día' : 'Noche'}</span>`; $('nightBtn').classList.toggle('on', n); $('nightBtn').setAttribute('aria-label', n ? 'Cambiar a día' : 'Cambiar a noche');
 }
-$('nightBtn').addEventListener('click', () => { state.night = !state.night; applyNight(); 0; });
+function applyNight() {
+  setSky(skyPhase());
+  const m = state.sky || 'dia', i = SKY_MODES.indexOf(m);
+  $('nightBtn').innerHTML = [sunIcon, sunsetIcon, moonIcon, autoIcon][i] + `<span>${['Día', 'Tarde', 'Noche', 'Auto'][i]}</span>`;
+  $('nightBtn').classList.toggle('on', m === 'noche'); $('nightBtn').setAttribute('aria-label', 'Luz: ' + ['día', 'atardecer', 'noche', 'ciclo automático'][i] + '. Toca para cambiar');
+}
+$('nightBtn').addEventListener('click', () => { state.sky = SKY_MODES[(SKY_MODES.indexOf(state.sky || 'dia') + 1) % 4]; settings.sky = state.sky; applyNight(); save(); buzz(6); sfx('click'); });
 function renderLockAll() {
   const on = !!state.lockAll; $('lockAllBtn').classList.toggle('on', on);
   $('lockAllBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${on ? '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' : '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/>'}</svg><span>${on ? 'Fijado' : 'Mover'}</span>`;
@@ -2859,11 +3017,11 @@ function loadRoom(id) {
   for (const w of Object.values(walls)) w.h = 1;
   app.classList.toggle('build', BM); tab = BM ? 'obra' : tab === 'obra' ? 'muebles' : tab; renderTabs();
   history.length = 0; future.length = 0; updHistory();
-  resetCat(); applyNight();
+  for (const c of pets) resetPet(c); applyNight();
   app.classList.toggle('home', !!L.home);
   const idx = LEVELS.indexOf(L);
   $('cRoom').textContent = L.room;
-  $('cSub').textContent = BM ? `Constructor · ${FLOOR_NAMES[HOUSE.cur]}` : L.home ? `Mi casa · ${L.w} × ${L.d}` : `Encargo ${idx + 1} de ${LEVELS.length} · ${L.kind}`;
+  $('cSub').textContent = L.challenge ? `${L.kind} · ${L.w} × ${L.d}` : BM ? `Constructor · ${FLOOR_NAMES[HOUSE.cur]}` : L.home ? `Mi casa · ${L.w} × ${L.d}` : `Encargo ${idx + 1} de ${LEVELS.length} · ${L.kind}`;
   $('cIco').style.background = L.color;
   if (!L.home) { $('mTitle').textContent = `Lo que pide ${L.client}`; $('mission').classList.toggle('collapsed', matchMedia('(pointer: coarse)').matches); }
   refreshHud(); queueLayout(); save();
@@ -2871,8 +3029,8 @@ function loadRoom(id) {
 
 /* ---------- menus ---------- */
 function openMenu() { if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; paintChrome(); app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
-function closeMenu() { state.menu = false; paintChrome(); app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
-const RANKS = [[0, 'Aprendiz'], [4, 'Decorador'], [10, 'Interiorista'], [18, 'Diseñador'], [27, 'Arquitecto estrella']];
+function closeMenu() { state.menu = false; paintChrome(); app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv', 'retosOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
+const RANKS = [[0, 'Aprendiz'], [4, 'Decorador'], [10, 'Interiorista'], [18, 'Diseñador'], [27, 'Arquitecto estrella'], [40, 'Leyenda del diseño']];
 function renderMenu() {
   const t = totalStars(), max = LEVELS.length * 3, homes = HOMES.filter(homeUnlocked).length;
   let ri = 0; RANKS.forEach((r, i) => { if (t >= r[0]) ri = i; });
@@ -2882,6 +3040,7 @@ function renderMenu() {
   $('rankBar').style.width = (next ? (t - RANKS[ri][0]) / (next[0] - RANKS[ri][0]) * 100 : 100) + '%';
   $('mContinueSub').textContent = (BM ? 'Constructor · ' : L.home ? 'Mi casa · ' : '') + L.room;
   $('mStorySub').textContent = `${t} de ${max} estrellas`; $('mStoryBar').style.width = t / max * 100 + '%';
+  $('mRetosSub').textContent = `${settings.trofeos || 0} trofeos · ${Object.values(CAT).filter(D => D.rare && !rareLocked(D)).length} de ${Object.values(CAT).filter(D => D.rare).length} objetos raros`; $('mRetosNew').hidden = rooms.reto_d.best > 0;
   $('mHomeSub').textContent = `${homes} de ${HOMES.length} salas`; $('mHomeBar').style.width = homes / HOMES.length * 100 + '%';
   const bw = rooms.build.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0);
   $('mBuildSub').textContent = bw ? `${bw} paredes` : 'Tu casa, 3 pisos'; $('mBuildBar').style.width = Math.min(100, bw / 80 * 100) + '%';
@@ -2903,6 +3062,14 @@ function renderHomes() {
 }
 $('mContinue').addEventListener('click', () => { closeMenu(); if (!settings.seenHelp) { settings.seenHelp = 1; save(); $('helpOv').hidden = false; } });
 $('mStory').addEventListener('click', () => { renderStory(); $('storyOv').hidden = false; });
+$('mRetos').addEventListener('click', () => { renderRetos(); $('retosOv').hidden = false; });
+function renderRetos() {
+  const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1), hrs = Math.ceil((mid - now) / 36e5), days = 7 - ((now.getDay() + 6) % 7);
+  $('retosSub').textContent = `Tienes ${settings.trofeos || 0} trofeos y ${totalStars()} estrellas: juntos abren los objetos raros.`;
+  $('retosList').innerHTML = RETOS.map(l => `<button class="lv ${l === L ? 'current' : ''}" data-room="${l.id}"><span class="band" style="background:${l.color}">${l.challenge === 'd' ? 'Hoy' : 'Semana'}${starsHtml(rooms[l.id].best)}</span>
+    <span class="body"><b>${l.room}</b><small>${l.kind} · ${l.needs.length} deseos · ${l.challenge === 'd' ? `quedan ${hrs} h` : `quedan ${days} días`} · premio ${l.challenge === 'w' ? '2' : '1'} trofeo${l.challenge === 'w' ? 's' : ''} por estrella</small></span></button>`).join('');
+  $('rareList').innerHTML = Object.entries(CAT).filter(([, D]) => D.rare).sort((a, b) => a[1].rare - b[1].rare).map(([k, D]) => `<div class="rare-item ${rareLocked(D) ? 'locked' : ''}"><img src="${getThumb(k)}" alt=""><span>${D.name}<small>${rareLocked(D) ? `Con ${D.rare} ★ y trofeos` : 'Desbloqueado'}</small></span></div>`).join('');
+}
 $('mHome').addEventListener('click', () => { renderHomes(); $('homeOv').hidden = false; });
 $('mBuild').addEventListener('click', () => { renderBuildList(); $('buildOv').hidden = false; });
 function renderBuildList() {
@@ -2928,7 +3095,7 @@ $('mSettings').addEventListener('click', () => { renderSettings(); $('settingsOv
 $('menuBtn').addEventListener('click', openMenu);
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => { b.closest('.overlay').hidden = true; }));
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'resultOv') o.hidden = true; }));
-for (const list of ['storyList', 'homeList']) $(list).addEventListener('click', e => {
+for (const list of ['storyList', 'homeList', 'retosList']) $(list).addEventListener('click', e => {
   const b = e.target.closest('.lv'); if (!b) return;
   if (b.classList.contains('locked')) { toast(list === 'storyList' ? 'Antes: 1 estrella en el anterior' : 'Necesitas más estrellas'); return; }
   loadRoom(b.dataset.room); closeMenu();
@@ -2954,7 +3121,8 @@ $('wipe').addEventListener('click', () => {
 
 $('deliver').addEventListener('click', () => {
   const s = score(); if (!s.needsMet) return;
-  const beforeStars = totalStars(), beforeHomes = HOMES.filter(homeUnlocked).length, idx = LEVELS.indexOf(L), nextWasOpen = idx + 1 < LEVELS.length && storyUnlocked(idx + 1);
+  const beforeStars = totalStars(), beforeHomes = HOMES.filter(homeUnlocked).length, idx = LEVELS.indexOf(L), nextWasOpen = idx + 1 < LEVELS.length && storyUnlocked(idx + 1), beforePts = points();
+  const won = L.challenge ? Math.max(0, s.stars - R.best) * (L.challenge === 'w' ? 2 : 1) : 0; if (won) settings.trofeos = (settings.trofeos || 0) + won;
   R.best = Math.max(R.best, s.stars); select(null); save();
   $('rAvatar').textContent = L.client[0]; $('rAvatar').style.background = L.color;
   $('rTitle').textContent = `${L.client} opina…`;
@@ -2965,8 +3133,10 @@ $('deliver').addEventListener('click', () => {
   if (!nextWasOpen && idx + 1 < LEVELS.length && storyUnlocked(idx + 1)) un.push(`Nuevo encargo: ${LEVELS[idx + 1].room}`);
   HOMES.filter(homeUnlocked).slice(beforeHomes).forEach(h => un.push(`Nueva sala en Mi casa: ${h.room}`));
   if (totalStars() > beforeStars) un.unshift(`+${totalStars() - beforeStars} estrellas · total ${totalStars()}`);
+  if (won) un.unshift(`+${won} trofeos · tienes ${settings.trofeos}`);
+  Object.values(CAT).filter(D => D.rare > beforePts && D.rare <= points()).forEach(D => un.push(`Objeto raro desbloqueado: ${D.name}`));
   $('rUnlocks').innerHTML = un.map(u => `<div>${u}</div>`).join('');
-  $('rNext').hidden = idx === LEVELS.length - 1;
+  $('rNext').hidden = idx === LEVELS.length - 1 || !!L.challenge;
   $('resultOv').hidden = false;
   if (s.stars === 3) confetti();
 });
@@ -3035,7 +3205,7 @@ const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new 
 function setRay(e) { const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); }
 function pick(e) {
   setRay(e);
-  if (cat.g.visible && ray.intersectObject(cat.g, true).length) return 'cat';
+  for (const c of pets) if (c.g.visible && ray.intersectObject(c.g, true).length) return c;
   const groups = R.items.filter(i => i.group && (!def(i).wall || (BM ? (wallMeshes[i.lv][i.edge] || { h: 0 }).h > 0.5 : walls[i.wall].h > 0.5))).map(i => i.group);
   const hits = ray.intersectObjects(groups, true).filter(h => h.object.material !== blobMat);
   if (!hits.length) return null;
@@ -3095,7 +3265,7 @@ canvas.addEventListener('pointerdown', e => {
   if (e.button === 2 || e.shiftKey) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: 99 }; return; }
   if (BM && tool) { const p = floorPoint(e); gesture = { kind: 'tool', a: p, b: p, before: snap(), x0: e.clientX, y0: e.clientY }; toolMove(gesture, e); return; }
   const it = pick(e);
-  if (it === 'cat') { cat.jump = 1; buzz(20); gesture = null; return; }
+  if (it && it.isPet) { it.jump = 1; buzz(20); sfx(it === cat ? 'bark' : it === luna ? 'meow' : 'hi'); gesture = null; return; }
   if (state.lockAll) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, moved: 0, tapItem: null }; return; }
   // only the object that is already selected can be dragged; anything else is a tap or a camera turn
   if (it && it === sel && !it.locked && !placing) { gesture = startDrag(it, e); gesture.x0 = e.clientX; gesture.y0 = e.clientY; }
@@ -3167,8 +3337,8 @@ function save() {
   if (wiping) return;
   try {
     const out = {};
-    for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, op: r.op, items: r.items.map(({ group, _a, _moved, ...i }) => i) };
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, night: state.night, settings }));
+    for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, op: r.op, key: r.key, items: r.items.map(({ group, _a, _moved, ...i }) => i) };
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, settings }));
   } catch (e) { /* storage blocked: the game still plays, it just won't remember */ }
 }
 setInterval(save, 3000);
@@ -3176,7 +3346,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 
 /* ---------- loop ---------- */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let last = performance.now();
+let last = performance.now(), frameN = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (state.menu && !reduce) view.az += dt * 0.12;
@@ -3191,19 +3361,24 @@ function frame(now) {
   if (!BM) for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
   if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
   animateDoors(dt);
-  if (!reduce) for (const it of allItems()) if (it.group && CAT[it.type].spin) { const b = it.group.getObjectByName('blades'); if (b) b.rotation.y += dt * 2.6; }
+  if (!reduce) for (const it of allItems()) if (it.group) {
+    const D = CAT[it.type]; if (D.spin) { const b = it.group.getObjectByName('blades'); if (b) b.rotation.y += dt * 2.6; }
+    if (it.type === 'loro') { const b = it.group.getObjectByName('bob'); if (b) b.rotation.z = Math.sin(now / 300) * 0.15 + (Math.sin(now / 1700) > 0.8 ? Math.sin(now / 60) * 0.2 : 0); }
+    else if (it.type === 'hamster') { const w = it.group.getObjectByName('wheel'); if (w) w.rotation.z -= dt * 5; }
+    else if (it.type === 'acuarioGigante' || it.type === 'pecera') { const f = it.group.getObjectByName('swim'); if (f) f.position.x = Math.sin(now / 1400) * 0.25; } }
   if (popAnim) {
     popAnim.t += dt * 3.2; const t = popAnim.t, s = t >= 1 ? 1 : 1 + Math.sin(t * PI) * 0.12;
     popAnim.it.group.scale.set(s, 2 - s, s); if (t >= 1) popAnim = null;
   }
   if (sel && !(gesture && /drag/.test(gesture.kind))) markerMat.opacity = 0.32 + Math.sin(now / 260) * 0.12;
   updateCat(dt);
+  if (state.sky === 'auto' && !state.menu && (frameN = (frameN + 1) % 6) === 0) setSky(skyPhase());
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 
 /* ---------- start ---------- */
-if (saved && saved.night) state.night = true;
+state.sky = settings.sky || (saved && saved.night ? 'noche' : 'dia');
 state.lockAll = !!settings.lockAll; renderLockAll();
 applyQuality();
 const PHONE = matchMedia('(pointer: coarse)').matches;
