@@ -41,3 +41,7 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 - **Ver:** foto sin botones, compartir una imagen con marco (o la casa entera con un enlace), paseo en primera persona en horizontal (con joystick y mejores gráficos) y plano desde arriba.
 - **Constructor:** varios proyectos con nombre (crear, duplicar, renombrar, borrar) y copiar y pegar zonas, incluso de un piso a otro.
 - **Gráficos y sonido:** espejos que reflejan de verdad, brillo en suelos de mármol y azulejo, sombras y halos de las lámparas de noche, sonidos y música suave (se apagan en Ajustes).
+- **Más cómodo:** tutorial guiado con un dedito la primera vez (se repite desde Cómo jugar), arrastrar una tarjeta del catálogo directamente a la sala, mover varios objetos juntos (elige uno y mantén pulsados los demás) y pestaña ★ con favoritos y recientes.
+- **Más vida:** el sol cambia de sitio con la hora y su luz entra por las ventanas; plantas, árboles y cortinas se mueven con la brisa; Milo se tumba en las alfombras, en su cama o su caseta, y de noche se va a dormir.
+- **Álbum de fotos:** en Ver · Foto el botón redondo guarda la foto (también en el paseo); se ven en Álbum, en el menú.
+- **Casas temáticas para empezar:** casa de playa, cabaña de montaña y piso en la ciudad.
