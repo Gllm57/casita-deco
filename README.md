@@ -38,11 +38,13 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 - **Encargos de estilo** (18 en total) que piden cosas de una colección, **reto del día** y **reto semanal** que dan trofeos, y **objetos raros** (piano de cola, acuario gigante, jukebox, bola de discoteca, sillón trono, escultura y cerezo) que se abren con estrellas y trofeos.
 - **Mascotas:** Milo (con collar azul; tócalo y dice su nombre), Kiwi el loro y un hámster con rueda.
 - **Luz:** el botón de la luz pasa por día, tarde, noche y ciclo automático.
-- **Ver:** foto sin botones, compartir una imagen con marco (o la casa entera con un enlace), paseo en primera persona en horizontal (con joystick y mejores gráficos) y plano desde arriba.
+- **Ver:** foto sin botones, compartir una imagen con marco (o la casa entera con un enlace) y plano desde arriba.
 - **Constructor:** varios proyectos con nombre (crear, duplicar, renombrar, borrar) y copiar y pegar zonas, incluso de un piso a otro.
 - **Gráficos y sonido:** espejos que reflejan de verdad, brillo en suelos de mármol y azulejo, sombras y halos de las lámparas de noche, sonidos y música suave (se apagan en Ajustes).
 - **Más cómodo:** tutorial guiado con un dedito la primera vez (se repite desde Cómo jugar), arrastrar una tarjeta del catálogo directamente a la sala, mover varios objetos juntos (elige uno y mantén pulsados los demás) y pestaña ★ con favoritos y recientes.
 - **Más vida:** el sol cambia de sitio con la hora y su luz entra por las ventanas; plantas, árboles y cortinas se mueven con la brisa; Milo se tumba en las alfombras, en su cama o su caseta, y de noche se va a dormir.
-- **Álbum de fotos:** en Ver · Foto el botón redondo guarda la foto (también en el paseo); se ven en Álbum, en el menú.
+- **Álbum de fotos:** en Ver · Foto el botón redondo guarda la foto; se ven en Álbum, en el menú.
 - **Casas temáticas para empezar:** casa de playa, cabaña de montaña y piso en la ciudad.
 - **Departamento en altura:** en el Constructor, «Nuevo: departamento en altura» (o la tarjeta En altura / Con jardín en Obra) pone el proyecto en lo alto de un edificio, con la ciudad y las nubes abajo y las ventanas encendidas de noche. El piso en la ciudad ya viene así.
+- **Colocar contra la pared:** los muebles que pones pegados a una pared se giran solos para quedar de frente a la sala.
+- **Cortinas:** lisas, visillos, de terciopelo con galería y de cocina, de 1 a 4 metros (botón Tamaño).
