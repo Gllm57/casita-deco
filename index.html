@@ -14,7 +14,7 @@
 <link rel="icon" href="icon-512.png">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Pacifico&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
 /* Layout: full-bleed 3D room; HUD floats on top, catalog fades up from the bottom edge (right edge in landscape); menus slide up as sheets */
 :root {
@@ -40,12 +40,12 @@
 }
 * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-html, body { height: 100%; margin: 0; }
+html, body { height: 100%; margin: 0; background: #1E1830; transition: background-color .4s; }
 body { -webkit-touch-callout: none; background: var(--page); color: var(--ink); font-family: var(--body); font-size: 14px; overflow: hidden; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
 button { font-family: var(--body); color: inherit; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
-.app { position: fixed; inset: 0; overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #FFE6D8 0%, #EBDCF4 50%, #C9BCE6 100%); transition: background .6s; }
+.app { position: fixed; inset: 0; height: 100dvh; overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #FFE6D8 0%, #EBDCF4 50%, #C9BCE6 100%); transition: background .6s; }
 .app.night { background: radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
 canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 45%, transparent 60%, rgba(43,33,64,.18) 100%); }
@@ -158,7 +158,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .palette .clear { margin-top: 10px; width: 100%; border: 0; border-radius: 12px; padding: 8px; background: rgba(124,113,148,.12); font: 800 12px var(--body); cursor: pointer; }
 
 /* catalog: fades up from the edge instead of sitting in a box */
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; isolation: isolate; padding: 24px 0 max(6px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(to top, rgba(var(--sheet-rgb), .88) 0%, rgba(var(--sheet-rgb), .62) 55%, rgba(var(--sheet-rgb), 0) 100%); transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; isolation: isolate; padding: 24px 0 max(4px, calc(env(safe-area-inset-bottom, 0px) - 16px)); background: linear-gradient(to top, rgba(var(--sheet-rgb), .92) 0%, rgba(var(--sheet-rgb), .65) 55%, rgba(var(--sheet-rgb), 0) 100%); transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .25s; }
 .sheet::before { content: ""; position: absolute; inset: 0; z-index: -1; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); -webkit-mask-image: linear-gradient(to top, #000 55%, transparent); mask-image: linear-gradient(to top, #000 55%, transparent); }
 .handle { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 64px; height: 22px; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
 .handle span { width: 42px; height: 5px; border-radius: 5px; background: rgba(124,113,148,.4); }
@@ -193,14 +193,12 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .card.active { box-shadow: 0 0 0 3px var(--coral), 0 6px 16px rgba(43,33,64,.12); }
 .card .want { position: absolute; top: 4px; right: 4px; background: var(--coral); color: #fff; font-size: 9.5px; font-weight: 900; border-radius: 999px; padding: 1px 6px; }
 
-.toast { position: absolute; left: calc((100% - var(--panel-w)) / 2); top: 45%; transform: translate(-50%, -8px); background: var(--ink); color: #fff; font: 800 13px var(--body); padding: 9px 15px; border-radius: 999px; opacity: 0; transition: .25s; pointer-events: none; white-space: nowrap; box-shadow: 0 8px 20px rgba(43,33,64,.3); z-index: 30; }
+.toast { position: absolute; left: calc((100% - var(--panel-w)) / 2); top: calc(env(safe-area-inset-top, 0px) + 104px); transform: translate(-50%, -6px); background: rgba(43,33,64,.86); color: #fff; font: 800 12px var(--body); padding: 5px 11px; border-radius: 999px; opacity: 0; transition: .2s; pointer-events: none; white-space: nowrap; max-width: 80%; overflow: hidden; text-overflow: ellipsis; z-index: 30; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
-.hint { position: absolute; left: calc((100% - var(--panel-w)) / 2); bottom: calc(var(--sheet-h) + 70px); transform: translateX(-50%); background: rgba(43,33,64,.8); color: #fff; font: 700 12px var(--body); padding: 7px 13px; border-radius: 999px; white-space: nowrap; transition: opacity .4s; pointer-events: none; }
-.hint.gone { opacity: 0; }
 
 /* photo mode hides every control */
-.app.in-menu .hud, .app.in-menu .sheet, .app.in-menu .cam, .app.in-menu .histbar, .app.in-menu .hint, .app.in-menu .tools, .app.in-menu .sel-name { opacity: 0 !important; pointer-events: none !important; }
-.app.photo .hud, .app.photo .sheet, .app.photo .cam, .app.photo .histbar, .app.photo .tools, .app.photo .sel-name, .app.photo .hint, .app.photo .palette { opacity: 0 !important; pointer-events: none !important; }
+.app.in-menu .hud, .app.in-menu .sheet, .app.in-menu .cam, .app.in-menu .histbar, .app.in-menu .tools, .app.in-menu .sel-name { opacity: 0 !important; pointer-events: none !important; }
+.app.photo .hud, .app.photo .sheet, .app.photo .cam, .app.photo .histbar, .app.photo .tools, .app.photo .sel-name, .app.photo .palette { opacity: 0 !important; pointer-events: none !important; }
 .photo-exit { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); border: 0; border-radius: 999px; padding: 9px 14px; font: 800 13px var(--body); cursor: pointer; display: none; }
 .app.photo .photo-exit { display: block; }
 
@@ -210,10 +208,10 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .menu-top { display: grid; justify-items: center; gap: 14px; text-align: center; }
 .brand { display: grid; justify-items: center; animation: floaty 4.5s ease-in-out infinite; }
 @keyframes floaty { 50% { transform: translateY(-5px); } }
-.roof { width: clamp(160px, 48vw, 230px); height: auto; margin-bottom: -14px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18)); }
+.logo-house { width: clamp(130px, 38vw, 180px); height: auto; margin-bottom: -6px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.25)); }
 .logo { display: grid; justify-items: center; }
-.logo .l1 { font: 800 clamp(58px, 17vw, 88px) var(--display); line-height: .9; letter-spacing: -.01em; color: #fff; text-shadow: 0 5px 0 var(--coral), 0 10px 0 rgba(0,0,0,.18), 0 18px 32px rgba(0,0,0,.35); }
-.logo .l2 { margin-top: 4px; font: 800 clamp(24px, 7vw, 34px) var(--display); line-height: 1.15; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); background: linear-gradient(180deg, #FFE7A0, #F2B33D); padding: 3px 22px 1px 26px; border-radius: 999px; transform: rotate(-4deg); box-shadow: 0 5px 0 #C98A12, 0 14px 26px rgba(0,0,0,.3); }
+.logo .l1 { font: 800 clamp(56px, 16vw, 84px) var(--display); line-height: .9; letter-spacing: -.015em; color: #fff; text-shadow: 0 4px 0 #E8C9DF, 0 8px 0 rgba(122,92,196,.55), 0 18px 34px rgba(0,0,0,.35); }
+.logo .l2 { margin-top: -8px; font: 400 clamp(38px, 11vw, 54px) 'Pacifico', 'Brush Script MT', cursive; line-height: 1.1; background: linear-gradient(180deg, #FFE08A 10%, #FF8A5C 90%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #FFB347; filter: drop-shadow(0 3px 0 #B8452B) drop-shadow(0 10px 18px rgba(0,0,0,.3)); transform: rotate(-6deg); padding: 0 10px; }
 .tagline { margin-top: 14px; font: 800 11.5px var(--body); letter-spacing: .24em; text-transform: uppercase; color: #F1E9FF; text-shadow: 0 2px 10px rgba(0,0,0,.45); }
 .rank { display: flex; align-items: center; gap: 10px; text-align: left; background: rgba(30,24,48,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 999px; padding: 6px 16px 6px 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
 .medal { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE7A0, var(--gold) 60%, #C98A12); color: #6B3F00; font: 800 15px var(--display); display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); flex: none; }
@@ -349,7 +347,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .rail button svg { width: 21px; height: 21px; }
 .rail button.on { background: var(--ink); color: #fff; }
 .night .rail button.on { background: #F1ECFF; color: var(--ink); }
-.floors { align-self: center; }
+.floors { align-self: flex-start; flex-direction: row !important; pointer-events: auto; }
+.row3 .floors button { width: 46px; }
 .floors button { width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
 .floors button b { font: 800 13px var(--display); line-height: 1; }
 .floors button small { font: 800 8.5px var(--body); opacity: .7; }
@@ -387,6 +386,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <span>Conjunto</span><span class="set" id="setVal"></span><span class="v" id="setBonus"></span>
     </div>
     <div class="row3">
+      <div class="floors glass build-only" id="floorSel" role="group" aria-label="Piso"><button data-lv="0" title="Planta baja"><b>PB</b><small>baja</small></button><button data-lv="1" title="Primer piso"><b>1º</b><small>piso</small></button></div>
       <div class="mission" id="mission">
         <header id="missionHead"><h3 id="mTitle">Lo que pide Lucía</h3><span class="count" id="mCount">0/4</span></header>
         <ul id="mList"></ul>
@@ -401,7 +401,6 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
           <button id="lockAllBtn" title="Fijar los objetos: solo se mueve la cámara"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg><span>Mover</span></button>
           <button id="photoBtn" title="Modo foto: oculta los botones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Foto</span></button>
         </div>
-        <div class="floors glass build-only" id="floorSel" role="group" aria-label="Piso"><button data-lv="1" title="Primer piso"><b>1º</b><small>piso</small></button><button data-lv="0" title="Planta baja"><b>PB</b><small>baja</small></button></div>
       </div>
     </div>
   </div>
@@ -442,7 +441,6 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button data-n="right" aria-label="Mover a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     <button data-n="down" aria-label="Mover abajo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
   </div>
-  <div class="hint" id="hint">Elige un objeto abajo y toca dónde ponerlo · dos dedos: zoom y mover</div>
   <div class="toast" id="toast"></div>
 
   <div class="sheet" id="sheet">
@@ -457,7 +455,19 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="menu" id="menu">
     <div class="menu-top" id="menuTop">
       <div class="brand">
-        <svg class="roof" viewBox="0 0 240 70" aria-hidden="true"><rect x="168" y="12" width="20" height="30" rx="4" fill="#E0603F"/><path d="M16 62 L120 12 L224 62" fill="none" stroke="#FF7A59" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M120 40c-5-8-17-4-13 4 2 5 13 11 13 11s11-6 13-11c4-8-8-12-13-4z" fill="#F2B33D"/></svg>
+        <svg class="logo-house" viewBox="0 0 200 172" aria-hidden="true">
+          <ellipse cx="100" cy="158" rx="78" ry="12" fill="rgba(0,0,0,.22)"/>
+          <path d="M30 116 L100 151 L100 103 L30 68 Z" fill="#FFF8F1"/>
+          <path d="M100 151 L170 116 L170 68 L100 103 Z" fill="#F4D8CF"/>
+          <path d="M135 145 L152 136.5 L152 104 L135 112.5 Z" fill="#8F74E0"/><circle cx="148" cy="124" r="2.6" fill="#FFE08A"/>
+          <path d="M65 106c-3-7-14-5-12 2 1 4 12 11 12 11s9-4 11-9c3-7-8-10-11-4z" fill="#F2B33D" transform="skewY(26) translate(0 -32)"/>
+          <path d="M134 50 L148 43 L148 22 L134 29 Z" fill="#C9512F"/><path d="M134 29 L148 22 L141 18.5 L127 25.5 Z" fill="#E86A47"/>
+          <path d="M20 70 L100 110 L100 14 Z" fill="#FF7A59"/>
+          <path d="M100 110 L180 70 L100 14 Z" fill="#E0603F"/>
+          <path d="M20 70 L100 110 L180 70" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M100 14 L100 110" stroke="#FFB49E" stroke-width="3"/>
+          <path d="M44 22 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z" fill="#FFF3D6"/><path d="M170 92 l3 6 6 3 -6 3 -3 6 -3 -6 -6 -3 6 -3z" fill="#FFF3D6"/>
+        </svg>
         <div class="logo"><span class="l1">Casita</span><span class="l2">Deco</span></div>
         <div class="tagline">Decora · Construye · Sueña</div>
       </div>
@@ -1542,7 +1552,7 @@ const ridersOf = it => (def(it).surface ? R.items.filter(o => def(o).top && cove
 function settleRiders(riders) { // things on a moved or turned table stay on it if they can, otherwise they are put away
   let lost = 0;
   for (const o of riders) { if (fits(o, o.gx, o.gz, 0)) { placeMesh(o); continue; } o.group.parent && o.group.parent.remove(o.group); R.items = R.items.filter(q => q !== o); lost++; }
-  if (lost) toast(`${lost} objeto${lost > 1 ? 's' : ''} de encima se ${lost > 1 ? 'guardaron' : 'guardó'} (Deshacer lo recupera)`);
+  if (lost) toast('Se quitó lo de encima');
 }
 function fits(it, gx, gz, r) {
   if (BM) return fitsB(it, gx, gz, r);
@@ -1608,12 +1618,12 @@ function freeWallSpot(it) {
 function placeNew(it) {
   if (BM) {
     it.lv = HOUSE.cur;
-    if (def(it).wall) { const sp = freeWallSpotB(it); if (!sp) { toast('No queda pared libre en este piso'); return false; } [it.edge, it.side] = sp; }
-    else { const sp = freeSpotB(it); if (!sp) { toast(def(it).stairs && HOUSE.cur ? 'La escalera va en la planta baja' : def(it).top ? 'Pon antes una mesa, encimera, isla o cómoda' : 'No queda sitio con suelo en este piso'); return false; } [it.gx, it.gz, it.r] = sp; }
+    if (def(it).wall) { const sp = freeWallSpotB(it); if (!sp) { toast('Sin pared libre'); return false; } [it.edge, it.side] = sp; }
+    else { const sp = freeSpotB(it); if (!sp) { toast(def(it).stairs && HOUSE.cur ? 'La escalera va abajo' : def(it).top ? 'Pon antes una mesa' : 'No hay sitio'); return false; } [it.gx, it.gz, it.r] = sp; }
     return true;
   }
-  if (def(it).wall) { const s = freeWallSpot(it); if (!s) { toast('No queda pared libre'); return false; } [it.wall, it.u] = s; }
-  else { const s = freeSpot(it); if (!s) { toast(def(it).top ? 'Pon antes una mesa, encimera, isla o cómoda' : 'No queda sitio libre'); return false; } [it.gx, it.gz, it.r] = s; }
+  if (def(it).wall) { const s = freeWallSpot(it); if (!s) { toast('Sin pared libre'); return false; } [it.wall, it.u] = s; }
+  else { const s = freeSpot(it); if (!s) { toast(def(it).top ? 'Pon antes una mesa' : 'No hay sitio'); return false; } [it.gx, it.gz, it.r] = s; }
   return true;
 }
 
@@ -1692,7 +1702,7 @@ $('metersToggle').addEventListener('click', () => { const on = $('meters').class
 $('missionHead').addEventListener('click', () => { $('mission').classList.toggle('collapsed'); queueLayout(); });
 
 let toastT;
-function toast(msg) { if (!msg) return; const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1700); }
+function toast(msg) { if (!msg) return; const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1300); }
 
 /* ---------- thumbnails (rendered once from the real models) ---------- */
 const thumbs = {}; let thumbKit = null;
@@ -1764,7 +1774,7 @@ $('strip').addEventListener('click', e => {
   }
   refreshHud();
 });
-function harmonyToast() { if (HARMONY.has(R.wall + '|' + R.floor)) toast('¡Pared y suelo combinan! +8 estilo'); }
+function harmonyToast() { if (HARMONY.has(R.wall + '|' + R.floor)) 0; }
 $('tabs').addEventListener('click', e => {
   const t = e.target.closest('.tab'); if (!t) return;
   document.querySelectorAll('.tab').forEach(o => o.setAttribute('aria-selected', o === t));
@@ -1988,6 +1998,11 @@ function updateLights() {
   lightPool.forEach((l, i) => { const it = list[i]; if (!it) { l.intensity = 0; return; } const Lc = def(it).light; it.group.updateWorldMatrix(true, false);
     l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(Lc.color); l.intensity = Lc.power; });
 }
+function paintChrome() { // what shows around and under the game: browser bar, iPhone home strip, overscroll
+  const c = state.menu ? '#1E1830' : state.night ? '#1D1A3A' : '#EEE4F3';
+  document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', c);
+}
 function applyNight() {
   const n = state.night;
   hemi.intensity = n ? 0.42 : 0.78; hemi.color.setHex(n ? 0x9DA6E8 : 0xFFF6EE);
@@ -1995,10 +2010,10 @@ function applyNight() {
   windowMat.color.setHex(n ? 0x2C3570 : 0xBFE3F5); windowMat.emissive.setHex(n ? 0x1B2150 : 0x7FB6D6);
   glowMats.forEach(m => { m.emissiveIntensity = n ? 1.1 : 0.5; });
   updateLights();
-  app.classList.toggle('night', n);
+  app.classList.toggle('night', n); paintChrome();
   $('nightBtn').innerHTML = (n ? sunIcon : moonIcon) + `<span>${n ? 'Día' : 'Noche'}</span>`; $('nightBtn').classList.toggle('on', n); $('nightBtn').setAttribute('aria-label', n ? 'Cambiar a día' : 'Cambiar a noche');
 }
-$('nightBtn').addEventListener('click', () => { state.night = !state.night; applyNight(); toast(state.night ? 'Buenas noches: enciende las lámparas' : 'Buenos días'); });
+$('nightBtn').addEventListener('click', () => { state.night = !state.night; applyNight(); 0; });
 function renderLockAll() {
   const on = !!state.lockAll; $('lockAllBtn').classList.toggle('on', on);
   $('lockAllBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${on ? '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' : '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/>'}</svg><span>${on ? 'Fijado' : 'Mover'}</span>`;
@@ -2197,7 +2212,7 @@ function setLevel(i, quiet) {
   groundPlane.constant = -i * LEVEL_H; view.target.y = i * LEVEL_H + 0.5;
   document.querySelectorAll('#floorSel button').forEach(b => b.classList.toggle('on', +b.dataset.lv === i));
   $('cSub').textContent = `Constructor · ${i ? 'Primer piso' : 'Planta baja'}`;
-  if (!quiet) { if (i && !Object.keys(R.tiles).length) toast('Primer piso vacío: abre Obra y usa Habitación'); refreshHud(); queueLayout(); }
+  if (!quiet) { if (i && !Object.keys(R.tiles).length) 0; refreshHud(); queueLayout(); }
 }
 function setRoofView(on) {
   state.showRoof = on; $('roofViewBtn').classList.toggle('on', on);
@@ -2208,7 +2223,7 @@ $('floorSel').addEventListener('click', e => { const b = e.target.closest('butto
 const WALL_ICONS = { auto: '<path d="M3 20h18"/><path d="M5 20V8h6v12"/><path d="M14 20v-4h5v4"/><path d="M13 9l7-3" stroke-dasharray="2 2"/>', altas: '<path d="M3 20h18"/><path d="M5 20V5h6v15M14 20V5h5v15"/>', bajas: '<path d="M3 20h18"/><path d="M5 20v-4h6v4M14 20v-4h5v4"/>' };
 function renderWallMode() { $('wallModeBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${WALL_ICONS[wallMode]}</svg><span>${{ auto: 'Recortar', altas: 'Altas', bajas: 'Bajas' }[wallMode]}</span>`; }
 renderWallMode();
-$('wallModeBtn').addEventListener('click', () => { wallMode = { auto: 'altas', altas: 'bajas', bajas: 'auto' }[wallMode]; renderWallMode(); toast({ auto: 'Paredes recortadas: se bajan las que tapan', altas: 'Paredes altas', bajas: 'Paredes bajas' }[wallMode]); buzz(); });
+$('wallModeBtn').addEventListener('click', () => { wallMode = { auto: 'altas', altas: 'bajas', bajas: 'auto' }[wallMode]; renderWallMode(); 0; buzz(); });
 function afterItemsChanged(it) { if (BM && def(it).stairs && HOUSE.levels[it.lv + 1]) buildLevelGeo(it.lv + 1); }
 
 function fitsB(it, gx, gz, r) {
@@ -2331,7 +2346,7 @@ function placeAt(e) {
       if (fits(it, gx, gz, r)) { it.gx = gx; it.gz = gz; it.r = r; ok = true; break; }
     }
   }
-  if (!ok) { buzz(30); return toast(D.wall ? 'Toca una pared libre' : D.top ? 'Toca una mesa, encimera o cómoda libre' : 'Ahí no cabe, prueba en otro hueco'); }
+  if (!ok) { buzz(30); return toast(D.wall ? 'Toca una pared libre' : D.top ? 'Toca una mesa libre' : 'Ahí no cabe'); }
   const before = snap(); pushUndo(before); R.items.push(it); buildItem(it); afterItemsChanged(it);
   startPlacing(null); select(it); pop(it); buzz(); refreshHud();
   $('mission').classList.add('collapsed'); queueLayout();
@@ -2364,16 +2379,16 @@ function toolEnd(g) {
   if (id === 'paint') { if (g.changed) pushUndo(g.before); return; }
   if (id === 'door' || id === 'window') {
     const k = edgeAt({ clientX: g.x0, clientY: g.y0 }), w = k && R.walls[k];
-    if (!w) return toast('Toca justo encima de una pared');
+    if (!w) return toast('Toca una pared');
     pushUndo(g.before); w.o = w.o === id ? null : id; buildLevelGeo(HOUSE.cur); if (HOUSE.cur > 0) buildLevelGeo(HOUSE.cur - 1); buzz(); return;
   }
   if (!g.a || !g.b) return;
   let changed = false;
   if (id === 'wall' || id === 'erase') {
     for (const k of lineEdges(gridPt(g.a), gridPt(g.b))) { if (id === 'wall' && !R.walls[k]) { R.walls[k] = { c: brush.wall, b: brush.wall, o: null }; changed = true; } if (id === 'erase' && R.walls[k]) { delete R.walls[k]; changed = true; } }
-    if (!changed && id === 'wall') toast('Arrastra de un punto a otro para levantar la pared');
+    if (!changed && id === 'wall') toast('Arrastra más largo');
   } else if (id === 'room') {
-    const r = gridRect(g.a, g.b); if (!r) return toast('Arrastra en diagonal para trazar la habitación');
+    const r = gridRect(g.a, g.b); if (!r) return toast('Arrastra en diagonal');
     rectRoom(R, r.x0, r.z0, r.x1, r.z1, brush.floor, brush.wall); changed = true;
   } else {
     const a = cellPt(g.a), b = cellPt(g.b);
@@ -2381,7 +2396,7 @@ function toolEnd(g) {
       const k = ckey(x, z), T = TOOLS.find(t => t.id === id); if (id === 'floor' && R.tiles[k] !== brush.floor) { R.tiles[k] = brush.floor; changed = true; } if (id === 'unfloor' && R.tiles[k]) { delete R.tiles[k]; changed = true; }
       if (T && 'roof' in T) { R.roof = R.roof || {}; if (T.roof && R.tiles[k] && R.roof[k] !== T.roof) { R.roof[k] = T.roof; changed = true; } if (!T.roof && R.roof[k]) { delete R.roof[k]; changed = true; } } }
   }
-  if (!changed) return toast(id.startsWith('roof') && id !== 'roofOff' ? 'El techo va sobre suelo construido' : '');
+  if (!changed) return toast(id.startsWith('roof') && id !== 'roofOff' ? 'Primero pon suelo' : '');
   pushUndo(g.before); buildLevelGeo(HOUSE.cur); if (HOUSE.cur > 0) buildLevelGeo(HOUSE.cur - 1); refreshHud(); buzz();
 }
 
@@ -2411,8 +2426,8 @@ function loadRoom(id) {
 }
 
 /* ---------- menus ---------- */
-function openMenu() { if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
-function closeMenu() { state.menu = false; app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
+function openMenu() { if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; paintChrome(); app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
+function closeMenu() { state.menu = false; paintChrome(); app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
 const RANKS = [[0, 'Aprendiz'], [4, 'Decorador'], [10, 'Interiorista'], [18, 'Diseñador'], [27, 'Arquitecto estrella']];
 function renderMenu() {
   const t = totalStars(), max = LEVELS.length * 3, homes = HOMES.filter(homeUnlocked).length;
@@ -2463,7 +2478,7 @@ $('buildList').addEventListener('click', e => {
     rooms.build = { cur: 0, best: 0, levels: b.dataset.b === 'example' ? exampleHouse() : [newLevel(), newLevel()] };
   }
   $('buildOv').hidden = true; loadRoom('build'); closeMenu();
-  if (b.dataset.b === 'empty') toast('Abre Obra y usa Habitación para empezar');
+  if (b.dataset.b === 'empty') 0;
 });
 $('mSettings').addEventListener('click', () => { renderSettings(); $('settingsOv').hidden = false; });
 $('menuBtn').addEventListener('click', openMenu);
@@ -2471,12 +2486,12 @@ document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'resultOv') o.hidden = true; }));
 for (const list of ['storyList', 'homeList']) $(list).addEventListener('click', e => {
   const b = e.target.closest('.lv'); if (!b) return;
-  if (b.classList.contains('locked')) { toast(list === 'storyList' ? 'Consigue 1 estrella en el encargo anterior' : 'Gana más estrellas en los encargos'); return; }
+  if (b.classList.contains('locked')) { toast(list === 'storyList' ? 'Antes: 1 estrella en el anterior' : 'Necesitas más estrellas'); return; }
   loadRoom(b.dataset.room); closeMenu();
 });
 $('resetRoom').addEventListener('click', () => {
-  if (!L.home || BM) return toast('Entra en una sala de Mi casa para vaciarla');
-  pushUndo(); clearItems(); R.items = []; refreshHud(); $('homeOv').hidden = true; closeMenu(); toast('Sala vacía: ¡a decorar! (Deshacer la recupera)');
+  if (!L.home || BM) return toast('Solo en Mi casa');
+  pushUndo(); clearItems(); R.items = []; refreshHud(); $('homeOv').hidden = true; closeMenu(); 0;
 });
 function renderSettings() {
   document.querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', settings[seg.dataset.setting] === b.dataset.v)));
@@ -2687,7 +2702,7 @@ canvas.addEventListener('wheel', e => { e.preventDefault(); if (!state.menu) vie
 for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
 let lastTap = 0; document.addEventListener('touchend', e => { const now = Date.now(); if (now - lastTap < 320 && e.target.closest('button')) e.preventDefault(); lastTap = now; }, { passive: false });
 let hintGone = false;
-function dismissHint() { if (!hintGone) { hintGone = true; $('hint').classList.add('gone'); } }
+function dismissHint() {}
 
 /* ---------- save ---------- */
 let wiping = false;
