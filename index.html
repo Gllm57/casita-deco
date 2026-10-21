@@ -40,12 +40,12 @@
 }
 * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
-html, body { height: 100%; margin: 0; background: #1E1830; transition: background-color .4s; }
+html, body { height: var(--app-h, 100%); margin: 0; background: #1E1830; transition: background-color .4s; }
 body { -webkit-touch-callout: none; background: var(--page); color: var(--ink); font-family: var(--body); font-size: 14px; overflow: hidden; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
 button { font-family: var(--body); color: inherit; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
-.app { position: fixed; inset: 0; height: 100dvh; overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #FFE6D8 0%, #EBDCF4 50%, #C9BCE6 100%); transition: background .6s; }
+.app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #FFE6D8 0%, #EBDCF4 50%, #C9BCE6 100%); transition: background .6s; }
 .app.night { background: radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
 canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 45%, transparent 60%, rgba(43,33,64,.18) 100%); }
@@ -114,7 +114,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 /* camera rotate pair, floating just above the catalog */
 .cam { position: absolute; bottom: calc(var(--sheet-h) + 10px); display: flex; gap: 8px; transition: opacity .2s; }
 .histbar { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(var(--sheet-h) + 10px); display: flex; gap: 2px; padding: 4px; border-radius: 999px; transition: bottom .2s, opacity .2s; }
-.histbar button { border: 0; background: transparent; height: 40px; padding: 0 13px; border-radius: 999px; display: flex; align-items: center; gap: 6px; font: 800 13px var(--body); cursor: pointer; }
+.histbar button { border: 0; background: transparent; height: 44px; padding: 0 13px; border-radius: 999px; display: flex; align-items: center; gap: 6px; font: 800 13px var(--body); cursor: pointer; }
 .histbar button + button { padding: 0 11px; box-shadow: -1px 0 0 rgba(124,113,148,.25); border-radius: 0 999px 999px 0; }
 .histbar button svg { width: 21px; height: 21px; }
 .histbar button[disabled] { opacity: .35; cursor: default; }
@@ -333,7 +333,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .card .ico { width: 72px; height: 60px; border-radius: 16px; background: var(--thumb); display: grid; place-items: center; }
 .card .ico svg { width: 38px; height: 38px; color: var(--card-ink); }
 /* nudge pad for the selected object */
-.dpad { position: absolute; right: calc(var(--panel-w) + max(10px, env(safe-area-inset-right, 0px))); bottom: calc(var(--sheet-h) + 76px); display: grid; grid-template-columns: repeat(3, 38px); grid-template-rows: repeat(3, 38px); border-radius: 50%; padding: 4px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.dpad { touch-action: none; position: absolute; right: calc(var(--panel-w) + max(10px, env(safe-area-inset-right, 0px))); bottom: calc(var(--sheet-h) + 76px); display: grid; grid-template-columns: repeat(3, 38px); grid-template-rows: repeat(3, 38px); border-radius: 50%; padding: 4px; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .app.has-sel:not(.sel-locked) .dpad { opacity: 1; pointer-events: auto; }
 .dpad button { border: 0; background: transparent; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
 .dpad button svg { width: 22px; height: 22px; }
@@ -353,7 +353,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .floors button b { font: 800 13px var(--display); line-height: 1; }
 .floors button small { font: 800 8.5px var(--body); opacity: .7; }
 .cam.r { display: flex; gap: 2px; padding: 4px; border-radius: 999px; }
-.cam.r button { width: 46px; height: 40px; border: 0; background: transparent; border-radius: 999px; display: grid; place-items: center; cursor: pointer; }
+.cam.r button { width: 48px; height: 44px; border: 0; background: transparent; border-radius: 999px; display: grid; place-items: center; cursor: pointer; }
 .cam.r button + button { box-shadow: -1px 0 0 rgba(124,113,148,.25); border-radius: 0; }
 .cam.r button:last-child { border-radius: 0 999px 999px 0; }
 .cam.r button:first-child { border-radius: 999px 0 0 999px; }
@@ -1649,8 +1649,15 @@ function redo() {
   if (s && s.id === L.id) { history.push(snap()); restore(s); buzz(); }
   updHistory();
 }
-$('undoBtn').addEventListener('click', undo);
-$('redoBtn').addEventListener('click', redo);
+function holdRepeat(el, fn) { // act on press, then keep going while the finger stays down
+  let t1 = null, t2 = null;
+  const stop = () => { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; };
+  el.addEventListener('pointerdown', e => { if (el.disabled || e.button > 0) return; e.preventDefault(); stop(); fn(e); t1 = setTimeout(() => { t2 = setInterval(() => { if (el.disabled) return stop(); fn(e); }, 140); }, 380); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel', 'blur']) el.addEventListener(ev, stop);
+  el.addEventListener('click', e => { if (e.detail === 0) fn(e); }); // keyboard activation
+}
+holdRepeat($('undoBtn'), undo);
+holdRepeat($('redoBtn'), redo);
 document.addEventListener('keydown', e => {
   if (state.menu || !(e.ctrlKey || e.metaKey)) return;
   const k = e.key.toLowerCase();
@@ -1822,7 +1829,7 @@ function nudge(dir) {
   const riders = ridersOf(it); it.gx += dx; it.gz += dz; for (const o of riders) { o.gx += dx; o.gz += dz; }
   pushUndo(before); placeMesh(it); settleRiders(riders); afterItemsChanged(it); updateMarker(true); refreshHud(); buzz(6);
 }
-$('dpad').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) nudge(b.dataset.n); });
+$('dpad').querySelectorAll('[data-n]').forEach(b => holdRepeat(b, () => nudge(b.dataset.n)));
 $('tLock').addEventListener('click', () => { const it = sel; if (!it) return; pushUndo(); it.locked = !it.locked; if (!it.locked) delete it.locked; refreshLock(); updateMarker(true); buzz(); });
 function updateMarker(ok) {
   const it = sel;
@@ -2560,6 +2567,16 @@ function layoutView() {
   fit.tcx = left + visW / 2; fit.tcy = top + visH / 2;
   if (!fit.ready) { fit.cx = fit.tcx; fit.cy = fit.tcy; fit.ppu = fit.tppu; fit.ready = true; }
 }
+function fitScreen() {
+  const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = iOS && (navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches);
+  const landscape = window.innerWidth > window.innerHeight;
+  const h = standalone ? Math.max(window.innerHeight, landscape ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height)) : window.innerHeight;
+  document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+fitScreen();
+for (const ev of ['resize', 'orientationchange']) window.addEventListener(ev, () => { fitScreen(); setTimeout(fitScreen, 300); });
+if (window.visualViewport) visualViewport.addEventListener('resize', fitScreen);
 new ResizeObserver(resize).observe(app);
 new ResizeObserver(queueLayout).observe($('hud'));
 new ResizeObserver(queueLayout).observe($('sheet'));
@@ -2700,7 +2717,7 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (!state.menu) view.zoom = THREE.MathUtils.clamp(view.zoom * (e.deltaY > 0 ? 0.92 : 1.08), 0.6, 2.8); }, { passive: false });
 for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
-let lastTap = 0; document.addEventListener('touchend', e => { const now = Date.now(); if (now - lastTap < 320 && e.target.closest('button')) e.preventDefault(); lastTap = now; }, { passive: false });
+document.addEventListener('touchstart', () => {}, { passive: true }); // lets :active press styles work on iPhone
 let hintGone = false;
 function dismissHint() {}
 
