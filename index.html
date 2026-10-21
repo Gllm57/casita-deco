@@ -60,6 +60,7 @@ button { font-family: var(--body); color: inherit; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
 .app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #F6D9C9 0%, #DFCDEC 50%, #B7A6DC 100%); transition: background .6s; }
+.app.highrise { background: radial-gradient(130% 90% at 50% 10%, #F2F7FD 0%, #D6E6F5 45%, #B4CCE6 100%); }
 .app.dusk { background: radial-gradient(130% 90% at 50% 15%, #FFC9A0 0%, #E8A8B8 45%, #8E74B8 100%); }
 .app.night { background: radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
 canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
@@ -1971,6 +1972,9 @@ function makeChallenge(kind) {
 }
 const RETOS = [makeChallenge('d'), makeChallenge('w')];
 // a theme house is drawn with rooms, then every piece is checked one by one so nothing overlaps or floats
+function emptyFlat() { // a bare floor plate with outer walls, ready to split into rooms
+  const L0 = newLevel(); rectRoom(L0, 2, 2, 14, 12, 'hormigon', 'hueso'); return fillLevels([L0]);
+}
 function themeHouse(kind) {
   const L0 = newLevel(), L1 = newLevel(), F = (x0, z0, x1, z1, f) => { for (let x = x0; x < x1; x++) for (let z = z0; z < z1; z++) L0.tiles[ckey(x, z)] = f; };
   const it = (type, gx, gz, r = 0, ci = 0) => ({ type, gx, gz, r, ci }), wl = (type, edge, side = 1, ci = 0) => ({ type, edge, side, r: 0, ci });
@@ -2038,7 +2042,7 @@ const plainLevels = levels => levels.map(lv => ({ tiles: lv.tiles, walls: lv.wal
 if (saved && saved.projects && saved.projects.length) { projects = saved.projects; projCur = Math.min(saved.projCur || 0, projects.length - 1); }
 else projects = [{ name: 'Mi proyecto', levels: plainLevels(rooms.build.levels) }];
 projects.forEach(pr => { pr.levels = fillLevels(migrateOpenings(pr.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))); });
-rooms.build = { cur: 0, best: 0, levels: JSON.parse(JSON.stringify(projects[projCur].levels)) };
+rooms.build = { cur: 0, best: 0, site: projects[projCur].site, levels: JSON.parse(JSON.stringify(projects[projCur].levels)) };
 BUILD_DEF.room = projects[projCur].name;
 const totalStars = () => LEVELS.reduce((a, l) => a + rooms[l.id].best, 0);
 const points = () => totalStars() + (settings.trofeos || 0); // stars from encargos plus trophies from challenges
@@ -2323,13 +2327,13 @@ function placeNew(it) {
 
 /* ---------- undo ---------- */
 const history = [];
-const houseJSON = () => JSON.stringify({ cur: HOUSE.cur, levels: HOUSE.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lifting, _a, _moved, ...i }) => i) })) });
+const houseJSON = () => JSON.stringify({ cur: HOUSE.cur, site: HOUSE.site, levels: HOUSE.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lifting, _a, _moved, ...i }) => i) })) });
 const snap = () => (BM ? { id: L.id, house: houseJSON() } : { id: L.id, wall: R.wall, floor: R.floor, items: JSON.stringify(R.items.map(({ group, _a, _moved, ...i }) => i)) });
 const future = [];
 function updHistory() { $('undoBtn').disabled = !history.length; $('redoBtn').disabled = !future.length; $('undoCount').textContent = history.length || ''; }
 function pushUndo(s = snap()) { history.push(s); if (history.length > 40) history.shift(); future.length = 0; updHistory(); }
 function restore(s) {
-  if (s.house) { clearItems(); const d = JSON.parse(s.house); HOUSE.levels = d.levels; HOUSE.cur = d.cur; rebuildHouse(); select(null); return; }
+  if (s.house) { clearItems(); const d = JSON.parse(s.house); HOUSE.levels = d.levels; HOUSE.cur = d.cur; HOUSE.site = d.site; rebuildHouse(); select(null); return; }
   clearItems(); R.wall = s.wall; R.floor = s.floor; R.items = JSON.parse(s.items);
   applySurfaces(); R.items.forEach(buildItem); select(null); refreshHud();
 }
@@ -2494,7 +2498,8 @@ function renderStrip() {
     html = (favs.length ? `<span class="strip-label">Favoritos</span>` + favs.map(k => cardHtml(k, CAT[k])).join('') : '') + (rec.length ? `<span class="strip-label">Recientes</span>` + rec.map(k => cardHtml(k, CAT[k])).join('') : '');
     if (!html) html = '<div class="empty">Toca la estrella ☆ de un objeto para guardarlo aquí. Lo último que pongas también aparecerá.</div>';
   } else if (tab === 'obra') {
-    html = TOOLS.map(t => `<button class="card ${tool && tool.id === t.id ? 'active' : ''}" data-tool="${t.id}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></span><span class="nm">${t.name}</span><span class="pr">Obra</span></button>`).join('')
+    const hi = HOUSE && HOUSE.site === 'piso';
+    html = `<button class="card" data-site="1"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${hi ? '<rect x="6" y="2" width="12" height="20" rx="1"/><path d="M9 6h2M13 6h2M9 10h2M13 10h2M9 14h2M13 14h2"/>' : '<path d="M3 20h18"/><path d="M5 20v-8l7-5 7 5v8"/><path d="M2 20c3-2 5-2 8 0"/>'}</svg></span><span class="nm">${hi ? 'En altura' : 'Con jardín'}</span><span class="pr">Cambiar</span></button>` + TOOLS.map(t => `<button class="card ${tool && tool.id === t.id ? 'active' : ''}" data-tool="${t.id}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></span><span class="nm">${t.name}</span><span class="pr">Obra</span></button>`).join('')
       + Object.entries(CAT).filter(([, D]) => D.tab === 'obra').map(([k, D]) => `<button class="card" data-buy="${k}"><img src="${getThumb(k)}" alt=""><span class="nm">${D.name}</span><span class="pr">${D.stairs ? 'Une dos pisos' : `<span class="coin"></span>${D.price}`}</span></button>`).join('');
   } else if (tab === 'pintura') {
     html = WALLS.map(w => `<button class="card ${(BM ? tool && tool.id === 'paint' && brush.wall === w.id : R.wall === w.id) ? 'active' : ''}" data-wall="${w.id}"><span class="sw" style="background:${wallSwatch(w)}"></span><span class="nm">${w.name}</span>${HARMONY.has(w.id + '|' + R.floor) ? '<span class="want">combina</span>' : ''}</button>`).join('');
@@ -2522,6 +2527,7 @@ $('strip').addEventListener('click', e => {
   if (cardDrag.done) { cardDrag.done = false; return; } // the press became a drag into the room
   const b = e.target.closest('.card'); if (!b) return;
   dismissHint();
+  if (b.dataset.site && BM) { pushUndo(); HOUSE.site = HOUSE.site === 'piso' ? undefined : 'piso'; rebuildHouse(); renderStrip(); buzz(); sfx('pop'); toast(HOUSE.site ? 'Departamento en altura' : 'Casa con jardín'); return; }
   if (b.dataset.tool) { setTool(tool && tool.id === b.dataset.tool ? null : b.dataset.tool); return; }
   if (BM && b.dataset.wall) { setTool('paint', { wall: b.dataset.wall }); return; }
   if (BM && b.dataset.floor) { setTool('floor', { floor: b.dataset.floor }); return; }
@@ -2945,7 +2951,8 @@ function setSky(p) {
   hemi.intensity = L2(A[0], Bk[0]); mixHex(A[1], Bk[1], t, hemi.color); mixHex(A[2], Bk[2], t, hemi.groundColor);
   sun.intensity = L2(A[3], Bk[3]); mixHex(A[4], Bk[4], t, sun.color); fill.intensity = L2(A[5], Bk[5]); placeSun(p);
   mixHex(A[6], Bk[6], t, windowMat.color); mixHex(A[7], Bk[7], t, windowMat.emissive);
-  const glow = L2(A[8], Bk[8]); glowMats.forEach(m => { m.emissiveIntensity = m.userData.off ? 0 : glow; });
+  mixHex(i ? 0xE9B8BC : 0xCFE0F2, i ? 0x2A2557 : 0xE9B8BC, t, skyFog.color); cloudMat.color.setHex(p > 0.6 ? 0x6E6A9A : p > 0.25 ? 0xFFD6C8 : 0xFFFFFF);
+  const glow = L2(A[8], Bk[8]); glowMats.forEach(m => { m.emissiveIntensity = m.userData.off ? 0 : m.userData.cityGlow ? Math.max(0.03, (p - 0.4) * 1.6) * (m.userData.k || 1) : glow; }); // city windows light up after sunset
   const night = p > 0.6, dusk = p > 0.25 && !night, changed = night !== state.night || skyP < 0;
   state.night = night; state.lampK = Math.max(0, Math.min(1, (p - 0.45) * 2.5)); skyP = p;
   app.classList.toggle('night', night); app.classList.toggle('dusk', dusk); if (changed) paintChrome();
@@ -3004,7 +3011,7 @@ $('shareSave').addEventListener('click', async () => {
 });
 const b64u = { enc: u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), dec: s2 => Uint8Array.from(atob(s2.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)) };
 async function packHouse() {
-  const json = new TextEncoder().encode(JSON.stringify({ n: (projects[projCur] || {}).name, l: JSON.parse(houseJSON()).levels }));
+  const json = new TextEncoder().encode(JSON.stringify({ n: (projects[projCur] || {}).name, s: HOUSE.site, l: JSON.parse(houseJSON()).levels }));
   if (window.CompressionStream) { const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer(); return 'z' + b64u.enc(new Uint8Array(buf)); }
   return 'j' + b64u.enc(json);
 }
@@ -3179,13 +3186,46 @@ const cellOnSide = (k, side) => { const [t, x, z] = parseE(k); return t === 'h' 
 function stairHole(i, x, z) { return i > 0 && HOUSE.levels[i - 1].items.some(o => { if (!def(o).stairs) return false; const [w, d] = fp(o); return x >= o.gx && x < o.gx + w && z >= o.gz && z < o.gz + d; }); }
 const hasTile = (i, x, z) => !!HOUSE.levels[i] && !!HOUSE.levels[i].tiles[ckey(x, z)] && !stairHole(i, x, z);
 
+// a flat tower face: rows of windows, some lit; the lit ones glow at night
+function towerTex(seed, lit) {
+  const r = rng('torre' + seed); return canvasTex(128, 256, (x, w, h) => {
+    x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+    for (let row = 0; row < 16; row++) for (let col = 0; col < 4; col++) { const on = r() < 0.35;
+      x.fillStyle = lit ? (on ? '#FFE3A8' : '#000') : (on ? '#C9D8E6' : '#8FA3B8'); x.fillRect(col * 32 + 6, row * 16 + 4, 20, 9); } });
+}
+const towerMats = [0xB9B3C9, 0xA7B4C4, 0xC9BBB0, 0x8F8AA8].map((c, i) => { const t = towerTex(i, false), e = towerTex(i, true); t.wrapS = t.wrapT = e.wrapS = e.wrapT = THREE.RepeatWrapping;
+  const m = std({ color: c, map: t, emissive: 0xFFE3A8, emissiveMap: e, emissiveIntensity: 0.15, roughness: 0.8 }); glowMats.add(m); m.userData.cityGlow = true; return m; });
+const skyFog = new THREE.Fog(0xCFE0F2, 36, 78), cloudMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.85, roughness: 1 });
+let clouds = null;
+function buildSite(g) {
+  const high = HOUSE.site === 'piso'; app.classList.toggle('highrise', high); scene.fog = high ? skyFog : null; clouds = null;
+  if (!high) {
+    const lot = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.3), M(0x9CCB8A)); lot.position.y = -0.2; lot.receiveShadow = true; g.add(lot);
+    const lot2 = new THREE.Mesh(roundBox(GW + 2, 0.3, GD + 2, 0.15), M(0x8E83A8)); lot2.position.y = -0.5; g.add(lot2); return;
+  }
+  // the roof slab of our floor with a low parapet, and the tower dropping away beneath it
+  const slab = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.1), M(0xCFC8C0)); slab.position.y = -0.2; slab.receiveShadow = true; g.add(slab);
+  for (const [w, d, x, z] of [[GW + 1.4, 0.16, 0, (GD + 1.4) / 2 - 0.08], [GW + 1.4, 0.16, 0, -(GD + 1.4) / 2 + 0.08], [0.16, GD + 1.4, (GW + 1.4) / 2 - 0.08, 0], [0.16, GD + 1.4, -(GW + 1.4) / 2 + 0.08, 0]]) {
+    const p = new THREE.Mesh(boxGeo(w, 0.22, d), M(0xE6E0D8)); p.position.set(x, 0.11, z); p.castShadow = p.receiveShadow = true; g.add(p); }
+  const fm = towerMats[0].clone(); fm.map = towerMats[0].map.clone(); fm.map.repeat.set(4, 3); fm.map.needsUpdate = true; fm.emissiveMap = towerMats[0].emissiveMap.clone(); fm.emissiveMap.repeat.set(4, 3); fm.emissiveMap.needsUpdate = true; fm.userData.k = 0.55; glowMats.add(fm);
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(GW + 1.2, 22, GD + 1.2), fm); tower.position.y = -11.4; g.add(tower);
+  // the rest of the city, all lower than us, fading into the haze
+  const r = rng('ciudad');
+  for (let i = 0; i < 34; i++) {
+    const a = i / 34 * 2 * PI + r() * 0.15, dist = 16 + r() * 22, w = 3 + r() * 5, d = 3 + r() * 5, top = -5 - r() * 14 - dist * 0.12, h = 46; // farther ones lower still, so ours is always the tallest
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), towerMats[i % towerMats.length]); m.position.set(Math.cos(a) * dist, top - h / 2, Math.sin(a) * dist); g.add(m);
+  }
+  clouds = new THREE.Group(); g.add(clouds);
+  for (let i = 0; i < 7; i++) { const c = new THREE.Group(), a = i / 7 * 2 * PI + r(), dist = 12 + r() * 16; c.position.set(Math.cos(a) * dist, -1.5 - r() * 4, Math.sin(a) * dist);
+    for (let k = 0; k < 5; k++) { const s2 = new THREE.Mesh(new THREE.SphereGeometry(0.8 + r() * 0.9, 14, 10), cloudMat); s2.position.set((k - 2) * 0.9, r() * 0.4, (r() - 0.5) * 1.2); s2.scale.y = 0.55; c.add(s2); }
+    clouds.add(c); }
+}
 function rebuildHouse(first) {
   HOUSE.levels.forEach((lv, i) => lv.items.forEach(it => { it.lv = i; }));
   R = HOUSE.levels[HOUSE.cur];
   if (roomGroup) scene.remove(roomGroup);
   roomGroup = new THREE.Group(); scene.add(roomGroup);
-  const lot = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.3), M(0x9CCB8A)); lot.position.y = -0.2; lot.receiveShadow = true; roomGroup.add(lot);
-  const lot2 = new THREE.Mesh(roundBox(GW + 2, 0.3, GD + 2, 0.15), M(0x8E83A8)); lot2.position.y = -0.5; roomGroup.add(lot2);
+  buildSite(roomGroup);
   grid = makeGrid(); roomGroup.add(grid);
   levelGroups = HOUSE.levels.map((lv, i) => { const root = new THREE.Group(), geo = new THREE.Group(), items = new THREE.Group(), roof = new THREE.Group(); root.position.y = i * LEVEL_H; root.add(geo, items, roof); roomGroup.add(root); return { root, geo, items, roof }; });
   HOUSE.levels.forEach((lv, i) => buildLevelGeo(i));
@@ -3586,7 +3626,8 @@ function loadRoom(id) {
     groundPlane.constant = 0; view.target.set(0, 0.5, 0); buildRoom(); applySurfaces(); for (const it of R.items) buildItem(it); }
   view.az = PI / 4; view.azGoal = null; view.el = BM ? 0.7 : 0.62; view.zoom = BM ? 1.35 : 1;
   for (const w of Object.values(walls)) w.h = 1;
-  app.classList.toggle('build', BM); tab = BM ? 'obra' : tab === 'obra' ? 'muebles' : tab; renderTabs();
+  app.classList.toggle('build', BM); if (!BM) { app.classList.remove('highrise'); scene.fog = null; clouds = null; }
+  tab = BM ? 'obra' : tab === 'obra' ? 'muebles' : tab; renderTabs();
   history.length = 0; future.length = 0; updHistory();
   for (const c of pets) resetPet(c); applyNight();
   app.classList.toggle('home', !!L.home);
@@ -3653,11 +3694,12 @@ function renderBuildList() {
       <span class="pacts">${mini('rename', i, '<path d="M4 20h4L19 9l-4-4L4 16z"/>', 'Cambiar nombre')}${mini('dup', i, '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>', 'Duplicar')}${projects.length > 1 ? mini('del', i, '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', 'Borrar') : ''}</span></div>`; }).join('') + `
     ${THEMES.map(([id, name, bg, svg]) => `<button class="lv" data-b="theme" data-theme="${id}">${band(bg, svg)}<span class="body"><b>Nueva: ${name.toLowerCase()}</b></span></button>`).join('')}
     <button class="lv" data-b="example">${band('linear-gradient(135deg,#8F74E0,#6A4FC2)', '<path d="M4 21V11l8-6 8 6v10z"/><path d="M4 15h16"/>')}<span class="body"><b>Nueva: casita de ejemplo</b></span></button>
+    <button class="lv" data-b="flat">${band('linear-gradient(135deg,#6FA8DC,#4A78B8)', '<rect x="6" y="2" width="12" height="20" rx="1"/><path d="M9 6h2M13 6h2M9 10h2M13 10h2M9 14h2M13 14h2M11 22v-4h2v4"/>')}<span class="body"><b>Nuevo: departamento en altura</b></span></button>
     <button class="lv" data-b="empty">${band('linear-gradient(135deg,#4CC9A0,#2F9E7C)', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16" stroke-dasharray="2 2"/>')}<span class="body"><b>Nueva: parcela vacía</b></span></button>`;
 }
 function openProject(i) {
-  if (rooms.build) projects[projCur].levels = plainLevels(rooms.build.levels);
-  projCur = i; rooms.build = { cur: 0, best: 0, levels: JSON.parse(JSON.stringify(projects[i].levels)) }; BUILD_DEF.room = projects[i].name;
+  if (rooms.build) { projects[projCur].levels = plainLevels(rooms.build.levels); projects[projCur].site = rooms.build.site; }
+  projCur = i; rooms.build = { cur: 0, best: 0, site: projects[i].site, levels: JSON.parse(JSON.stringify(projects[i].levels)) }; BUILD_DEF.room = projects[i].name;
   history.length = 0; future.length = 0; updHistory(); save();
 }
 let nameCb = null;
@@ -3665,7 +3707,7 @@ function askName(title, value, ok, cb) { $('nameTitle').textContent = title; $('
 function nameDone(go) { const v = $('nameIn').value.trim().slice(0, 40); $('nameOv').hidden = true; $('nameIn').blur(); if (go && nameCb) nameCb(v || 'Mi proyecto'); nameCb = null; }
 $('nameGo').addEventListener('click', () => nameDone(true)); $('nameNo').addEventListener('click', () => nameDone(false));
 $('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') nameDone(true); });
-function addProject(name, levels) { projects.push({ name, levels: plainLevels(levels) }); openProject(projects.length - 1); }
+function addProject(name, levels, site) { projects.push({ name, levels: plainLevels(levels), site }); openProject(projects.length - 1); }
 const GWB = BUILD_DEF.w, GDB = BUILD_DEF.d;
 $('buildList').addEventListener('click', e => {
   const act = e.target.closest('[data-act]');
@@ -3678,8 +3720,8 @@ $('buildList').addEventListener('click', e => {
   const b = e.target.closest('[data-b]'); if (!b) return;
   if (b.dataset.b === 'open') { if (+b.dataset.i !== projCur || !BM) openProject(+b.dataset.i); }
   else { const kind = b.dataset.b, th = THEMES.find(t => t[0] === b.dataset.theme);
-    return askName('Nuevo proyecto', th ? th[1] : kind === 'example' ? 'Casita de ejemplo' : `Mi proyecto ${projects.length + 1}`, 'Crear', n => {
-      addProject(n, th ? themeHouse(th[0]) : kind === 'example' ? exampleHouse() : fillLevels([])); $('buildOv').hidden = true; loadRoom('build'); closeMenu(); }); }
+    return askName('Nuevo proyecto', th ? th[1] : kind === 'example' ? 'Casita de ejemplo' : kind === 'flat' ? 'Mi departamento' : `Mi proyecto ${projects.length + 1}`, 'Crear', n => {
+      addProject(n, th ? themeHouse(th[0]) : kind === 'example' ? exampleHouse() : kind === 'flat' ? emptyFlat() : fillLevels([]), (th && th[0] === 'ciudad') || kind === 'flat' ? 'piso' : undefined); $('buildOv').hidden = true; loadRoom('build'); closeMenu(); }); }
   $('buildOv').hidden = true; loadRoom('build'); closeMenu();
   if (b.dataset.b === 'empty') 0;
 });
@@ -3942,7 +3984,7 @@ function save() {
   try {
     const out = {};
     for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, op: r.op, key: r.key, items: r.items.map(({ group, _a, _moved, ...i }) => i) };
-    projects[projCur].levels = out.build.levels;
+    projects[projCur].levels = out.build.levels; projects[projCur].site = rooms.build.site;
     localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, settings, projects, projCur }));
   } catch (e) { /* storage blocked: the game still plays, it just won't remember */ }
 }
@@ -3968,6 +4010,7 @@ function frame(now) {
   if (!BM) for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
   if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
   animateDoors(dt);
+  if (clouds && !reduce) clouds.rotation.y += dt * 0.006; // clouds drift past below the balcony
   if (!reduce) for (const it of allItems()) if (it.group) {
     const D = CAT[it.type]; if (D.spin) { const b = it.group.getObjectByName('blades'); if (b) b.rotation.y += dt * 2.6; }
     if (D.sway) { const sw = it.group.getObjectByName('sway'); if (sw) { const t = now / 1000 + sw.userData.ph, a = D.sway[1]; sw.rotation.z = Math.sin(t * 0.9) * a + Math.sin(t * 2.3) * a * 0.3; sw.rotation.x = Math.sin(t * 0.7 + 1) * a * (D.sway[2] ? 1.2 : 0.7); } }
@@ -4009,7 +4052,7 @@ if (location.hash.startsWith('#casa=')) unpackHouse(location.hash.slice(6)).then
 $('importNo').addEventListener('click', () => { $('importOv').hidden = true; window.history.replaceState(null, '', location.pathname); });
 $('importGo').addEventListener('click', () => {
   $('importOv').hidden = true; window.history.replaceState(null, '', location.pathname); if (!incoming) return;
-  addProject(incoming.n ? incoming.n + ' (recibida)' : 'Casa recibida', fillLevels(migrateOpenings(incoming.l.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))));
+  addProject(incoming.n ? incoming.n + ' (recibida)' : 'Casa recibida', fillLevels(migrateOpenings(incoming.l.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))), incoming.s);
   loadRoom('build'); closeMenu();
 });
 openMenu();

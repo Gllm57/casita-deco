@@ -45,3 +45,4 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 - **Más vida:** el sol cambia de sitio con la hora y su luz entra por las ventanas; plantas, árboles y cortinas se mueven con la brisa; Milo se tumba en las alfombras, en su cama o su caseta, y de noche se va a dormir.
 - **Álbum de fotos:** en Ver · Foto el botón redondo guarda la foto (también en el paseo); se ven en Álbum, en el menú.
 - **Casas temáticas para empezar:** casa de playa, cabaña de montaña y piso en la ciudad.
+- **Departamento en altura:** en el Constructor, «Nuevo: departamento en altura» (o la tarjeta En altura / Con jardín en Obra) pone el proyecto en lo alto de un edificio, con la ciudad y las nubes abajo y las ventanas encendidas de noche. El piso en la ciudad ya viene así.
