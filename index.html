@@ -215,6 +215,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .app.topview .top-exit { display: block !important; }
 .walkui { position: absolute; inset: 0; pointer-events: none; display: none; }
 .app.walk .walkui { display: block; }
+.app.walk.rot { right: auto; width: var(--app-h, 100vh); height: 100vw; transform-origin: 0 0; transform: translateX(100vw) rotate(90deg); }
 .app.walk .walkui > * { pointer-events: auto; }
 .app.walk .walkui .photo-exit { display: block; }
 .app.walk .hud, .app.walk .sheet, .app.walk .cam, .app.walk .histbar, .app.walk .tools, .app.walk .toolpill, .app.walk .dpad, .app.walk .palette { opacity: 0 !important; pointer-events: none !important; }
@@ -223,6 +224,10 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .walk-hint { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); border-radius: 999px; padding: 8px 14px; font: 800 12px var(--body); white-space: nowrap; pointer-events: none !important; }
 .app.walk .walkui .photo-exit { top: auto; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .share-img { width: 100%; border-radius: 14px; margin: 6px 0 12px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.bubble { position: absolute; z-index: 25; transform: translate(-50%, -100%); background: #fff; color: var(--ink); font: 900 17px var(--display); padding: 7px 14px; border-radius: 18px; box-shadow: 0 6px 18px rgba(43,33,64,.22); pointer-events: none; white-space: nowrap; animation: bub .25s ease-out; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: #fff; }
+.bubble[hidden] { display: none; }
+@keyframes bub { from { transform: translate(-50%, -80%) scale(.6); opacity: 0; } }
 .photo-exit { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); border: 0; border-radius: 999px; padding: 9px 14px; font: 800 13px var(--body); cursor: pointer; display: none; }
 .app.photo .photo-exit { display: block; }
 
@@ -275,6 +280,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .pacts { display: flex; align-items: center; gap: 4px; padding-right: 8px; }
 .pact { width: 36px; height: 36px; border: 0; border-radius: 12px; background: rgba(124,113,148,.12); display: grid; place-items: center; cursor: pointer; color: inherit; }
 .pact svg { width: 17px; height: 17px; }
+.name-in { width: 100%; box-sizing: border-box; border: 0; border-radius: 16px; padding: 14px 16px; font: 800 17px var(--body); background: rgba(124,113,148,.12); color: inherit; margin: 4px 0 14px; outline: none; }
+.name-in:focus { box-shadow: 0 0 0 2px var(--coral); }
 .rare-item { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 14px; background: rgba(124,113,148,.1); font: 800 12px var(--body); }
 .rare-item img { width: 44px; height: 40px; object-fit: contain; border-radius: 10px; background: var(--thumb); }
 .rare-item.locked img { filter: grayscale(1); opacity: .5; }
@@ -485,6 +492,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button data-n="down" aria-label="Mover abajo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
   </div>
   <div class="toast" id="toast"></div>
+  <div class="bubble" id="bubble" hidden></div>
 
   <div class="sheet" id="sheet">
     <button class="handle" id="handle" aria-label="Plegar o desplegar el catálogo" title="Plegar / desplegar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -500,7 +508,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button data-v="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h10v9M13 3v5"/></svg><span><b>Plano</b><small>Vista desde arriba</small></span></button>
   </div>
   <button class="photo-exit glass top-exit" id="topExit">Salir del plano</button>
-  <div class="walkui" id="walkUI"><div class="joy glass" id="joy"><i id="joyKnob"></i></div><div class="walk-hint glass">Joystick para andar · arrastra para mirar</div><button class="photo-exit glass" id="walkExit">Salir del paseo</button></div>
+  <div class="walkui" id="walkUI"><div class="joy glass" id="joy"><i id="joyKnob"></i></div><div class="walk-hint glass">Gira el móvil · joystick para andar · arrastra para mirar</div><button class="photo-exit glass" id="walkExit">Salir del paseo</button></div>
   <button class="photo-exit glass" id="photoExit">Salir del modo foto · o toca la pantalla</button>
 
   <div class="menu" id="menu">
@@ -568,7 +576,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   </div>
   <div class="overlay" id="buildOv" hidden>
     <div class="panel">
-      <div class="panel-head"><div><h2>Constructor</h2><p class="sub">Levanta paredes, abre puertas y ventanas, pinta cada pared y sube al primer piso con una escalera.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="panel-head"><div><h2>Constructor</h2><p class="sub">Tus proyectos</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="lvgrid" id="buildList"></div>
     </div>
   </div>
@@ -587,6 +595,13 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="btn-row"><button class="btn primary" id="shareSave">Compartir imagen</button><button class="btn" id="shareLink">Enviar la casa</button></div>
     </div>
   </div>
+  <div class="overlay" id="nameOv" hidden>
+    <div class="panel">
+      <div class="panel-head"><div><h2 id="nameTitle">Nuevo proyecto</h2><p class="sub">Ponle un nombre a tu casa.</p></div></div>
+      <input class="name-in" id="nameIn" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Mi proyecto">
+      <div class="btn-row"><button class="btn" id="nameNo">Cancelar</button><button class="btn primary" id="nameGo">Crear</button></div>
+    </div>
+  </div>
   <div class="overlay" id="importOv" hidden>
     <div class="panel">
       <div class="panel-head"><div><h2>Te han enviado una casa</h2><p class="sub" id="importSub">Se guardará como un proyecto nuevo del Constructor. Lo tuyo no se toca.</p></div></div>
@@ -598,8 +613,6 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="panel-head"><div><h2>Ajustes</h2><p class="sub">Se guardan en este dispositivo.</p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="setting"><span>Calidad gráfica<small>Ahorro va más fluido en móviles antiguos</small></span><div class="seg" data-setting="quality"><button data-v="alta">Alta</button><button data-v="ahorro">Ahorro</button></div></div>
       <div class="setting"><span>Milo, el pug<small>Pasea por las habitaciones</small></span><div class="seg" data-setting="cat"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
-      <div class="setting"><span>Luna, la gata<small>Curiosa y dormilona</small></span><div class="seg" data-setting="luna"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
-      <div class="setting"><span>Nico, de visita<small>Un amigo que pasea por la casa</small></span><div class="seg" data-setting="visita"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Sonidos<small>Al poner, quitar y usar cosas</small></span><div class="seg" data-setting="sound"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Música<small>Melodía tranquila de fondo</small></span><div class="seg" data-setting="music"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Vibración<small>Al colocar objetos (Android)</small></span><div class="seg" data-setting="vibrate"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
@@ -1901,7 +1914,7 @@ const ALL = [...LEVELS, ...HOMES, ...RETOS, BUILD_DEF];
 const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, key: L.key, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
 const rooms = {}; for (const L of ALL) rooms[L.id] = L.build ? { cur: 0, best: 0, levels: exampleHouse() } : freshRoom(L);
 let projects = [], projCur = 0;
-const settings = { quality: 'alta', cat: '1', luna: '1', visita: '1', vibrate: '1', sound: '1', music: '1' };
+const settings = { quality: 'alta', cat: '1', vibrate: '1', sound: '1', music: '1' };
 
 // saved game lives in this browser only (v1 = earlier versions of the game)
 const SAVE_KEY = 'casita-deco-v2';
@@ -1937,7 +1950,7 @@ const view = { az: PI / 4, el: 0.62, zoom: 1, azGoal: null, target: new THREE.Ve
 
 const hemi = new THREE.HemisphereLight(0xFFF6EE, 0x8E83B0, 0.78); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xFFF0DD, 0.85);
-sun.position.set(6, 11, 5); sun.castShadow = true; sun.shadow.bias = -0.0012; sun.shadow.normalBias = 0.02; scene.add(sun);
+sun.position.set(6, 11, 5); sun.castShadow = true; sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.035; sun.shadow.radius = 2.5; scene.add(sun);
 const fill = new THREE.DirectionalLight(0xD8D0FF, 0.22); fill.position.set(-6, 5, -4); scene.add(fill);
 function applyQuality() {
   const hi = settings.quality === 'alta';
@@ -1956,7 +1969,7 @@ const envTex = (() => { const es = new THREE.Scene(), box = new THREE.Mesh(new T
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0xB9A98F })); fl.rotation.x = -PI / 2; fl.position.y = -2.9; es.add(fl);
   const pm = new THREE.PMREMGenerator(renderer), t = pm.fromScene(es, 0.02).texture; pm.dispose(); return t; })();
 const GLOSSY = { marmol: 0.22, azulejo: 0.28, ajedrez: 0.24, baldosa: 0.4, terrazo: 0.32, hormigon: 0.45 };
-function floorFinish(mat, id) { const r = GLOSSY[id]; mat.roughness = r ?? 0.62; mat.envMap = envTex; mat.envMapIntensity = r != null ? 0.4 : 0.14; mat.needsUpdate = true; }
+function floorFinish(mat, id) { const r = GLOSSY[id]; mat.roughness = r ?? 0.82; mat.envMap = r != null ? envTex : null; mat.envMapIntensity = 0.32; mat.needsUpdate = true; } // only stone and tile shine; wood stays matte
 for (const k of [METAL, GOLD, CERAMIC]) Object.assign(M(k), { envMap: envTex, envMapIntensity: 0.8 });
 const wallMat = std({ color: WALLS[0].hex, roughness: 0.92 }); wallMat.userData.pat = null;
 const capMat = M(0x5E537A);
@@ -2255,8 +2268,6 @@ function sfx(kind) {
   else if (kind === 'undo') tone(700, 0.09, 'triangle', 0.1, 0, 0.7);
   else if (kind === 'bad') tone(190, 0.14, 'square', 0.05, 0, 0.9);
   else if (kind === 'bark') { tone(380, 0.08, 'sawtooth', 0.08, 0, 0.6); tone(340, 0.09, 'sawtooth', 0.07, 0.13, 0.6); }
-  else if (kind === 'meow') { tone(620, 0.18, 'sine', 0.1, 0, 1.35); tone(840, 0.25, 'sine', 0.08, 0.17, 0.7); }
-  else if (kind === 'hi') { tone(523, 0.1, 'sine', 0.1); tone(659, 0.16, 'sine', 0.1, 0.1); }
   else if (kind === 'win') [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 'triangle', 0.14, i * 0.11));
 }
 // lo-fi loop: soft chords (Cmaj7 · Am7 · Fmaj7 · G6) with a few pentatonic notes on top
@@ -2551,10 +2562,10 @@ $('tSize').addEventListener('click', () => {
 
 /* ---------- cat ---------- */
 const cat = { key: 'cat', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 1, jump: 0, t: 0, speed: 0.9, rest: 1.5, bounce: 0.03, hop: 0.45 };
-// Milo the pug: fawn coat, black mask, rose ears, forehead wrinkles, curly tail and a red collar. Faces +x.
+// Milo the pug: fawn coat, black mask, rose ears, forehead wrinkles, curly tail and a blue collar. Faces +x.
 (function buildPug() {
   const fawn = M(0xD9B07E), fawnL = M(0xEACFA6), fawnD = M(0xC39563), mask = std({ color: 0x241E2E, roughness: 0.55 }), nose = std({ color: 0x15111C, roughness: 0.25 });
-  const iris = std({ color: 0x3A2414, roughness: 0.2 }), shine = M(0xFFFFFF), eyeW = M(0xF7F3EE), pink = M(0xFF8FA3), collar = M(0xE5533D), gold = M(GOLD);
+  const iris = std({ color: 0x3A2414, roughness: 0.2 }), shine = M(0xFFFFFF), eyeW = M(0xF7F3EE), pink = M(0xFF8FA3), collar = M(0x3F7FD9), gold = M(GOLD);
   const body = new THREE.Group(); cat.g.add(body); cat.body = body;
   // chunky body with a lighter chest and a slightly darker back
   S(body, 0.17, fawn, -0.03, 0.22, 0).scale.set(1.45, 0.93, 1.1);
@@ -2658,39 +2669,19 @@ function updatePet(c, dt) {
   if (c.body) c.body.rotation.x = moving ? Math.sin(c.t * 10) * 0.07 : 0;
   if (c.head) { c.head.rotation.x = moving ? 0 : Math.sin(c.t * 0.7) * 0.18; c.head.rotation.z = moving ? Math.sin(c.t * 10) * 0.05 : 0; }
   if (c.tongue) c.tongue.scale.y = moving ? 1 + Math.abs(Math.sin(c.t * 12)) * 0.8 : 1;
-  if (c.legs) c.legs.forEach((l, i) => { l.rotation.z = moving ? Math.sin(c.t * 9 + i * PI) * 0.45 : 0; });
-  if (c.arm) c.arm.rotation.x = c.jump > 0 ? -2.6 * Math.sin(c.jump * PI) : moving ? Math.sin(c.t * 9) * 0.3 : 0; // waves when tapped
   if (c.eyes) { const blink = c.t > c.blinkAt && c.t < c.blinkAt + 0.13; if (c.t > c.blinkAt + 0.13) c.blinkAt = c.t + 2 + Math.random() * 3; for (const e of c.eyes) e.scale.y = blink ? 0.12 : 1; }
 }
-function updateCat(dt) { for (const c of pets) updatePet(c, dt); }
-// Luna, a grey cat, and Nico, a friend who drops by; both face +x like Milo
-const luna = { key: 'luna', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 2, jump: 0, t: 0, speed: 0.75, rest: 2.5, bounce: 0.02, hop: 0.6, blinkAt: 3, eyes: [] };
-(function buildLuna() {
-  const fur = M(0x9A9AA6), furL = M(0xD8D8DE), pink = M(0xF2A7B8), body = new THREE.Group(); luna.g.add(body); luna.body = body;
-  S(body, 0.14, fur, 0, 0.2, 0).scale.set(1.5, 0.85, 0.85); S(body, 0.09, furL, 0.07, 0.17, 0).scale.set(1.2, 0.8, 0.7);
-  for (const [x, z] of [[0.13, 0.06], [0.13, -0.06], [-0.13, 0.06], [-0.13, -0.06]]) C(body, 0.028, 0.024, 0.14, fur, x, 0.07, z, 8);
-  const head = new THREE.Group(); head.position.set(0.22, 0.3, 0); body.add(head); luna.head = head; S(head, 0.1, fur, 0, 0, 0).scale.set(1, 0.92, 1.05); S(head, 0.05, furL, 0.07, -0.03, 0).scale.set(0.8, 0.7, 1.1);
-  for (const sz of [-1, 1]) { K(head, 0.04, 0.08, fur, -0.01, 0.1, sz * 0.055).rotation.x = sz * 0.3; K(head, 0.022, 0.05, pink, 0.0, 0.1, sz * 0.055).rotation.x = sz * 0.3;
-    const e = new THREE.Group(); e.position.set(0.085, 0.02, sz * 0.042); head.add(e); luna.eyes.push(e); S(e, 0.022, M(0x8FD06A), 0, 0, 0); S(e, 0.012, M(0x15111C), 0.012, 0, 0).scale.set(0.6, 1.4, 1); }
-  S(head, 0.012, pink, 0.105, -0.015, 0);
-  const tail = new THREE.Group(); tail.position.set(-0.2, 0.22, 0); body.add(tail); luna.tail = tail; rod(tail, V3(0, 0, 0), V3(-0.1, 0.18, 0), 0.02, fur); rod(tail, V3(-0.1, 0.18, 0), V3(-0.06, 0.3, 0), 0.018, fur);
-  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.32), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; luna.g.add(blob);
-  luna.g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; }); scene.add(luna.g);
-})();
-const nico = { key: 'visita', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, tz: 0, wait: 3, jump: 0, t: 0, speed: 0.6, rest: 3, bounce: 0.015, hop: 0, legs: [], blinkAt: 2, eyes: [] };
-(function buildNico() {
-  const skin = M(0xE8B896), shirt = M(0xFF7A59), jeans = M(0x4F6A9A), hair = M(0x3B2A22), shoe = M(0xF4F1EA), body = new THREE.Group(); nico.g.add(body); nico.body = body;
-  for (const sz of [-1, 1]) { const leg = new THREE.Group(); leg.position.set(0, 0.72, sz * 0.09); body.add(leg); nico.legs.push(leg); C(leg, 0.06, 0.05, 0.66, jeans, 0, -0.35, 0, 12); B(leg, 0.16, 0.07, 0.1, shoe, 0.03, -0.69, 0); }
-  add(body, roundBox(0.24, 0.5, 0.34, 0.1), shirt, 0, 0.97, 0); S(body, 0.05, skin, 0, 1.24, 0);
-  const head = new THREE.Group(); head.position.set(0, 1.4, 0); body.add(head); nico.head = head; S(head, 0.14, skin, 0, 0, 0).scale.set(0.95, 1.05, 0.95);
-  S(head, 0.145, hair, -0.02, 0.05, 0).scale.set(0.95, 0.8, 1); S(head, 0.06, hair, 0.06, 0.1, 0.04);
-  for (const sz of [-1, 1]) { const e = new THREE.Group(); e.position.set(0.13, 0.01, sz * 0.05); head.add(e); nico.eyes.push(e); S(e, 0.018, M(0x2B2140), 0, 0, 0); S(head, 0.02, M(0xF2A7B8), 0.125, -0.04, sz * 0.08).scale.set(0.5, 0.6, 1); }
-  BX(head, 0.01, 0.012, 0.05, M(0xB0584A), 0.135, -0.06, 0);
-  for (const sz of [-1, 1]) { const arm = new THREE.Group(); arm.position.set(0, 1.18, sz * 0.21); body.add(arm); if (sz > 0) nico.arm = arm; C(arm, 0.045, 0.04, 0.42, shirt, 0, -0.2, 0, 10); S(arm, 0.045, skin, 0, -0.44, 0); }
-  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5), blobMat); blob.rotation.x = -PI / 2; blob.position.y = 0.01; nico.g.add(blob);
-  nico.g.traverse(o => { if (o.isMesh && o !== blob) o.castShadow = true; }); scene.add(nico.g);
-})();
-const pets = [cat, luna, nico];
+function updateCat(dt) { for (const c of pets) updatePet(c, dt); placeBubble(); }
+let bubbleUntil = 0, bubbleN = 0;
+function miloSays() { const b = $('bubble'); b.textContent = (bubbleN++ % 3 === 2 || Math.random() < 0.3) ? '¡Milonquiti!' : '¡Milo!'; b.hidden = false; b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; bubbleUntil = performance.now() + 1600; placeBubble(); }
+const bubPos = new THREE.Vector3();
+function placeBubble() {
+  const b = $('bubble'); if (b.hidden) return;
+  if (performance.now() > bubbleUntil || !cat.g.visible) { b.hidden = true; return; }
+  bubPos.set(cat.x, cat.g.position.y + 0.75, cat.z).project(state.walk ? walkCam : camera);
+  b.style.left = ((bubPos.x + 1) / 2 * W) + 'px'; b.style.top = ((1 - bubPos.y) / 2 * H) + 'px';
+}
+const pets = [cat];
 
 /* ---------- day / night ---------- */
 const state = { night: false, menu: true };
@@ -2705,7 +2696,7 @@ function updatePools() { lightPool.forEach((l, i) => { const p = pools[i], on = 
 function updateLights() {
   const list = state.night ? allItems().filter(it => def(it).light && !it.off && it.group && it.group.parent && (!BM || it.lv <= HOUSE.cur)) : [];
   list.sort((a, b) => a.group.position.lengthSq() - b.group.position.lengthSq());
-  const shadows = state.night && settings.quality === 'alta';
+  const shadows = state.night && (settings.quality === 'alta' || state.walk);
   lightPool.forEach((l, i) => { if (i < 2 && l.castShadow !== shadows) l.castShadow = shadows; const it = list[i]; if (!it) { l.intensity = 0; return; } const Lc = def(it).light; it.group.updateWorldMatrix(true, false);
     l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(it.lc ?? Lc.color); l.intensity = Lc.power * (state.lampK ?? 1); });
 }
@@ -2715,7 +2706,7 @@ function paintChrome() { // what shows around and under the game: browser bar, i
   document.querySelector('meta[name="theme-color"]').setAttribute('content', c);
 }
 // each look is [hemi, hemiSky, hemiGround, sun, sunColor, fill, windowColor, windowGlow, lampGlow]
-const SKY_KEYS = [[0.56, 0xFFF2E6, 0x6F6396, 0.92, 0xFFEBD2, 0.14, 0xA9D6EE, 0x5E9CC4, 0.5], [0.46, 0xFFC9A8, 0x6A4F7A, 0.72, 0xFF9455, 0.1, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
+const SKY_KEYS = [[0.6, 0xFFF2E6, 0x7A6EA0, 0.88, 0xFFEBD2, 0.26, 0xA9D6EE, 0x5E9CC4, 0.5], [0.46, 0xFFC9A8, 0x6A4F7A, 0.72, 0xFF9455, 0.1, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
 const SKY_MODES = ['dia', 'tarde', 'noche', 'auto'], SKY_P = { dia: 0, tarde: 0.5, noche: 1 };
 const sunsetIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 7v2M5.6 11.6l1.4 1.4M18.4 11.6L17 13M7 21h10"/></svg>';
 const autoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M21 3v6h-6"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -2809,7 +2800,7 @@ function setTopView(on) {
 }
 $('topExit').addEventListener('click', () => setTopView(false));
 // walking tour: a person's-eye camera, a joystick to walk and a drag to look around
-const walkCam = new THREE.PerspectiveCamera(70, 1, 0.05, 80), walk = { x: 0, z: 0, yaw: 0, pitch: -0.05, jx: 0, jy: 0, bob: 0 };
+const walkCam = new THREE.PerspectiveCamera(84, 1, 0.05, 80), walk = { x: 0, z: 0, yaw: 0, pitch: -0.05, jx: 0, jy: 0, bob: 0 };
 function startWalk() {
   setTopView(false); select(null); if (placing) startPlacing(null); if (tool) setTool(null);
   walk.x = view.target.x; walk.z = view.target.z; walk.yaw = view.az + PI; walk.pitch = -0.05;
@@ -2818,10 +2809,18 @@ function startWalk() {
     if (cells.length) { const mx = cells.reduce((a, c) => a + c[0], 0) / cells.length, mz = cells.reduce((a, c) => a + c[1], 0) / cells.length;
       const best = cells.filter(([x, z]) => !walkBlocked(x + 0.5 - GW / 2, z + 0.5 - GD / 2)).sort((a, b) => Math.hypot(a[0] - mx, a[1] - mz) - Math.hypot(b[0] - mx, b[1] - mz))[0];
       if (best) { walk.x = best[0] + 0.5 - GW / 2; walk.z = best[1] + 0.5 - GD / 2; } } }
-  state.walk = true; app.classList.add('walk'); setRoofView(false); showCeilings(true); resize();
+  state.walk = true; app.classList.add('walk'); setRoofView(false); showCeilings(true); walkOrient();
+  // best looks while walking: full sharpness and finer shadows
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2.5)); sun.shadow.mapSize.set(2048, 2048); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  lightPool.slice(0, 2).forEach(l => { l.shadow.mapSize.set(512, 512); if (l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; } }); updateLights(); resize();
 }
-function stopWalk() { state.walk = false; app.classList.remove('walk'); showCeilings(false); walk.jx = walk.jy = 0; $('joyKnob').style.transform = ''; resize(); }
+function stopWalk() { state.walk = false; app.classList.remove('walk', 'rot'); showCeilings(false);
+  lightPool.slice(0, 2).forEach(l => { l.shadow.mapSize.set(256, 256); if (l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; } }); applyQuality(); updateLights(); walk.jx = walk.jy = 0; $('joyKnob').style.transform = ''; resize(); }
 $('walkExit').addEventListener('click', stopWalk);
+// the tour is always landscape: if the phone is held upright the whole view turns sideways
+function walkOrient() { app.classList.toggle('rot', !!state.walk && innerHeight > innerWidth); resize(); }
+addEventListener('resize', () => { if (state.walk) setTimeout(walkOrient, 50); });
+const rotD = (dx, dy) => (app.classList.contains('rot') ? [dy, -dx] : [dx, dy]); // screen movement -> movement in the turned view
 function showCeilings(on) { // walking around you want a ceiling: the floor above and the roofs, or a plain ceiling in a single room
   if (BM) levelGroups.forEach((lg, j) => { lg.root.visible = on ? j <= HOUSE.cur + 1 : j <= HOUSE.cur; lg.roof.visible = on && j === HOUSE.cur; });
   if (walkCeil) walkCeil.visible = on && !BM;
@@ -2844,13 +2843,13 @@ function updateWalk(dt) {
   // -jy is forward on the stick; slide along walls when going straight in is blocked
   for (const [dx, dz] of [[mx, mz], [mx, 0], [0, mz]]) { const nx = walk.x + dx, nz = walk.z + dz; if ((dx || dz) && !walkBlocked(nx, nz) && !wallBetween(walk.x, walk.z, nx, nz)) { walk.x = nx; walk.z = nz; break; } }
   const moving = Math.hypot(walk.jx, walk.jy) > 0.1; walk.bob += moving ? dt * 9 : 0;
-  const y = (BM ? HOUSE.cur * LEVEL_H : 0) + 1.55 + (moving ? Math.sin(walk.bob) * 0.025 : 0);
+  const y = (BM ? HOUSE.cur * LEVEL_H : 0) + 1.3 + (moving ? Math.sin(walk.bob) * 0.02 : 0); // a little below the hanging lamps
   walkCam.position.set(walk.x, y, walk.z);
   walkCam.lookAt(walk.x + Math.sin(walk.yaw) * Math.cos(walk.pitch), y + Math.sin(walk.pitch), walk.z + Math.cos(walk.yaw) * Math.cos(walk.pitch));
 }
 (() => { // joystick
   const joy = $('joy'), knob = $('joyKnob'); let id = null;
-  const move = e => { const r = joy.getBoundingClientRect(), dx = e.clientX - r.left - r.width / 2, dy = e.clientY - r.top - r.height / 2, R0 = r.width / 2 - 14, d = Math.min(R0, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+  const move = e => { const r = joy.getBoundingClientRect(), [dx, dy] = rotD(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2), R0 = Math.min(r.width, r.height) / 2 - 14, d = Math.min(R0, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
     walk.jx = Math.cos(a) * d / R0; walk.jy = Math.sin(a) * d / R0; knob.style.transform = `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px)`; };
   joy.addEventListener('pointerdown', e => { id = e.pointerId; joy.setPointerCapture(id); move(e); });
   joy.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
@@ -2950,13 +2949,13 @@ function openingMap(lv) { // wall edges a door or window cuts through: edge -> {
   return out;
 }
 const holeGeos = {};
-function holeWallGeo(type) { // one wall slab with the item's hole cut out, spanning every edge the item covers
-  if (holeGeos[type]) return holeGeos[type];
-  const D = CAT[type], h = D.hole, span = D.w - WALL_T, cx = (D.w - 1) / 2, x0 = cx - span / 2, x1 = cx + span / 2, pts = holePts(h).map(([x, y]) => [x + cx, y]);
+function holeWallGeo(type, e0, e1) { // one wall slab with the item's hole cut out, spanning every edge the item covers
+  const key = [type, e0, e1].join(); if (holeGeos[key]) return holeGeos[key];
+  const D = CAT[type], h = D.hole, cx = (D.w - 1) / 2, x0 = cx - (D.w - WALL_T) / 2 - e0, x1 = cx + (D.w - WALL_T) / 2 + e1, pts = holePts(h).map(([x, y]) => [x + cx, y]);
   let shape;
   if (h.y0 <= 0) shape = shapeOf([[x0, 0], ...pts, [x1, 0], [x1, WALL_H], [x0, WALL_H]]);
   else { shape = shapeOf([[x0, 0], [x1, 0], [x1, WALL_H], [x0, WALL_H]]); shape.holes.push(new THREE.Path(pts.map(([x, y]) => new THREE.Vector2(x, y)))); }
-  return (holeGeos[type] = new THREE.ExtrudeGeometry(shape, { depth: WALL_T / 2, bevelEnabled: false }));
+  return (holeGeos[key] = new THREE.ExtrudeGeometry(shape, { depth: WALL_T / 2, bevelEnabled: false }));
 }
 function buildLevelGeo(i) {
   const lg = levelGroups[i], lv = HOUSE.levels[i]; if (!lg) return;
@@ -2969,11 +2968,19 @@ function buildLevelGeo(i) {
     const t = new THREE.Mesh(tileGeo(x, z), floorMatFor(f)); t.rotation.x = -PI / 2; t.position.set(x + 0.5 - GW / 2, 0.002, z + 0.5 - GD / 2); t.receiveShadow = true; lg.geo.add(t);
     if (i > 0) P(lg.geo, 1, 0.15, 1, slabMat, x + 0.5 - GW / 2, -0.074, z + 0.5 - GD / 2);
   }
-  const ops = openingMap(lv);
+  const ops = openingMap(lv); straightV = straightVerts(lv);
   for (const [k, e] of Object.entries(lv.walls)) makeEdge(i, k, e, ops[k]);
   makePosts(i); makeRuns(i); buildRoof(i);
   for (const it of lv.items) if (def(it).wall && it.group) placeMeshB(it);
 }
+let straightV = new Set();
+const edgeEnds = k => { const [t, x, z] = parseE(k); return [ckey(x, z), t === 'h' ? ckey(x + 1, z) : ckey(x, z + 1)]; };
+function straightVerts(lv) {
+  const verts = {}; for (const k of Object.keys(lv.walls)) for (const v of edgeEnds(k)) (verts[v] = verts[v] || []).push(k);
+  return new Set(Object.entries(verts).filter(([, es]) => es.length === 2 && es[0][0] === es[1][0] && !lv.walls[es[0]].half === !lv.walls[es[1]].half).map(([v]) => v));
+}
+// how far a wall piece reaches past its own metre: into the next piece on a straight run, just into the post at a corner
+const endExt = v => (straightV.has(v) ? WALL_T / 2 + 0.002 : 0.01);
 function makeEdge(i, k, e, op) {
   const [t] = parseE(k), [cx, cz] = edgeCenter(k), g = new THREE.Group();
   g.position.set(cx, 0, cz); if (t === 'v') g.rotation.y = -PI / 2;
@@ -2984,24 +2991,24 @@ function makeEdge(i, k, e, op) {
   const W = (grp, w, h, x, y) => { const g2 = wallBox(w, h, T / 2, ((u0 + x - w / 2) % 4 + 4) % 4), a = add(grp, g2, mf, x, y, T / 4), b = add(grp, g2, mb, x, y, -T / 4); a.userData.face = 1; b.userData.face = -1; };
   g.add(body, stub);
   const D = op && def(op.it), hole = D && D.hole;
-  const HH = e.half ? HALF_H : WALL_H;
-  if (!op) W(body, L1, HH, 0, HH / 2);
-  else if (op.n === 0) for (const [mat, face, z] of [[mf, 1, 0], [mb, -1, -T / 2]]) add(body, holeWallGeo(op.it.type), mat, 0, 0, z).userData.face = face;
+  const HH = e.half ? HALF_H : WALL_H, [v0, v1] = edgeEnds(k), e0 = endExt(v0), e1 = endExt(v1), sw = L1 + e0 + e1, sx = (e1 - e0) / 2;
+  if (!op) W(body, sw, HH, sx, HH / 2);
+  else if (op.n === 0) { const h1 = endExt(edgeEnds(edgeShift(k, D.w - 1))[1]); for (const [mat, face, z] of [[mf, 1, 0], [mb, -1, -T / 2]]) add(body, holeWallGeo(op.it.type, e0, h1), mat, 0, 0, z).userData.face = face; }
   // a doorway leaves a gap in the skirting and in the low cut-away wall; hx is the hole centre in this edge's own x
   const hx = hole ? (D.w - 1) / 2 + (hole.x || 0) - op.n : 0, gap = D && D.opening === 'door' ? [hx - hole.hw, hx + hole.hw] : null;
   const cut = (a, b) => (gap ? [[a, Math.min(b, gap[0])], [Math.max(a, gap[1]), b]] : [[a, b]]).filter(([p, q]) => q - p > 0.01);
   // a wall with another wall right above it gets no cap; upper walls reach down over the floor slab
   const above = HOUSE.levels[i + 1] && HOUSE.levels[i + 1].walls[k];
-  if (!above || e.half) P(body, L1 - 0.03, 0.04, T + 0.03, capMat, 0, HH + 0.02, 0);
-  if (i > 0) W(g, L1, LEVEL_H - WALL_H, 0, -(LEVEL_H - WALL_H) / 2);
+  if (!above || e.half) P(body, sw, 0.04, T + 0.03, capMat, sx, HH + 0.02, 0);
+  if (i > 0) W(g, sw, LEVEL_H - WALL_H, sx, -(LEVEL_H - WALL_H) / 2);
   // skirting only on faces that look into a room, running through the corner posts
   for (const sz of [-1, 1]) if (hasTile(i, ...cellOnSide(k, sz))) for (const [a, b] of cut(-(L1 + T) / 2, (L1 + T) / 2)) P(body, b - a, 0.1, 0.02, trimMat, (a + b) / 2, 0.05, sz * (T / 2 + 0.01));
-  for (const [a, b] of cut(-L1 / 2, L1 / 2)) { W(stub, b - a, STUB_H, (a + b) / 2, STUB_H / 2); P(stub, b - a - 0.03, 0.04, T + 0.03, capMat, (a + b) / 2, STUB_H + 0.02, 0); }
+  for (const [a, b] of cut(-L1 / 2 - e0, L1 / 2 + e1)) { W(stub, b - a, STUB_H, (a + b) / 2, STUB_H / 2); P(stub, b - a, 0.04, T + 0.03, capMat, (a + b) / 2, STUB_H + 0.02, 0); }
   g.traverse(o => { if (o.isMesh) o.userData.edge = k; });
   levelGroups[i].geo.add(g);
   wallMeshes[i][k] = { g, body, stub, h: 1, key: k, t };
 }
-// square posts where walls meet: segments stop at the post, so nothing overlaps or flickers
+// square posts at corners, junctions and loose ends; straight runs need none
 let posts = [[], [], []];
 function makePosts(i) {
   const lv = HOUSE.levels[i], verts = {};
@@ -3010,14 +3017,15 @@ function makePosts(i) {
   const up = HOUSE.levels[i + 1], upVerts = new Set();
   if (up) for (const k of Object.keys(up.walls)) { const [t, x, z] = parseE(k); upVerts.add(ckey(x, z)); upVerts.add(t === 'h' ? ckey(x + 1, z) : ckey(x, z + 1)); }
   const inner = new Set(); for (const it of lv.items) { const D = def(it); if (D.opening && !it.lifting) for (let n = 1; n < D.w; n++) { const [, x, z] = parseE(edgeShift(it.edge, n)); inner.add(ckey(x, z)); } }
+  const straight = straightVerts(lv);
   for (const [v, edges] of Object.entries(verts)) {
-    if (inner.has(v)) continue;
+    if (inner.has(v) || straight.has(v)) continue;
     const [x, z] = v.split(',').map(Number), g = new THREE.Group(), body = new THREE.Group(), stub = new THREE.Group(), mat = wallMatFor(lv.walls[edges[0]].c);
     g.position.set(x - GW / 2, 0, z - GD / 2); g.add(body, stub);
     const ph = edges.every(q => lv.walls[q].half) ? HALF_H : WALL_H; // a post only as tall as the tallest wall it joins
-    P(body, WALL_T, ph, WALL_T, mat, 0, ph / 2, 0); if (!upVerts.has(v) || ph < WALL_H) P(body, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, ph + 0.02, 0);
-    if (i > 0) P(g, WALL_T, LEVEL_H - WALL_H, WALL_T, mat, 0, -(LEVEL_H - WALL_H) / 2, 0);
-    P(stub, WALL_T, STUB_H, WALL_T, mat, 0, STUB_H / 2, 0); P(stub, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, STUB_H + 0.02, 0);
+    P(body, WALL_T - 0.006, ph, WALL_T - 0.006, mat, 0, ph / 2, 0); // just inside the wall faces, so the two never fight if (!upVerts.has(v) || ph < WALL_H) P(body, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, ph + 0.02, 0);
+    if (i > 0) P(g, WALL_T - 0.006, LEVEL_H - WALL_H, WALL_T - 0.006, mat, 0, -(LEVEL_H - WALL_H) / 2, 0);
+    P(stub, WALL_T - 0.006, STUB_H, WALL_T - 0.006, mat, 0, STUB_H / 2, 0); P(stub, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, STUB_H + 0.02, 0);
     g.traverse(o => { if (o.isMesh && o.material === mat) o.userData.post = true; });
     levelGroups[i].geo.add(g); posts[i].push({ g, body, stub, edges, h: 1 });
   }
@@ -3329,7 +3337,7 @@ function renderMenu() {
   $('mRetosSub').textContent = `${settings.trofeos || 0} trofeos · ${Object.values(CAT).filter(D => D.rare && !rareLocked(D)).length} de ${Object.values(CAT).filter(D => D.rare).length} objetos raros`; $('mRetosNew').hidden = rooms.reto_d.best > 0;
   $('mHomeSub').textContent = `${homes} de ${HOMES.length} salas`; $('mHomeBar').style.width = homes / HOMES.length * 100 + '%';
   const bw = rooms.build.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0);
-  $('mBuildSub').textContent = projects.length > 1 ? `${projects.length} proyectos` : bw ? `${bw} paredes` : 'Tu casa, 3 pisos'; $('mBuildBar').style.width = Math.min(100, bw / 80 * 100) + '%';
+  $('mBuildSub').textContent = projects[projCur].name; $('mBuildBar').style.width = Math.min(100, bw / 80 * 100) + '%';
 }
 $('mHelp').addEventListener('click', () => { $('helpOv').hidden = false; });
 function renderStory() {
@@ -3362,30 +3370,36 @@ function renderBuildList() {
   if (rooms.build) projects[projCur].levels = plainLevels(rooms.build.levels);
   const band = (bg, svg) => `<span class="band" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" style="width:26px;height:26px">${svg}</svg></span>`;
   const mini = (act, i, svg, label) => `<button class="pact" data-act="${act}" data-i="${i}" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg></button>`;
-  $('buildList').innerHTML = projects.map((pr, i) => { const w0 = pr.levels.reduce((a, l) => a + Object.keys(l.walls).length, 0), n0 = pr.levels.reduce((a, l) => a + l.items.length, 0);
-    return `<div class="lv proj ${i === projCur ? 'current' : ''}"><button class="pmain" data-b="open" data-i="${i}">${band('linear-gradient(135deg,#F2B33D,#E0803A)', '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>')}<span class="body"><b>${pr.name.replace(/</g, '&lt;')}</b><small>${w0} paredes · ${n0} objetos${i === projCur ? ' · abierto' : ''}</small></span></button>
+  $('buildList').innerHTML = projects.map((pr, i) => {
+    return `<div class="lv proj ${i === projCur ? 'current' : ''}"><button class="pmain" data-b="open" data-i="${i}">${band('linear-gradient(135deg,#F2B33D,#E0803A)', '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>')}<span class="body"><b>${pr.name.replace(/</g, '&lt;')}</b></span></button>
       <span class="pacts">${mini('rename', i, '<path d="M4 20h4L19 9l-4-4L4 16z"/>', 'Cambiar nombre')}${mini('dup', i, '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>', 'Duplicar')}${projects.length > 1 ? mini('del', i, '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', 'Borrar') : ''}</span></div>`; }).join('') + `
-    <button class="lv" data-b="example">${band('linear-gradient(135deg,#8F74E0,#6A4FC2)', '<path d="M4 21V11l8-6 8 6v10z"/><path d="M4 15h16"/>')}<span class="body"><b>Nueva: casita de ejemplo</b><small>Dos pisos ya montados para inspirarte</small></span></button>
-    <button class="lv" data-b="empty">${band('linear-gradient(135deg,#4CC9A0,#2F9E7C)', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16" stroke-dasharray="2 2"/>')}<span class="body"><b>Nueva: parcela vacía</b><small>Empieza de cero sobre el césped · ${GWB}×${GDB} casillas</small></span></button>`;
+    <button class="lv" data-b="example">${band('linear-gradient(135deg,#8F74E0,#6A4FC2)', '<path d="M4 21V11l8-6 8 6v10z"/><path d="M4 15h16"/>')}<span class="body"><b>Nueva: casita de ejemplo</b></span></button>
+    <button class="lv" data-b="empty">${band('linear-gradient(135deg,#4CC9A0,#2F9E7C)', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16" stroke-dasharray="2 2"/>')}<span class="body"><b>Nueva: parcela vacía</b></span></button>`;
 }
 function openProject(i) {
   if (rooms.build) projects[projCur].levels = plainLevels(rooms.build.levels);
   projCur = i; rooms.build = { cur: 0, best: 0, levels: JSON.parse(JSON.stringify(projects[i].levels)) }; BUILD_DEF.room = projects[i].name;
   history.length = 0; future.length = 0; updHistory(); save();
 }
+let nameCb = null;
+function askName(title, value, ok, cb) { $('nameTitle').textContent = title; $('nameGo').textContent = ok; $('nameIn').value = value; nameCb = cb; $('nameOv').hidden = false; $('nameIn').focus(); $('nameIn').select(); }
+function nameDone(go) { const v = $('nameIn').value.trim().slice(0, 40); $('nameOv').hidden = true; $('nameIn').blur(); if (go && nameCb) nameCb(v || 'Mi proyecto'); nameCb = null; }
+$('nameGo').addEventListener('click', () => nameDone(true)); $('nameNo').addEventListener('click', () => nameDone(false));
+$('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') nameDone(true); });
 function addProject(name, levels) { projects.push({ name, levels: plainLevels(levels) }); openProject(projects.length - 1); }
 const GWB = BUILD_DEF.w, GDB = BUILD_DEF.d;
 $('buildList').addEventListener('click', e => {
   const act = e.target.closest('[data-act]');
   if (act) { const i = +act.dataset.i;
-    if (act.dataset.act === 'rename') { const n = prompt('Nombre del proyecto', projects[i].name); if (n && n.trim()) { projects[i].name = n.trim().slice(0, 40); if (i === projCur) BUILD_DEF.room = projects[i].name; save(); renderBuildList(); if (BM) refreshHud(); } }
+    if (act.dataset.act === 'rename') askName('Cambiar nombre', projects[i].name, 'Guardar', n => { projects[i].name = n; if (i === projCur) BUILD_DEF.room = n; save(); renderBuildList(); if (BM) loadRoom('build'); });
     if (act.dataset.act === 'dup') { if (i === projCur) projects[i].levels = plainLevels(rooms.build.levels); projects.splice(i + 1, 0, { name: projects[i].name + ' (copia)', levels: JSON.parse(JSON.stringify(projects[i].levels)) }); if (projCur > i) projCur++; save(); renderBuildList(); toast('Duplicado'); }
     if (act.dataset.act === 'del') { if (act.dataset.armed !== '1') { act.dataset.armed = '1'; act.style.background = '#D9433A'; act.style.color = '#fff'; toast('Toca otra vez para borrar'); return; }
       const wasOpen = i === projCur; projects.splice(i, 1); if (projCur >= i && projCur > 0) projCur--; if (wasOpen) { openProject(projCur); if (BM) loadRoom('build'); } save(); renderBuildList(); }
     return; }
   const b = e.target.closest('[data-b]'); if (!b) return;
   if (b.dataset.b === 'open') { if (+b.dataset.i !== projCur || !BM) openProject(+b.dataset.i); }
-  else addProject(b.dataset.b === 'example' ? 'Casita de ejemplo' : `Proyecto ${projects.length + 1}`, b.dataset.b === 'example' ? exampleHouse() : fillLevels([]));
+  else { const ex = b.dataset.b === 'example';
+    return askName('Nuevo proyecto', ex ? 'Casita de ejemplo' : `Mi proyecto ${projects.length + 1}`, 'Crear', n => { addProject(n, ex ? exampleHouse() : fillLevels([])); $('buildOv').hidden = true; loadRoom('build'); closeMenu(); }); }
   $('buildOv').hidden = true; loadRoom('build'); closeMenu();
   if (b.dataset.b === 'empty') 0;
 });
@@ -3566,7 +3580,7 @@ canvas.addEventListener('pointerdown', e => {
   if (e.button === 2 || e.shiftKey) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: 99 }; return; }
   if (BM && tool) { const p = floorPoint(e); gesture = { kind: 'tool', a: tool.id === 'paste' ? null : p, b: p, before: snap(), x0: e.clientX, y0: e.clientY }; if (tool.id === 'paste') gesture.a = p; toolMove(gesture, e); return; }
   const it = pick(e);
-  if (it && it.isPet && !placing) { it.jump = 1; buzz(20); sfx(it === cat ? 'bark' : it === luna ? 'meow' : 'hi'); gesture = null; return; }
+  if (it && it.isPet && !placing) { it.jump = 1; buzz(20); sfx('bark'); miloSays(); gesture = null; return; }
   if (state.lockAll) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, moved: 0, tapItem: null }; return; }
   // only the object that is already selected can be dragged; anything else is a tap or a camera turn
   if (it && it === sel && !it.locked && !placing) { gesture = startDrag(it, e); gesture.x0 = e.clientX; gesture.y0 = e.clientY; }
@@ -3576,7 +3590,7 @@ canvas.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return;
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!gesture) return;
-  if (gesture.kind === 'look') { walk.yaw -= (e.clientX - gesture.x) * 0.006; walk.pitch = THREE.MathUtils.clamp(walk.pitch - (e.clientY - gesture.y) * 0.005, -1.1, 0.9); gesture.x = e.clientX; gesture.y = e.clientY; return; }
+  if (gesture.kind === 'look') { const [lx, ly] = rotD(e.clientX - gesture.x, e.clientY - gesture.y); walk.yaw -= lx * 0.006; walk.pitch = THREE.MathUtils.clamp(walk.pitch - ly * 0.005, -1.1, 0.9); gesture.x = e.clientX; gesture.y = e.clientY; return; }
   if (gesture.kind === 'pinch' && pointers.size === 2) {
     const [a, b] = [...pointers.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, ang = Math.atan2(b.y - a.y, b.x - a.x);
     view.zoom = THREE.MathUtils.clamp(gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0, 0.6, 3.4);
