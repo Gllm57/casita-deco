@@ -14,8 +14,22 @@
 <link rel="icon" href="icon-512.png">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Pacifico&family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
+.loader { position: fixed; inset: 0; z-index: 100; background: #1E1830; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; transition: opacity .45s ease, visibility .45s; }
+.loader.gone { opacity: 0; visibility: hidden; }
+.ld-house { width: 76px; height: auto; overflow: visible; }
+.ld-roof { fill: #FF6F4D; fill-opacity: 0; stroke: #FF6F4D; stroke-width: 2.6; stroke-linejoin: round; stroke-dasharray: 160; stroke-dashoffset: 160; animation: ldDraw 1.1s ease forwards, ldFill .4s .9s ease forwards; }
+.ld-door { fill: #1E1830; opacity: 0; animation: ldFill .3s 1.15s forwards; }
+@keyframes ldDraw { to { stroke-dashoffset: 0; } }
+@keyframes ldFill { to { fill-opacity: 1; opacity: 1; } }
+.ld-name { font: 800 30px/1 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif; letter-spacing: -.02em; color: #fff; }
+.ld-name span + span { color: #FF6F4D; }
+.ld-bar { width: 140px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; margin-top: 6px; }
+.ld-bar i { display: block; height: 100%; width: 8%; border-radius: 4px; background: #FF6F4D; transition: width .5s ease; animation: ldCrawl 6s ease-out forwards; }
+@keyframes ldCrawl { to { width: 72%; } }
+.ld-tip { font: 700 12px 'Nunito', system-ui, sans-serif; color: rgba(241,233,255,.6); letter-spacing: .04em; }
+@media (prefers-reduced-motion: reduce) { .ld-roof { stroke-dashoffset: 0; fill-opacity: 1; animation: none; } .ld-door { opacity: 1; animation: none; } }
 /* Layout: full-bleed 3D room; HUD floats on top, catalog fades up from the bottom edge (right edge in landscape); menus slide up as sheets */
 :root {
   --page: #1E1830;
@@ -268,11 +282,11 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .menu-top { display: grid; justify-items: center; gap: 14px; text-align: center; }
 .brand { display: grid; justify-items: center; animation: floaty 4.5s ease-in-out infinite; }
 @keyframes floaty { 50% { transform: translateY(-5px); } }
-.logo-house { width: clamp(130px, 38vw, 180px); height: auto; margin-bottom: -6px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.25)); }
-.logo { display: grid; justify-items: center; }
-.logo .l1 { font: 800 clamp(56px, 16vw, 84px) var(--display); line-height: .9; letter-spacing: -.015em; color: #fff; text-shadow: 0 4px 0 #E8C9DF, 0 8px 0 rgba(122,92,196,.55), 0 18px 34px rgba(0,0,0,.35); }
-.logo .l2 { margin-top: -8px; font: 400 clamp(38px, 11vw, 54px) 'Pacifico', 'Brush Script MT', cursive; line-height: 1.1; background: linear-gradient(180deg, #FFE08A 10%, #FF8A5C 90%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #FFB347; filter: drop-shadow(0 3px 0 #B8452B) drop-shadow(0 10px 18px rgba(0,0,0,.3)); transform: rotate(-6deg); padding: 0 10px; }
-.tagline { margin-top: 14px; font: 800 11.5px var(--body); letter-spacing: .24em; text-transform: uppercase; color: #F1E9FF; text-shadow: 0 2px 10px rgba(0,0,0,.45); }
+.logo-house { width: clamp(64px, 18vw, 84px); height: auto; margin-bottom: 10px; filter: drop-shadow(0 8px 16px rgba(255,111,77,.35)); }
+.logo { display: flex; align-items: baseline; gap: .22em; font: 800 clamp(44px, 13vw, 64px)/1 var(--display); letter-spacing: -.02em; }
+.logo .l1 { color: #fff; }
+.logo .l2 { color: #FF6F4D; }
+.tagline { margin-top: 10px; font: 800 11px var(--body); letter-spacing: .26em; text-transform: uppercase; color: rgba(241,233,255,.7); }
 .rank { display: flex; align-items: center; gap: 10px; text-align: left; background: rgba(30,24,48,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 999px; padding: 6px 16px 6px 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
 .medal { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE7A0, var(--gold) 60%, #C98A12); color: #6B3F00; font: 800 15px var(--display); display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); flex: none; }
 .rank b { display: block; font: 800 15px var(--display); line-height: 1.05; }
@@ -323,9 +337,9 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .mi.house { background: linear-gradient(135deg, #4CC9A0, #2F9E7C); }
 .mi.build { background: linear-gradient(135deg, #F2B33D, #E0803A); }
 .mrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.mslim { border: 0; border-radius: 16px; padding: 11px 14px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,.08); color: #fff; font: 800 14px var(--body); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); transition: transform .12s; }
+.mslim { border: 0; border-radius: 16px; padding: 11px 8px; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; min-width: 0; cursor: pointer; background: rgba(255,255,255,.08); color: #fff; font: 800 13.5px var(--body); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); transition: transform .12s; }
 .mslim:active { transform: scale(.96); }
-.mslim svg { width: 19px; height: 19px; opacity: .85; }
+.mslim svg { width: 18px; height: 18px; flex: none; opacity: .85; }
 @media (hover: hover) { .mode:hover, .mslim:hover { background: rgba(255,255,255,.15); } }
 .help { display: grid; gap: 14px; }
 .help > div { display: flex; gap: 12px; align-items: flex-start; }
@@ -447,6 +461,12 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 </style>
 </head>
 <body>
+<div class="loader" id="loader" role="status" aria-label="Cargando Casita Deco">
+  <svg class="ld-house" viewBox="10 10 44 46" aria-hidden="true"><path class="ld-roof" d="M14 31.5 31 17.2a1.6 1.6 0 0 1 2 0L50 31.5V50a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4z"/><path class="ld-door" d="M27 54V45a5 5 0 0 1 10 0v9z"/></svg>
+  <div class="ld-name"><span>casita</span> <span>deco</span></div>
+  <div class="ld-bar"><i id="ldBar"></i></div>
+  <div class="ld-tip" id="ldTip">Preparando la casa…</div>
+</div>
 <div class="app" id="app">
   <canvas id="room" aria-label="Habitación 3D: arrastra para girar la cámara, toca un objeto para moverlo"></canvas>
   <div class="vignette"></div>
@@ -550,20 +570,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="menu" id="menu">
     <div class="menu-top" id="menuTop">
       <div class="brand">
-        <svg class="logo-house" viewBox="0 0 200 172" aria-hidden="true">
-          <ellipse cx="100" cy="158" rx="78" ry="12" fill="rgba(0,0,0,.22)"/>
-          <path d="M30 116 L100 151 L100 103 L30 68 Z" fill="#FFF8F1"/>
-          <path d="M100 151 L170 116 L170 68 L100 103 Z" fill="#F4D8CF"/>
-          <path d="M135 145 L152 136.5 L152 104 L135 112.5 Z" fill="#8F74E0"/><circle cx="148" cy="124" r="2.6" fill="#FFE08A"/>
-          <path d="M65 106c-3-7-14-5-12 2 1 4 12 11 12 11s9-4 11-9c3-7-8-10-11-4z" fill="#F2B33D" transform="skewY(26) translate(0 -32)"/>
-          <path d="M134 50 L148 43 L148 22 L134 29 Z" fill="#C9512F"/><path d="M134 29 L148 22 L141 18.5 L127 25.5 Z" fill="#E86A47"/>
-          <path d="M20 70 L100 110 L100 14 Z" fill="#FF7A59"/>
-          <path d="M100 110 L180 70 L100 14 Z" fill="#E0603F"/>
-          <path d="M20 70 L100 110 L180 70" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="4" stroke-linejoin="round"/>
-          <path d="M100 14 L100 110" stroke="#FFB49E" stroke-width="3"/>
-          <path d="M44 22 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z" fill="#FFF3D6"/><path d="M170 92 l3 6 6 3 -6 3 -3 6 -3 -6 -6 -3 6 -3z" fill="#FFF3D6"/>
-        </svg>
-        <div class="logo"><span class="l1">Casita</span><span class="l2">Deco</span></div>
+        <svg class="logo-house" viewBox="10 10 44 46" aria-hidden="true"><path d="M14 31.5 31 17.2a1.6 1.6 0 0 1 2 0L50 31.5V50a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4z" fill="#FF6F4D"/><path d="M27 54V45a5 5 0 0 1 10 0v9z" fill="#FFF6EE"/></svg>
+        <div class="logo"><span class="l1">casita</span><span class="l2">deco</span></div>
         <div class="tagline">Decora · Construye · Sueña</div>
       </div>
       <div class="rank" title="Tu rango sube con las estrellas de los encargos"><span class="medal" id="rankStars">0</span><span><b id="rankName">Aprendiz</b><small id="rankNext">4 estrellas para Decorador</small><span class="track"><i id="rankBar"></i></span></span></div>
@@ -688,6 +696,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
+const loadStart = performance.now(); document.getElementById('ldBar').style.animation = 'none'; document.getElementById('ldBar').style.width = '80%';
 const WALL_H = 2.6, HALF_H = 1.05, PI = Math.PI, LEVEL_H = WALL_H + 0.15, WALL_T = 0.15, STUB_H = 0.24;
 let BM = false, HOUSE = null; // constructor mode flag and the house being built
 const $ = id => document.getElementById(id);
@@ -3976,7 +3985,13 @@ function frame(now) {
   if (settings.quality === 'alta' && !state.menu) renderMirrors(cam);
   updatePools();
   renderer.render(scene, cam);
+  if (!loaderGone) hideLoader();
   requestAnimationFrame(frame);
+}
+let loaderGone = false;
+function hideLoader() { // the first frame is on screen: finish the bar and fade out (it stays at least a moment so it never just flickers)
+  loaderGone = true; $('ldBar').style.width = '100%';
+  setTimeout(() => { $('loader').classList.add('gone'); setTimeout(() => $('loader').remove(), 600); }, Math.max(350, 1300 - (performance.now() - loadStart)));
 }
 
 /* ---------- start ---------- */
