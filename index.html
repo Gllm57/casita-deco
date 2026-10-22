@@ -1945,9 +1945,9 @@ const wallPatTexCache = {};
 function wallPatTex(id) { if (wallPatTexCache[id]) return wallPatTexCache[id]; const t = new THREE.CanvasTexture(wallPatCanvas(id)); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return (wallPatTexCache[id] = t); }
 const wallSwatch = w => (w.pat ? `url(${wallPatCanvas(w.id).toDataURL()}) center/120% ` : '') + hexCss(w.hex);
 // a box whose texture coordinates are in metres, offset along the wall so neighbouring pieces line up
-function meterUV(geo, w, h, d, u0 = 0) {
+function meterUV(geo, w, h, d, u0 = 0, world = false) { // world: the back faces run the same way as the front, so neighbouring pieces line up
   const uv = geo.attributes.uv, dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
-  geo.groups.forEach((gr, gi) => { const [a, b] = dims[gi]; for (let i = gr.start; i < gr.start + gr.count; i++) { const vi = geo.index ? geo.index.getX(i) : i; if (geo.userData.done && geo.userData.done[vi]) continue; (geo.userData.done = geo.userData.done || {})[vi] = 1; uv.setXY(vi, uv.getX(vi) * a + u0, uv.getY(vi) * b); } });
+  geo.groups.forEach((gr, gi) => { const [a, b] = dims[gi]; for (let i = gr.start; i < gr.start + gr.count; i++) { const vi = geo.index ? geo.index.getX(i) : i; if (geo.userData.done && geo.userData.done[vi]) continue; (geo.userData.done = geo.userData.done || {})[vi] = 1; uv.setXY(vi, (world && (gi === 1 || gi === 5) ? 1 - uv.getX(vi) : uv.getX(vi)) * a + u0, uv.getY(vi) * b); } });
   delete geo.userData.done; uv.needsUpdate = true; return geo;
 }
 const FLOORS = [
@@ -2678,7 +2678,7 @@ $('strip').addEventListener('click', e => {
   const b = e.target.closest('.card'); if (!b) return;
   dismissHint();
   if (b.dataset.site && BM) { pushUndo(); HOUSE.site = HOUSE.site === 'piso' ? undefined : 'piso'; rebuildHouse(); renderStrip(); buzz(); sfx('pop'); toast(HOUSE.site ? 'Departamento en altura' : 'Casa con jardín'); return; }
-  if (b.dataset.tool) { setTool(tool && tool.id === b.dataset.tool ? null : b.dataset.tool); return; }
+  if (b.dataset.tool) { const id = tool && tool.id === b.dataset.tool ? null : b.dataset.tool; setTool(id); const T = id && TOOLS.find(t => t.id === id); if (T && T.roof) roofAll(T.roof); return; }
   if (BM && b.dataset.wall) { setTool('paint', { wall: b.dataset.wall }); return; }
   if (BM && b.dataset.floor) { setTool('floor', { floor: b.dataset.floor }); return; }
   if (b.dataset.buy) {
@@ -2943,8 +2943,11 @@ function stepBlocked(x1, z1, x2, z2) {
   const a = [Math.floor(x1 + GW / 2), Math.floor(z1 + GD / 2)], b = [Math.floor(x2 + GW / 2), Math.floor(z2 + GD / 2)], w0 = HOUSE.levels[0].walls;
   const doors = new Set(); for (const o of HOUSE.levels[0].items) if (def(o).opening === 'door') for (let n = 0; n < def(o).w; n++) doors.add(edgeShift(o.edge, n));
   const blk = k => w0[k] && !doors.has(k);
-  if (a[0] !== b[0] && blk(ekey('v', Math.max(a[0], b[0]), a[1]))) return true;
-  if (a[1] !== b[1] && blk(ekey('h', b[0], Math.max(a[1], b[1])))) return true;
+  const vx = Math.max(a[0], b[0]), hz = Math.max(a[1], b[1]);
+  if (a[0] !== b[0] && a[1] !== b[1]) // cutting a corner: any wall touching that corner stops him, so he never slips through where two walls meet
+    return blk(ekey('v', vx, a[1])) || blk(ekey('v', vx, b[1])) || blk(ekey('h', a[0], hz)) || blk(ekey('h', b[0], hz));
+  if (a[0] !== b[0] && blk(ekey('v', vx, a[1]))) return true;
+  if (a[1] !== b[1] && blk(ekey('h', b[0], hz))) return true;
   return false;
 }
 const doorPos = new THREE.Vector3();
@@ -3248,9 +3251,9 @@ const TOOLS = [
   { id: 'copy', name: 'Copiar habitación', hint: 'Arrastra por encima de una habitación para copiarla con todo lo que tiene', svg: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>' },
   { id: 'paste', name: 'Pegar copia', hint: 'Toca dónde quieres la copia (también en otro piso)', svg: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 12h6M9 16h4"/>' },
   { id: 'floor', name: 'Poner suelo', hint: 'Arrastra para cubrir un área · el tipo se elige en Suelo', svg: '<path d="M3 14l9-5 9 5-9 5z"/><path d="M7 12l9 5M11 10l9 5"/>' },
-  { id: 'roofTeja', roof: 'teja', name: 'Tejado de teja', hint: 'Arrastra sobre las habitaciones para taparlas', svg: '<path d="M3 12l9-7 9 7"/><path d="M6 10v9h12v-9"/>' },
-  { id: 'roofPizarra', roof: 'pizarra', name: 'Tejado de pizarra', hint: 'Arrastra sobre las habitaciones para taparlas', svg: '<path d="M3 12l9-7 9 7"/><path d="M5 12h14M7 9h10"/>' },
-  { id: 'roofPlano', roof: 'plano', name: 'Azotea', hint: 'Arrastra para poner un techo plano', svg: '<rect x="3" y="9" width="18" height="4" rx="1"/><path d="M5 13v7M19 13v7"/>' },
+  { id: 'roofTeja', roof: 'teja', name: 'Tejado de teja', hint: 'Toda la casa tapada · arrastra sobre una zona para quitarlo o ponerlo', svg: '<path d="M3 12l9-7 9 7"/><path d="M6 10v9h12v-9"/>' },
+  { id: 'roofPizarra', roof: 'pizarra', name: 'Tejado de pizarra', hint: 'Toda la casa tapada · arrastra sobre una zona para quitarlo o ponerlo', svg: '<path d="M3 12l9-7 9 7"/><path d="M5 12h14M7 9h10"/>' },
+  { id: 'roofPlano', roof: 'plano', name: 'Azotea', hint: 'Toda la casa con azotea · arrastra sobre una zona para quitarla o ponerla', svg: '<rect x="3" y="9" width="18" height="4" rx="1"/><path d="M5 13v7M19 13v7"/>' },
   { id: 'roofOff', roof: null, name: 'Quitar techo', hint: 'Arrastra sobre el techo que quieras quitar', svg: '<path d="M3 12l9-7 9 7"/><path d="M8 14l8 6M16 14l-8 6" stroke="#D9433A"/>' },
   { id: 'unfloor', name: 'Quitar suelo', hint: 'Arrastra para quitar suelo', svg: '<path d="M3 14l9-5 9 5-9 5z"/><path d="M9 4l6 6M15 4l-6 6" stroke="#D9433A"/>' },
 ];
@@ -3269,7 +3272,9 @@ const wallMatFor = id => wallMats[id] || (wallMats[id] = (w => std(w.pat ? { col
 const boxGeo = (w, h, d) => boxCache[[w, h, d]] || (boxCache[[w, h, d]] = new THREE.BoxGeometry(w, h, d));
 const P = (g, w, h, d, mat, x, y, z) => add(g, boxGeo(w, h, d), mat, x, y, z);
 const wallGeos = {};
-const wallBox = (w, h, d, u0) => { const k = [w, h, d, u0.toFixed(2)].join(); return wallGeos[k] || (wallGeos[k] = meterUV(new THREE.BoxGeometry(w, h, d), w, h, d, u0)); };
+// wall slabs leave out their end, top and bottom faces: those edges sat exactly on the wall's face and drew thin dark seams every metre, at corners and between storeys
+const wallBox = (w, h, d, u0, caps) => { const k = [w, h, d, u0.toFixed(2), caps].join(); if (wallGeos[k]) return wallGeos[k];
+  const g = meterUV(new THREE.BoxGeometry(w, h, d), w, h, d, u0, true); if (caps !== 'all') { const ix = Array.from(g.index.array); g.setIndex([...(caps === 'top' ? ix.slice(12, 18) : []), ...ix.slice(24)]); g.clearGroups(); } return (wallGeos[k] = g); }; // the broad faces (and the top where nothing sits on it)
 function tileGeo(x, z) {
   const k = `${x % 8},${z % 8}`; if (tileGeos[k]) return tileGeos[k];
   const g = new THREE.PlaneGeometry(1, 1), uv = g.attributes.uv, u0 = (x % 8) / 8, vt = 1 - (z % 8) / 8;
@@ -3343,19 +3348,76 @@ const ROOF_STYLE = {
 };
 const roofMats = {};
 const roofMatFor = st => roofMats[st] || (roofMats[st] = std({ color: ROOF_STYLE[st].color, map: surfTex(128, 1, ROOF_STYLE[st].draw), roughness: 0.85 }));
+const roofMatsDS = {};
+const roofMatDS = st => roofMatsDS[st] || (roofMatsDS[st] = (() => { const m = roofMatFor(st).clone(); m.side = THREE.DoubleSide; return m; })());
+const ROOF_PITCH = 0.55, EAVE = 0.28;
 function buildRoof(i) {
   const lg = levelGroups[i], lv = HOUSE.levels[i]; lg.roof.clear(); lv.roof = lv.roof || {};
-  const has = (x, z) => !!lv.roof[ckey(x, z)], y = WALL_H + 0.11;
-  for (const [k, st] of Object.entries(lv.roof)) {
-    const [x, z] = k.split(',').map(Number), cx = x + 0.5 - GW / 2, cz = z + 0.5 - GD / 2;
-    P(lg.roof, 1.0, 0.12, 1.0, roofMatFor(st), cx, y, cz); P(lg.roof, 1.0, 0.012, 1.0, M(0xF4F1EA), cx, WALL_H + 0.044, cz);
-    // eaves and a light fascia wherever the roof ends
-    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (!has(x + dx, z + dz)) {
-      P(lg.roof, dz ? 1.0 : 0.22, 0.05, dx ? 1.0 : 0.22, roofMatFor(st), cx + dx * 0.6, y + 0.02, cz + dz * 0.6);
-      P(lg.roof, dz ? 1.0 : 0.04, 0.1, dx ? 1.0 : 0.04, trimMat, cx + dx * 0.71, y - 0.02, cz + dz * 0.71);
+  const up = HOUSE.levels[i + 1], covered = (x, z) => !!up && !!up.tiles[ckey(x, z)];
+  const cells = Object.entries(lv.roof).filter(([k]) => { const [x, z] = k.split(',').map(Number); return !covered(x, z); });
+  const styleAt = (x, z) => (covered(x, z) ? null : lv.roof[ckey(x, z)] || null);
+  const y0 = WALL_H + 0.11; // high enough that the wall tops never poke through the slope
+  for (const [k] of cells) { const [x, z] = k.split(',').map(Number); P(lg.roof, 1.0, 0.012, 1.0, M(0xF4F1EA), x + 0.5 - GW / 2, WALL_H + 0.044, z + 0.5 - GD / 2); } // the ceiling under it
+  for (const st of new Set(cells.map(([, v]) => v))) {
+    const mine = cells.filter(([, v]) => v === st).map(([k]) => k.split(',').map(Number)), inn = (x, z) => styleAt(x, z) === st;
+    // the eaves stick out only over open air, never into an upper floor or a neighbouring roof
+    const openAir = (x, z) => !inn(x, z) && !covered(x, z) && !styleAt(x, z);
+    if (st === 'plano') { flatRoof(lg.roof, st, mine, inn, openAir, y0); continue; }
+    // a hip roof: every point rises with its distance to the nearest edge, so any shape of house gets clean slopes, hips and valleys
+    const dist = (px, pz) => { let d = 9; const x0 = Math.floor(px) - 9, x1 = Math.ceil(px) + 9, z0 = Math.floor(pz) - 9, z1 = Math.ceil(pz) + 9;
+      for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) { if (inn(x, z)) continue; const q = Math.max(Math.max(0, x - px, px - x - 1), Math.max(0, z - pz, pz - z - 1)); if (q < d) d = q; }
+      return d; };
+    const memo = {}, vert = (px, pz) => { const key = px + ',' + pz; if (memo[key]) return memo[key];
+      const d = dist(px, pz); let ox = 0, oz = 0;
+      // each axis only moves out where a roofed cell meets open air across it, so a roof never pulls away from a wall it leans on
+      if (d === 0) { const q = (sx, sz) => { const x = Math.floor(px + sx * 0.25), z = Math.floor(pz + sz * 0.25); return inn(x, z) ? 1 : openAir(x, z) ? 2 : 0; };
+        for (const t of [-1, 1]) { const [l, r] = [q(-1, t), q(1, t)], [n, f] = [q(t, -1), q(t, 1)];
+          if (l === 1 && r === 2) ox = 1; if (l === 2 && r === 1) ox = -1; if (n === 1 && f === 2) oz = 1; if (n === 2 && f === 1) oz = -1; } }
+      ox *= EAVE; oz *= EAVE; const drop = (ox || oz) ? EAVE * ROOF_PITCH : 0;
+      return (memo[key] = [px + ox - GW / 2, y0 + d * ROOF_PITCH - drop, pz + oz - GD / 2]); };
+    const pos = [], fas = [];
+    for (const [cx, cz] of mine) for (const [sx, sz] of [[0, 0], [0.5, 0], [0, 0.5], [0.5, 0.5]]) {
+      const px = cx + sx, pz = cz + sz, a = vert(px, pz), b = vert(px + 0.5, pz), c = vert(px, pz + 0.5), d = vert(px + 0.5, pz + 0.5);
+      if (Math.abs(a[1] - d[1]) >= Math.abs(b[1] - c[1])) pos.push(...a, ...c, ...d, ...a, ...d, ...b); else pos.push(...a, ...c, ...b, ...b, ...c, ...d);
+      // a painted fascia board along every edge that looks out over open air
+      for (const [ex, ez, p1, p2] of [[0, -1, a, b], [0, 1, d, c], [-1, 0, c, a], [1, 0, b, d]]) {
+        const nx = Math.floor(px + 0.25 + ex * 0.5), nz = Math.floor(pz + 0.25 + ez * 0.5); if (inn(nx, nz) || !openAir(nx, nz)) continue;
+        fas.push(...p1, ...p2, p2[0], p2[1] - 0.09, p2[2], ...p1, p2[0], p2[1] - 0.09, p2[2], p1[0], p1[1] - 0.09, p1[2]); }
     }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.computeVertexNormals();
+    // tiles run along each slope's eave: map every triangle on the plane it faces most
+    const n = geo.attributes.normal, uv = [];
+    for (let t = 0; t < pos.length / 9; t++) { const xs = Math.abs(n.getX(t * 3)) > Math.abs(n.getZ(t * 3)); for (let v = 0; v < 3; v++) { const o = (t * 3 + v) * 3; uv.push(xs ? pos[o + 2] : pos[o], xs ? pos[o] * 1.15 : pos[o + 2] * 1.15); } }
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    const m = new THREE.Mesh(geo, roofMatDS(st)); m.castShadow = m.receiveShadow = true; lg.roof.add(m);
+    if (fas.length) { const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(fas, 3)); fg.computeVertexNormals();
+      const fm = new THREE.Mesh(fg, fasciaMat); fm.castShadow = true; lg.roof.add(fm); }
   }
   lg.roof.visible = !!state.showRoof;
+}
+const fasciaMat = new THREE.MeshStandardMaterial({ color: 0xF4F1EA, roughness: 0.8, side: THREE.DoubleSide });
+function flatRoof(g, st, mine, inn, openAir, y0) { // a flat roof terrace: a slab with a low parapet wherever it meets open air
+  const y = y0 + 0.06, mat = roofMatFor(st);
+  for (const [x, z] of mine) {
+    const cx = x + 0.5 - GW / 2, cz = z + 0.5 - GD / 2; P(g, 1.0, 0.12, 1.0, mat, cx, y, cz);
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (openAir(x + dx, z + dz)) {
+      P(g, dz ? 1.0 : 0.16, 0.12, dx ? 1.0 : 0.16, mat, cx + dx * 0.58, y, cz + dz * 0.58);
+      P(g, dz ? 1.0 : 0.1, 0.16, dx ? 1.0 : 0.1, trimMat, cx + dx * 0.61, y + 0.14, cz + dz * 0.61); }
+    // outside corners get their own corner piece, so the edge runs all the way round without a notch
+    for (const [dx, dz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) if (openAir(x + dx, z) && openAir(x, z + dz)) {
+      P(g, 0.16, 0.12, 0.16, mat, cx + dx * 0.58, y, cz + dz * 0.58); P(g, 0.1, 0.16, 0.1, trimMat, cx + dx * 0.61, y + 0.14, cz + dz * 0.61); }
+  }
+}
+// one tap covers the whole house: every indoor floor with nothing built above it, on every storey
+const OUTDOOR = new Set(['cesped', 'camino', 'grava', 'tarima']);
+function roofAll(st) {
+  const before = snap(); let changed = false;
+  HOUSE.levels.forEach((lv, i) => { lv.roof = lv.roof || {}; const up = HOUSE.levels[i + 1];
+    for (const k of Object.keys(lv.tiles)) { const want = OUTDOOR.has(lv.tiles[k]) || (up && up.tiles[k]) ? null : st;
+      if ((lv.roof[k] || null) !== want) { if (want) lv.roof[k] = want; else delete lv.roof[k]; changed = true; } } });
+  if (!Object.values(HOUSE.levels).some(lv => Object.keys(lv.roof).length)) return toast('Primero construye una habitación');
+  if (changed) { pushUndo(before); HOUSE.levels.forEach((_, i) => buildRoof(i)); buzz(); sfx('pop'); save(); }
+  toast(st === 'plano' ? 'Azotea puesta en toda la casa' : 'Tejado puesto en toda la casa');
 }
 function openingMap(lv) { // wall edges a door or window cuts through: edge -> { it, n }
   const out = {};
@@ -3402,11 +3464,11 @@ function makeEdge(i, k, e, op) {
   const mf = wallMatFor(e.c), mb = wallMatFor(e.b || e.c);
   // each wall piece is two half-thickness slabs so the two faces can carry different paint
   const [, ex, ez] = parseE(k), u0 = (t === 'h' ? ex : ez) + 0.5;
-  const W = (grp, w, h, x, y) => { const g2 = wallBox(w, h, T / 2, ((u0 + x - w / 2) % 4 + 4) % 4), a = add(grp, g2, mf, x, y, T / 4), b = add(grp, g2, mb, x, y, -T / 4); a.userData.face = 1; b.userData.face = -1; };
+  const W = (grp, w, h, x, y, caps) => { const g2 = wallBox(w, h, T / 2, ((u0 + x - w / 2) % 4 + 4) % 4, caps), a = add(grp, g2, mf, x, y, T / 4), b = add(grp, g2, mb, x, y, -T / 4); a.userData.face = 1; b.userData.face = -1; };
   g.add(body, stub);
   const D = op && def(op.it), hole = D && D.hole;
   const HH = e.half ? HALF_H : WALL_H, [v0, v1] = edgeEnds(k), e0 = endExt(v0), e1 = endExt(v1), sw = L1 + e0 + e1, sx = (e1 - e0) / 2;
-  if (!op) W(body, sw, HH, sx, HH / 2);
+  if (!op) W(body, sw, HH, sx, HH / 2, 'top');
   else if (op.n === 0) { const h1 = endExt(edgeEnds(edgeShift(k, D.w - 1))[1]); for (const [mat, face, z] of [[mf, 1, 0], [mb, -1, -T / 2]]) add(body, holeWallGeo(op.it.type, e0, h1), mat, 0, 0, z).userData.face = face; }
   // a doorway leaves a gap in the skirting and in the low cut-away wall; hx is the hole centre in this edge's own x
   const hx = hole ? (D.w - 1) / 2 + (hole.x || 0) - op.n : 0, gap = D && D.opening === 'door' ? [hx - hole.hw, hx + hole.hw] : null;
@@ -3416,14 +3478,27 @@ function makeEdge(i, k, e, op) {
   if (!above || e.half) P(body, sw, 0.04, T + 0.03, capMat, sx, HH + 0.02, 0);
   if (i > 0) W(g, sw, LEVEL_H - WALL_H, sx, -(LEVEL_H - WALL_H) / 2);
   // skirting only on faces that look into a room, running through the corner posts
-  for (const sz of [-1, 1]) if (hasTile(i, ...cellOnSide(k, sz))) for (const [a, b] of cut(-(L1 + T) / 2, (L1 + T) / 2)) P(body, b - a, 0.1, 0.02, trimMat, (a + b) / 2, 0.05, sz * (T / 2 + 0.01));
-  for (const [a, b] of cut(-L1 / 2 - e0, L1 / 2 + e1)) { W(stub, b - a, STUB_H, (a + b) / 2, STUB_H / 2); P(stub, b - a, 0.04, T + 0.03, capMat, (a + b) / 2, STUB_H + 0.02, 0); }
+  for (const sz of [-1, 1]) if (hasTile(i, ...cellOnSide(k, sz))) for (const [a, b] of cut(-(L1 + T) / 2 - 0.003, (L1 + T) / 2 + 0.003)) P(body, b - a, 0.1, 0.02, trimMat, (a + b) / 2, 0.05, sz * (T / 2 + 0.01)); // a hair longer, so the skirting runs on without gaps
+  for (const [a, b] of cut(-L1 / 2 - e0, L1 / 2 + e1)) { W(stub, b - a, STUB_H, (a + b) / 2, STUB_H / 2, gap ? 'all' : ''); P(stub, b - a, 0.04, T + 0.03, capMat, (a + b) / 2, STUB_H + 0.02, 0); }
   g.traverse(o => { if (o.isMesh) o.userData.edge = k; });
   levelGroups[i].geo.add(g);
   wallMeshes[i][k] = { g, body, stub, h: 1, key: k, t };
 }
-// square posts at corners, junctions and loose ends; straight runs need none
+// square posts at corners, junctions and loose ends; straight runs need none.
+// Each side of a post carries the paint of the wall face it continues, so an outside corner never shows the inside colour.
 let posts = [[], [], []];
+function postGeo(h, X, Z) { // a post whose pattern carries on from the walls beside it (u in metres along the grid)
+  const w = WALL_T - 0.006, k = ['post', h, X, Z].join(); if (wallGeos[k]) return wallGeos[k];
+  const g = new THREE.BoxGeometry(w, h, w), uv = g.attributes.uv, x0 = X - w / 2, z0 = Z - w / 2;
+  g.groups.forEach((gr, gi) => { if (gi === 2 || gi === 3) return; for (let i = gr.start; i < gr.start + gr.count; i++) { const vi = g.index.getX(i), t = uv.getX(vi);
+    uv.setXY(vi, gi === 4 ? x0 + t * w : gi === 5 ? x0 + (1 - t) * w : gi === 0 ? z0 + (1 - t) * w : z0 + t * w, uv.getY(vi) * h); } });
+  return (wallGeos[k] = g);
+}
+function postMats(lv, edges) { // box faces: +x, -x, +y, -y, +z, -z
+  const h = edges.find(q => q[0] === 'h'), v = edges.find(q => q[0] === 'v'), any = lv.walls[edges[0]], col = (k, side) => { const e = lv.walls[k]; return side > 0 ? e.c : (e.b || e.c); };
+  const xp = v ? col(v, -1) : any.c, xn = v ? col(v, 1) : any.c, zp = h ? col(h, 1) : any.c, zn = h ? col(h, -1) : any.c;
+  return [xp, xn, zp, zp, zp, zn].map(wallMatFor);
+}
 function makePosts(i) {
   const lv = HOUSE.levels[i], verts = {};
   for (const k of Object.keys(lv.walls)) { const [t, x, z] = parseE(k), a = ckey(x, z), b = t === 'h' ? ckey(x + 1, z) : ckey(x, z + 1); (verts[a] = verts[a] || []).push(k); (verts[b] = verts[b] || []).push(k); }
@@ -3434,13 +3509,14 @@ function makePosts(i) {
   const straight = straightVerts(lv);
   for (const [v, edges] of Object.entries(verts)) {
     if (inner.has(v) || straight.has(v)) continue;
-    const [x, z] = v.split(',').map(Number), g = new THREE.Group(), body = new THREE.Group(), stub = new THREE.Group(), mat = wallMatFor(lv.walls[edges[0]].c);
+    const [x, z] = v.split(',').map(Number), g = new THREE.Group(), body = new THREE.Group(), stub = new THREE.Group(), mat = postMats(lv, edges);
     g.position.set(x - GW / 2, 0, z - GD / 2); g.add(body, stub);
     const ph = edges.every(q => lv.walls[q].half) ? HALF_H : WALL_H; // a post only as tall as the tallest wall it joins
-    P(body, WALL_T - 0.006, ph, WALL_T - 0.006, mat, 0, ph / 2, 0); // just inside the wall faces, so the two never fight if (!upVerts.has(v) || ph < WALL_H) P(body, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, ph + 0.02, 0);
-    if (i > 0) P(g, WALL_T - 0.006, LEVEL_H - WALL_H, WALL_T - 0.006, mat, 0, -(LEVEL_H - WALL_H) / 2, 0);
-    P(stub, WALL_T - 0.006, STUB_H, WALL_T - 0.006, mat, 0, STUB_H / 2, 0); P(stub, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, STUB_H + 0.02, 0);
-    g.traverse(o => { if (o.isMesh && o.material === mat) o.userData.post = true; });
+    add(body, postGeo(ph, x, z), mat, 0, ph / 2, 0); // just inside the wall faces, so the two never fight
+    if (!upVerts.has(v) || ph < WALL_H) P(body, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, ph + 0.02, 0);
+    if (i > 0) add(g, postGeo(LEVEL_H - WALL_H, x, z), mat, 0, -(LEVEL_H - WALL_H) / 2, 0);
+    add(stub, postGeo(STUB_H, x, z), mat, 0, STUB_H / 2, 0); P(stub, WALL_T + 0.03, 0.04, WALL_T + 0.03, capMat, 0, STUB_H + 0.02, 0);
+    g.traverse(o => { if (o.isMesh && o.material === mat) o.userData.post = true; }); g.userData.edges = edges;
     levelGroups[i].geo.add(g); posts[i].push({ g, body, stub, edges, h: 1 });
   }
 }
@@ -3464,7 +3540,7 @@ function segLow(i, k) {
 function repaintEdge(k, face) {
   const wm = wallMeshes[HOUSE.cur][k], e = R.walls[k], mat = wallMatFor(face > 0 ? e.c : e.b);
   if (wm) wm.g.traverse(o => { if (o.userData.face === face) o.material = mat; });
-  for (const p of posts[HOUSE.cur] || []) if (p.edges[0] === k && face > 0) p.g.traverse(o => { if (o.userData.post) o.material = mat; });
+  for (const p of posts[HOUSE.cur] || []) if (p.edges.includes(k)) { const pm = postMats(R, p.edges); p.g.traverse(o => { if (o.userData.post) o.material = pm; }); }
 }
 function updateBuildWalls(dt) {
   const k = Math.min(1, dt * (reduce ? 60 : 10));
@@ -3718,13 +3794,23 @@ function toolEnd(g) {
   } else if (id === 'room') {
     const r = gridRect(g.a, g.b); if (!r) return toast('Arrastra en diagonal');
     rectRoom(R, r.x0, r.z0, r.x1, r.z1, brush.floor, brush.wall); changed = true;
+  } else if (TOOLS.find(t => t.id === id && 'roof' in t)) {
+    // the roof you see from above is the one on the highest floor built there, whichever floor is selected
+    const a = cellPt(g.a), b = cellPt(g.b), st = TOOLS.find(t => t.id === id).roof, ks = [];
+    for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++) for (let z = Math.min(a.z, b.z); z <= Math.max(a.z, b.z); z++) {
+      const k = ckey(x, z); let top = -1; HOUSE.levels.forEach((lv, i) => { if (lv.tiles[k]) top = i; });
+      if (top >= 0) { const lv = HOUSE.levels[top]; lv.roof = lv.roof || {}; ks.push([lv, k]); } }
+    // dragging over a zone that already has this roof takes it off; anywhere else puts it on
+    const off = !st || ks.every(([lv, k]) => lv.roof[k] === st);
+    for (const [lv, k] of ks) { if (off && lv.roof[k]) { delete lv.roof[k]; changed = true; } else if (!off && lv.roof[k] !== st) { lv.roof[k] = st; changed = true; } }
+    if (changed) { toast(off ? 'Techo quitado de esa zona' : 'Techo puesto en esa zona'); HOUSE.levels.forEach((_, i) => buildRoof(i)); }
   } else {
     const a = cellPt(g.a), b = cellPt(g.b);
     for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++) for (let z = Math.min(a.z, b.z); z <= Math.max(a.z, b.z); z++) {
       const k = ckey(x, z), T = TOOLS.find(t => t.id === id); if (id === 'floor' && R.tiles[k] !== brush.floor) { R.tiles[k] = brush.floor; changed = true; } if (id === 'unfloor' && R.tiles[k]) { delete R.tiles[k]; changed = true; }
-      if (T && 'roof' in T) { R.roof = R.roof || {}; if (T.roof && R.tiles[k] && R.roof[k] !== T.roof) { R.roof[k] = T.roof; changed = true; } if (!T.roof && R.roof[k]) { delete R.roof[k]; changed = true; } } }
+    }
   }
-  if (!changed) return toast(id.startsWith('roof') && id !== 'roofOff' ? 'Primero pon suelo' : '');
+  if (!changed) return toast(id.startsWith('roof') ? 'Ahí no hay suelo que tapar' : '');
   pushUndo(g.before); buildLevelGeo(HOUSE.cur); if (HOUSE.cur > 0) buildLevelGeo(HOUSE.cur - 1); refreshHud(); buzz();
 }
 
