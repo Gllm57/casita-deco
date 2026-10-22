@@ -30,6 +30,8 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Interfaz más limpia:** menú de inicio con los cuatro modos en una cuadrícula; en el juego, título y marcador en una sola fila (el marcador se despliega con la flecha y en el Constructor no aparece). Catálogo en diez pestañas (Puertas y ventanas juntas, Pintura y suelo juntas), cada una dividida en secciones: sofás, dormitorio, mesas y sillas, guardar, plantas, alfombras, cortinas, cuadros…
+- **Paredes:** sin líneas ni costuras en esquinas, uniones en T, junto a las ventanas ni entre pisos; cada cara de la pared se pinta entera.
 - **Más muebles:** sofá Chester, butaca orejera, chaise longue, banco tapizado, cama con dosel, vitrina, aparador, estantería de cubos, consola de entrada, reloj de pie, escalera de mantas, jarrón con pampas, olivo, ficus y bambú, puf trenzado, cesta de mantas, carrito de cocina, mesa alta de bar, botellero, columna de horno, cafetera expreso, globo terráqueo, estante con plantas, tapiz, tríptico, mapamundi, perchero de pared, espejo con luz y tablero de corcho.
 - **Construcción:** escaleras en L y en U, barandillas (para balcones: pon suelo en el piso de arriba y rodéalo), media pared, tabiques sueltos y paredes en diagonal, papel pintado, azulejo, ladrillo, friso y piedra, tercer piso, puerta de garaje y coche.
 - **Jardín:** césped, camino de piedra, tarima y grava; árboles, palmera, setos, flores, vallas, piscina, tumbona, mesa con sombrilla, barbacoa, farola, columpio, fuente y caseta para Milo.
