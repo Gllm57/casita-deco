@@ -245,7 +245,24 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .shutter { position: absolute; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); margin-left: -36px; width: 72px; height: 72px; border-radius: 50%; border: 4px solid #fff; background: rgba(255,255,255,.25); display: none; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 31; }
 .shutter i { display: block; width: 52px; height: 52px; margin: 6px auto; border-radius: 50%; background: #fff; transition: transform .1s; }
 .shutter:active i { transform: scale(.85); }
-.app.photo .shutter { display: block; }
+.app.photo .shutter:not(.walk-shot) { display: block; }
+.walkui { position: absolute; inset: 0; pointer-events: none; display: none; }
+.app.walk .walkui { display: block; }
+.app.walk.rot { right: auto; width: var(--app-h, 100vh); height: 100vw; transform-origin: 0 0; transform: translateX(100vw) rotate(90deg); }
+.app.walk .walkui > * { pointer-events: auto; }
+.app.walk .hud, .app.walk .sheet, .app.walk .cam, .app.walk .histbar, .app.walk .tools, .app.walk .toolpill, .app.walk .dpad, .app.walk .palette, .app.walk .sel-name { opacity: 0 !important; pointer-events: none !important; }
+.joy { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 128px; height: 128px; border-radius: 50%; touch-action: none; }
+.joy i { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: var(--ink); opacity: .85; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+.walk-hint { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); border-radius: 999px; padding: 8px 14px; font: 800 12px var(--body); white-space: nowrap; pointer-events: none !important; transition: opacity .6s; }
+.walk-hint.gone { opacity: 0; }
+.walk-exit { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); border: 0; border-radius: 999px; padding: 10px 16px; font: 800 13px var(--body); cursor: pointer; }
+.walk-floors { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(160px + env(safe-area-inset-bottom, 0px)); display: none; flex-direction: column; gap: 2px; padding: 4px; border-radius: 22px; }
+.app.walk.build .walk-floors { display: flex; }
+.walk-floors button { width: 48px; height: 44px; border: 0; background: transparent; border-radius: 16px; display: grid; place-items: center; cursor: pointer; color: inherit; font: 800 11px var(--body); }
+.walk-floors button svg { width: 20px; height: 20px; }
+.walk-floors button[disabled] { opacity: .3; }
+.app.walk .walk-shot { display: block; left: auto; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); margin: 0; width: 64px; height: 64px; }
+.app.walk .walk-shot i { width: 44px; height: 44px; }
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 50; transition: opacity .35s; }
 .flash.on { opacity: .85; transition: none; }
 .share-img { width: 100%; border-radius: 14px; margin: 6px 0 12px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
@@ -552,9 +569,13 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="viewpop glass" id="viewPop" hidden>
     <button data-v="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span><b>Foto</b><small>Oculta los botones</small></span></button>
     <button data-v="share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span><b>Compartir</b><small>Imagen con marco</small></span></button>
+    <button data-v="walk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M9 21l3-6 3 3v3M7 12l3-4 4 1 2 4M12 15l-1-6"/></svg><span><b>Paseo</b><small>Camina por dentro de la casa</small></span></button>
     <button data-v="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h10v9M13 3v5"/></svg><span><b>Plano</b><small>Vista desde arriba</small></span></button>
   </div>
   <button class="photo-exit glass top-exit" id="topExit">Salir del plano</button>
+  <div class="walkui" id="walkUI"><div class="joy glass" id="joy"><i id="joyKnob"></i></div><button class="shutter walk-shot" id="walkShot" aria-label="Foto al álbum"><i></i></button>
+    <div class="walk-floors glass" id="walkFloors"><button id="walkUp" aria-label="Subir de piso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button><button id="walkDown" aria-label="Bajar de piso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <div class="walk-hint glass" id="walkHint">Joystick para andar · arrastra para mirar</div><button class="walk-exit glass" id="walkExit">Salir</button></div>
   <button class="shutter" id="shutter" aria-label="Guardar la foto en el álbum"><i></i></button>
   <div class="flash" id="flash"></div>
   <button class="photo-exit glass" id="photoExit">Salir del modo foto · o toca la pantalla</button>
@@ -591,7 +612,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></span><p><b>Mover la vista</b>Arrastra con un dedo para girar. Con dos dedos: pellizca para acercar, arrastra para desplazarte y gira los dedos para rotar. Abajo a la derecha: girar de 90 en 90 y centrar. En el Constructor, desliza rápido dos dedos hacia arriba o hacia abajo para subir o bajar de piso.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg></span><p><b>Añadir y colocar</b>Elige un objeto del catálogo (o búscalo con la lupa) y toca en la sala dónde lo quieres, o mantén pulsada la tarjeta y arrástrala a la sala. La estrella de cada tarjeta lo guarda en Favoritos (pestaña ★, junto con lo último que pusiste). Para mover varias cosas juntas, elige una y mantén pulsadas las demás. Para moverlo, tócalo para elegirlo y arrástralo: así no se mueve nada sin querer. Las flechas curvas de arriba lo inclinan de 15 en 15 grados. Si se pone rojo, ahí no cabe. Con el candado lo bloqueas, y las flechas que salen a la derecha lo mueven casilla a casilla. El botón Mover/Fijado de la derecha fija todos los objetos para que solo se mueva la cámara. Lo de la pestaña Encima va sobre mesas, encimeras, islas y cómodas, y viaja con ellas.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/></svg></span><p><b>Editar</b>Doble toque en un objeto para girarlo. Con un objeto seleccionado también puedes girarlo, cambiarle el color, copiarlo o quitarlo. Deshacer y Rehacer están abajo a la izquierda.</p></div>
-        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><p><b>Ver y usar</b>Toca otra vez algo elegido para usarlo: enciende lámparas, abre puertas y corre cortinas. El botón de la luz cambia entre día, tarde, noche y ciclo automático. En Ver tienes foto, compartir y plano desde arriba.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><p><b>Ver y usar</b>En Ver · Paseo caminas por dentro de la casa con el joystick (en el Constructor, con las flechas cambias de piso). Toca otra vez algo elegido para usarlo: enciende lámparas, abre puertas y corre cortinas. El botón de la luz cambia entre día, tarde, noche y ciclo automático. En Ver tienes foto, compartir y plano desde arriba.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4 6.8 19.2l1-5.9L3.5 9.2l5.9-.8z"/></svg></span><p><b>Encargos y estrellas</b>Cumple la lista del cliente y pulsa Entregar. Más estilo y comodidad dan más estrellas, que abren encargos, salas de Mi casa y suben tu rango.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8-16 8 16z"/><path d="M8 13h8"/></svg></span><p><b>Ganar estilo</b>Variedad de objetos, cosas propias de la sala, tres o más de la misma colección y pared y suelo que combinan.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11"/></svg></span><p><b>Constructor</b>En Obra: habitación, pared, media pared, copiar y pegar zonas, escaleras y tejados. Puertas y ventanas están en su pestaña y abren un hueco de verdad. Cada cara de una pared se pinta por separado (también con papel pintado, azulejo o ladrillo). Hay tres pisos: cámbialos con PB, 1º y 2º. Fuera, pon césped y decora el jardín. Puedes tener varios proyectos y enviarlos con Ver · Compartir.</p></div>
@@ -2317,7 +2338,9 @@ function paintFloor(f, cv = floorCanvas) {
 
 /* ---------- room building ---------- */
 let L = LEVELS[0], R = rooms[L.id], GW = 8, GD = 8;
-let roomGroup = null, grid = null;
+let roomGroup = null, grid = null, walkCeil = null;
+// ceilings face down, where only the purple bounce light reaches: a little light of their own keeps them a soft off-white
+const ceilMat = new THREE.MeshStandardMaterial({ color: 0xF2EDE6, emissive: 0x6A645E, roughness: 1 });
 const walls = {};
 const WALL_SPEC = {
   N: { s: 1, rot: 0, normal: new THREE.Vector3(0, 0, -1) }, S: { s: -1, rot: PI, normal: new THREE.Vector3(0, 0, 1) },
@@ -2359,6 +2382,7 @@ function buildRoom() {
   const base = new THREE.Mesh(roundBox(GW + 0.5, 0.5, GD + 0.5, 0.22), M(0x8E83A8)); base.position.y = -0.255; base.receiveShadow = true; roomGroup.add(base);
   const plinth = new THREE.Mesh(roundBox(GW + 1.1, 0.25, GD + 1.1, 0.12), M(0x73689A)); plinth.position.y = -0.55; roomGroup.add(plinth);
   for (const k of ['N', 'S', 'W', 'E']) makeWall(k);
+  walkCeil = new THREE.Mesh(new THREE.PlaneGeometry(GW + 0.3, GD + 0.3), ceilMat); walkCeil.rotation.x = PI / 2; walkCeil.position.y = WALL_H; walkCeil.visible = false; roomGroup.add(walkCeil);
   grid = makeGrid(); roomGroup.add(grid);
   const m = Math.max(GW, GD) * 0.85;
   Object.assign(sun.shadow.camera, { left: -m, right: m, top: m, bottom: -m, near: 1, far: 40 }); sun.shadow.camera.updateProjectionMatrix();
@@ -3078,7 +3102,7 @@ const bubPos = new THREE.Vector3();
 function placeBubble() {
   const b = $('bubble'); if (b.hidden) return;
   if (performance.now() > bubbleUntil || !cat.g.visible) { b.hidden = true; return; }
-  bubPos.set(cat.x, cat.g.position.y + 0.85, cat.z).project(camera);
+  bubPos.set(cat.x, cat.g.position.y + 0.85, cat.z).project(state.walk ? walkCam : camera);
   b.style.left = ((bubPos.x + 1) / 2 * W) + 'px'; b.style.top = ((1 - bubPos.y) / 2 * H) + 'px';
 }
 const pets = [cat];
@@ -3221,6 +3245,7 @@ $('viewPop').addEventListener('click', e => {
   if (v === 'photo') app.classList.add('photo');
   else if (v === 'share') sharePhoto();
   else if (v === 'top') setTopView(!state.top);
+  else if (v === 'walk') startWalk();
 });
 // plan view: straight down, walls kept low, so the layout reads like a floor plan
 let topSaved = null;
@@ -3230,6 +3255,76 @@ function setTopView(on) {
   else { view.elGoal = topSaved ? topSaved.el : 0.62; if (BM && topSaved) { wallMode = topSaved.mode; renderWallMode(); } if (grid) grid.material.opacity = tool ? 0.45 : 0; }
 }
 $('topExit').addEventListener('click', () => setTopView(false));
+// walking tour: eyes at a person's height, a joystick to walk and a drag to look around; always landscape
+const walkCam = new THREE.PerspectiveCamera(80, 1, 0.05, 80), walk = { x: 0, z: 0, yaw: 0, pitch: -0.05, jx: 0, jy: 0, bob: 0 };
+function walkSpawn() { // the free spot of this floor's rooms closest to their middle
+  const tiles = BM ? HOUSE.levels[HOUSE.cur].tiles : null;
+  const cells = BM ? Object.keys(tiles).filter(k => !OUTDOOR.has(tiles[k])).map(k => k.split(',').map(Number)) : [];
+  if (BM && !cells.length) cells.push(...Object.keys(tiles).map(k => k.split(',').map(Number)));
+  if (!BM) for (let x = 0; x < GW; x++) for (let z = 0; z < GD; z++) cells.push([x, z]);
+  if (!cells.length) return;
+  const mx = cells.reduce((a, c) => a + c[0], 0) / cells.length, mz = cells.reduce((a, c) => a + c[1], 0) / cells.length;
+  const best = cells.filter(([x, z]) => !walkBlocked(x + 0.5 - GW / 2, z + 0.5 - GD / 2)).sort((a, b) => Math.hypot(a[0] + 0.5 - mx, a[1] + 0.5 - mz) - Math.hypot(b[0] + 0.5 - mx, b[1] + 0.5 - mz))[0];
+  if (best) { walk.x = best[0] + 0.5 - GW / 2; walk.z = best[1] + 0.5 - GD / 2; }
+}
+function startWalk() {
+  setTopView(false); select(null); if (placing) startPlacing(null); if (tool) setTool(null);
+  walk.x = view.target.x; walk.z = view.target.z; walk.yaw = view.az + PI; walk.pitch = -0.05;
+  if (BM || walkBlocked(walk.x, walk.z)) walkSpawn();
+  state.walk = true; app.classList.add('walk'); setRoofView(false); showCeilings(true); walkOrient(); renderWalkFloors();
+  $('walkHint').classList.remove('gone'); clearTimeout(walk.hintT); walk.hintT = setTimeout(() => $('walkHint').classList.add('gone'), 4000);
+  // best looks while walking: full sharpness and finer sun shadows
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2.5)); sun.shadow.mapSize.set(2048, 2048); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  updateLights(); resize(); buzz(8);
+}
+function stopWalk() { state.walk = false; app.classList.remove('walk', 'rot'); showCeilings(false); applyQuality(); updateLights(); walk.jx = walk.jy = 0; $('joyKnob').style.transform = ''; resize(); }
+$('walkExit').addEventListener('click', stopWalk);
+function walkOrient() { app.classList.toggle('rot', !!state.walk && innerHeight > innerWidth); resize(); }
+addEventListener('resize', () => { if (state.walk) setTimeout(walkOrient, 50); });
+const rotD = (dx, dy) => (app.classList.contains('rot') ? [dy, -dx] : [dx, dy]); // screen movement -> movement in the turned view
+function showCeilings(on) { // walking around you want a ceiling: the floor above and the roofs, or a plain ceiling in a single room
+  if (BM) levelGroups.forEach((lg, j) => { lg.root.visible = on ? j <= HOUSE.cur + 1 : j <= HOUSE.cur; lg.roof.visible = on ? j === HOUSE.cur : !!state.showRoof; });
+  if (walkCeil) walkCeil.visible = on && !BM;
+}
+function renderWalkFloors() { if (!BM) return; $('walkUp').disabled = !Object.keys((HOUSE.levels[HOUSE.cur + 1] || { tiles: {} }).tiles).length; $('walkDown').disabled = HOUSE.cur === 0; }
+function walkFloor(dir) {
+  const to = HOUSE.cur + dir; if (to < 0 || to >= HOUSE.levels.length || !Object.keys(HOUSE.levels[to].tiles).length) return;
+  setLevel(to); walkSpawn(); showCeilings(true); renderWalkFloors(); toast(FLOOR_NAMES[to]); buzz(10); sfx('click');
+}
+$('walkUp').addEventListener('click', () => walkFloor(1)); $('walkDown').addEventListener('click', () => walkFloor(-1));
+function walkBlocked(x, z) {
+  if (Math.abs(x) > GW / 2 - 0.2 || Math.abs(z) > GD / 2 - 0.2) return true;
+  const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2), list = BM ? HOUSE.levels[HOUSE.cur].items : R.items;
+  if (BM && !hasTile(HOUSE.cur, cx, cz)) return true; // no walking off the edge of the floor
+  return list.some(o => { const D = def(o); if (D.wall || D.flat || D.top || D.ceil || D.stairs) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; });
+}
+function wallBetween(x1, z1, x2, z2) { // walls (but not doorways) between two points on the current floor
+  if (!BM) return false;
+  const lv = HOUSE.levels[HOUSE.cur], doors = new Set(); for (const o of lv.items) if (def(o).opening === 'door') for (let n = 0; n < def(o).w; n++) doors.add(edgeShift(o.edge, n));
+  const a = [Math.floor(x1 + GW / 2), Math.floor(z1 + GD / 2)], b = [Math.floor(x2 + GW / 2), Math.floor(z2 + GD / 2)], blk = k => lv.walls[k] && !doors.has(k);
+  const vx = Math.max(a[0], b[0]), hz = Math.max(a[1], b[1]);
+  if (a[0] !== b[0] && a[1] !== b[1]) return blk(ekey('v', vx, a[1])) || blk(ekey('v', vx, b[1])) || blk(ekey('h', a[0], hz)) || blk(ekey('h', b[0], hz));
+  if (a[0] !== b[0] && blk(ekey('v', vx, a[1]))) return true;
+  if (a[1] !== b[1] && blk(ekey('h', a[0], hz))) return true;
+  return false;
+}
+function updateWalk(dt) {
+  const sp = 1.7 * dt, fx = Math.sin(walk.yaw), fz = Math.cos(walk.yaw), mx = (fx * -walk.jy - fz * walk.jx) * sp, mz = (fz * -walk.jy + fx * walk.jx) * sp;
+  // -jy is forward on the stick; slide along walls when going straight in is blocked
+  for (const [dx, dz] of [[mx, mz], [mx, 0], [0, mz]]) { const nx = walk.x + dx, nz = walk.z + dz; if ((dx || dz) && !walkBlocked(nx, nz) && !wallBetween(walk.x, walk.z, nx, nz)) { walk.x = nx; walk.z = nz; break; } }
+  const moving = Math.hypot(walk.jx, walk.jy) > 0.1; walk.bob += moving ? dt * 9 : 0;
+  const y = (BM ? HOUSE.cur * LEVEL_H : 0) + 1.3 + (moving ? Math.sin(walk.bob) * 0.02 : 0); // a little below the hanging lamps
+  walkCam.position.set(walk.x, y, walk.z);
+  walkCam.lookAt(walk.x + Math.sin(walk.yaw) * Math.cos(walk.pitch), y + Math.sin(walk.pitch), walk.z + Math.cos(walk.yaw) * Math.cos(walk.pitch));
+}
+(() => { // joystick
+  const joy = $('joy'), knob = $('joyKnob'); let id = null;
+  const move = e => { const r = joy.getBoundingClientRect(), [dx, dy] = rotD(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2), R0 = Math.min(r.width, r.height) / 2 - 14, d = Math.min(R0, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+    walk.jx = Math.cos(a) * d / R0; walk.jy = Math.sin(a) * d / R0; knob.style.transform = `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px)`; };
+  joy.addEventListener('pointerdown', e => { id = e.pointerId; joy.setPointerCapture(id); move(e); $('walkHint').classList.add('gone'); });
+  joy.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+  for (const ev of ['pointerup', 'pointercancel']) joy.addEventListener(ev, e => { if (e.pointerId !== id) return; id = null; walk.jx = walk.jy = 0; knob.style.transform = ''; });
+})();
 $('photoExit').addEventListener('click', () => app.classList.remove('photo'));
 // album: pictures live in this browser's IndexedDB, newest first
 const albumDB = () => new Promise((res, rej) => { const r = indexedDB.open('casita-album', 1); r.onupgradeneeded = () => r.result.createObjectStore('fotos', { keyPath: 'id', autoIncrement: true }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
@@ -3247,6 +3342,7 @@ function toAlbum(canvasOrBlob) {
 }
 function shoot(cam) { const c = grabFrame(cam); const f = $('flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 60); sfx('pop'); buzz(15); toAlbum(c); }
 $('shutter').addEventListener('click', e => { e.stopPropagation(); shoot(camera); });
+$('walkShot').addEventListener('click', e => { e.stopPropagation(); shoot(walkCam); });
 $('shareAlbum').addEventListener('click', () => { if (shareBlob) toAlbum(shareBlob); });
 let albumURLs = [], albumOpen = null;
 async function renderAlbum() {
@@ -3313,7 +3409,7 @@ function tileGeo(x, z) {
   uv.setXY(0, u0, vt); uv.setXY(1, u0 + 0.125, vt); uv.setXY(2, u0, vt - 0.125); uv.setXY(3, u0 + 0.125, vt - 0.125);
   return (tileGeos[k] = g);
 }
-const slabMat = M(0xEDE7F5), doorMat = M(0xC99A6B);
+const slabMat = ceilMat, doorMat = M(0xC99A6B);
 const ghostOk = new THREE.MeshBasicMaterial({ color: 0x3FB894, transparent: true, opacity: 0.45, depthWrite: false });
 const ghostBad = new THREE.MeshBasicMaterial({ color: 0xE5533D, transparent: true, opacity: 0.45, depthWrite: false });
 const edgeShift = (k, n) => { const [t, x, z] = parseE(k); return t === 'h' ? ekey('h', x + n, z) : ekey('v', x, z + n); };
@@ -3389,7 +3485,7 @@ function buildRoof(i) {
   const cells = Object.entries(lv.roof).filter(([k]) => { const [x, z] = k.split(',').map(Number); return !covered(x, z); });
   const styleAt = (x, z) => (covered(x, z) ? null : lv.roof[ckey(x, z)] || null);
   const y0 = WALL_H + 0.11; // high enough that the wall tops never poke through the slope
-  for (const [k] of cells) { const [x, z] = k.split(',').map(Number); P(lg.roof, 1.0, 0.012, 1.0, M(0xF4F1EA), x + 0.5 - GW / 2, WALL_H + 0.044, z + 0.5 - GD / 2); } // the ceiling under it
+  for (const [k] of cells) { const [x, z] = k.split(',').map(Number); P(lg.roof, 1.0, 0.012, 1.0, ceilMat, x + 0.5 - GW / 2, WALL_H + 0.044, z + 0.5 - GD / 2); } // the ceiling under it
   for (const st of new Set(cells.map(([, v]) => v))) {
     const mine = cells.filter(([, v]) => v === st).map(([k]) => k.split(',').map(Number)), inn = (x, z) => styleAt(x, z) === st;
     // the eaves stick out only over open air, never into an upper floor or a neighbouring roof
@@ -3604,7 +3700,7 @@ function updateBuildWalls(dt) {
     const runT = new Map();
     for (const wm of Object.values(wallMeshes[i])) {
       let target = 1;
-      if (state.showRoof) target = 1;
+      if (state.showRoof || state.walk) target = 1;
       else if (i === HOUSE.cur && wallMode === 'bajas') target = 0;
       else if (i === HOUSE.cur && wallMode === 'auto') { if (!runT.has(wm.run)) runT.set(wm.run, (wm.run || [wm.key]).some(q => segLow(i, q)) ? 0 : 1); target = runT.get(wm.run); }
       wm.h += (target - wm.h) * k; applyH(wm);
@@ -3614,7 +3710,7 @@ function updateBuildWalls(dt) {
   for (const it of allItems()) if (def(it).wall && it.group) { const wm = wallMeshes[it.lv][it.edge]; it.group.visible = !!wm && wm.h > 0.5; }
   for (const it of allItems()) if (def(it).partition && it.group && (!popAnim || popAnim.it !== it)) {
     const near = it.group.position.x * camDir.x + it.group.position.z * camDir.z - (view.target.x * camDir.x + view.target.z * camDir.z) > 0.3;
-    const tgt = state.showRoof || wallMode === 'altas' ? 1 : it.lv === HOUSE.cur && (wallMode === 'bajas' || near) ? 0.1 : 1;
+    const tgt = state.showRoof || state.walk || wallMode === 'altas' ? 1 : it.lv === HOUSE.cur && (wallMode === 'bajas' || near) ? 0.1 : 1;
     it.group.scale.y += (tgt - it.group.scale.y) * k; }
 }
 function setLevel(i, quiet) {
@@ -3899,7 +3995,7 @@ function loadRoom(id) {
 }
 
 /* ---------- menus ---------- */
-function openMenu() { setTopView(false); closeViewPop(); if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; paintChrome(); app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
+function openMenu() { if (state.walk) stopWalk(); setTopView(false); closeViewPop(); if (placing) startPlacing(null); select(null); if (tool) setTool(null); state.menu = true; paintChrome(); app.classList.add('in-menu'); $('menu').classList.remove('off'); renderMenu(); queueLayout(); save(); }
 function closeMenu() { state.menu = false; paintChrome(); app.classList.remove('in-menu'); $('menu').classList.add('off'); for (const id of ['storyOv', 'homeOv', 'settingsOv', 'buildOv', 'helpOv', 'retosOv', 'shareOv', 'albumOv', 'photoOv']) $(id).hidden = true; view.az = PI / 4; view.azGoal = null; queueLayout(); }
 const RANKS = [[0, 'Aprendiz'], [4, 'Decorador'], [10, 'Interiorista'], [18, 'Diseñador'], [27, 'Arquitecto estrella'], [40, 'Leyenda del diseño']];
 function renderMenu() {
@@ -4047,7 +4143,7 @@ function confetti() {
 /* ---------- camera fit: keep the room centred in the space the UI leaves free ---------- */
 const fit = { cx: 0, cy: 0, ppu: 40, tcx: 0, tcy: 0, tppu: 40, ready: false };
 let W = 1, H = 1, layoutQueued = false;
-function resize() { W = app.clientWidth; H = app.clientHeight; renderer.setSize(W, H, false); queueLayout(); }
+function resize() { W = app.clientWidth; H = app.clientHeight; renderer.setSize(W, H, false); walkCam.aspect = W / H; walkCam.updateProjectionMatrix(); queueLayout(); }
 function queueLayout() { if (!layoutQueued) { layoutQueued = true; requestAnimationFrame(() => { layoutQueued = false; layoutView(); }); } }
 function layoutView() {
   const a = app.getBoundingClientRect(), side = matchMedia('(min-aspect-ratio: 5/4) and (min-width: 760px)').matches;
@@ -4154,6 +4250,7 @@ canvas.addEventListener('pointerdown', e => {
   if (state.menu) return;
   canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   dismissHint(); closePalette();
+  if (state.walk) { gesture = { kind: 'look', x: e.clientX, y: e.clientY }; return; }
   if (pointers.size === 2) {
     if (gesture && /drag/.test(gesture.kind)) endDrag(gesture);
     clearPreview(); const [a, b] = [...pointers.values()];
@@ -4175,6 +4272,7 @@ canvas.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return;
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!gesture) return;
+  if (gesture.kind === 'look') { const [lx, ly] = rotD(e.clientX - gesture.x, e.clientY - gesture.y); walk.yaw -= lx * 0.006; walk.pitch = THREE.MathUtils.clamp(walk.pitch - ly * 0.005, -1.1, 0.9); gesture.x = e.clientX; gesture.y = e.clientY; return; }
   if (gesture.kind === 'pinch' && pointers.size === 2) {
     const [a, b] = [...pointers.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, ang = Math.atan2(b.y - a.y, b.x - a.x);
     view.zoom = THREE.MathUtils.clamp(gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0, 0.6, 3.4);
@@ -4278,9 +4376,10 @@ function frame(now) {
   if (view.azGoal != null) { view.az += (view.azGoal - view.az) * Math.min(1, dt * 8); if (Math.abs(view.azGoal - view.az) < 0.002) { view.az = view.azGoal; view.azGoal = null; } }
   if (view.elGoal != null) { view.el += (view.elGoal - view.el) * Math.min(1, dt * 6); if (Math.abs(view.elGoal - view.el) < 0.002) { view.el = view.elGoal; view.elGoal = null; } }
   updateCamera(dt);
+  if (state.walk) updateWalk(dt);
   if (BM) updateBuildWalls(dt);
   for (const w of Object.values(walls)) {
-    const facing = state.top || w.normal.dot(camDir) > 0.15;
+    const facing = state.top || (!state.walk && w.normal.dot(camDir) > 0.15);
     w.h += ((facing ? 0 : 1) - w.h) * Math.min(1, dt * (reduce ? 60 : 10));
     applyH(w);
   }
@@ -4301,7 +4400,7 @@ function frame(now) {
   if (sel && !(gesture && /drag/.test(gesture.kind))) markerMat.opacity = 0.32 + Math.sin(now / 260) * 0.12;
   updateCat(dt);
   if (!state.menu && (frameN = (frameN + 1) % 6) === 0) { if (state.sky === 'auto') setSky(skyPhase()); else if (now - sunAt > 30000) { sunAt = now; placeSun(skyP); } updateSunPatches(); } // the real-clock sun creeps along
-  const cam = camera;
+  const cam = state.walk ? walkCam : camera;
   if (settings.quality === 'alta' && !state.menu) renderMirrors(cam);
   updatePools();
   renderer.render(scene, cam);
