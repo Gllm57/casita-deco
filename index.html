@@ -1821,7 +1821,7 @@ const FLOORS = [
   { id: 'marmol', name: 'Mármol', a: '#F2EFEA', b: '#CFC9C2' }, { id: 'ajedrez', name: 'Ajedrez', a: '#F4F1EA', b: '#2E2A36' },
   { id: 'hormigon', name: 'Microcemento', a: '#BDB8B2', b: '#A9A49E' }, { id: 'terrazo', name: 'Terrazo', a: '#EFE8DF', b: '#D99577' },
   { id: 'pino', name: 'Pino ancho', a: '#EACDA0', b: '#DDBB88' }, { id: 'grisaceo', name: 'Parquet gris', a: '#ADA7A0', b: '#9C958E' },
-  { id: 'cesped', name: 'Césped', a: '#86C06E', b: '#74AE5E' }, { id: 'camino', name: 'Camino de piedra', a: '#A9C68F', b: '#CFC7BB' },
+  { id: 'cesped', name: 'Césped', a: '#6C9A52', b: '#5E8B47' }, { id: 'camino', name: 'Camino de piedra', a: '#6C9A52', b: '#B9B0A3' },
   { id: 'tarima', name: 'Tarima exterior', a: '#A9744C', b: '#94643F' }, { id: 'grava', name: 'Grava', a: '#DCD3C6', b: '#BDB3A5' },
 ];
 const HARMONY = new Set(['hueso|marmol', 'cielo|marmol', 'rosa|terrazo', 'salvia|pino', 'noche|ajedrez', 'mostaza|hormigon', 'lavanda|grisaceo', 'salvia|roble', 'lavanda|moqueta', 'melocoton|baldosa', 'cielo|azulejo', 'hueso|nogal', 'terracota|espiga', 'menta|azulejo', 'mostaza|nogal', 'rosa|moqueta', 'noche|espiga']);
@@ -2123,7 +2123,9 @@ function paintFloor(f, cv = floorCanvas) {
   } else if (f.id === 'moqueta') {
     for (let i = 0; i < 9000; i++) { x.fillStyle = Math.random() < .5 ? f.b : 'rgba(255,255,255,.12)'; x.fillRect(Math.random() * n, Math.random() * n, 2, 2); }
   } else if (f.id === 'cesped') {
-    for (let i = 0; i < 9000; i++) { x.fillStyle = Math.random() < 0.5 ? 'rgba(40,90,30,.16)' : 'rgba(220,255,190,.18)'; const px = Math.random() * n, py = Math.random() * n; x.fillRect(px, py, 1.5, 4 + Math.random() * 4); }
+    // soft patches of lighter and darker grass, then short blades: matte, no shine
+    for (let i = 0; i < 26; i++) { const gr = x.createRadialGradient(0, 0, 0, 0, 0, 60 + Math.random() * 60), cx = Math.random() * n, cy = Math.random() * n; gr.addColorStop(0, Math.random() < 0.5 ? 'rgba(120,160,80,.35)' : 'rgba(70,110,50,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.save(); x.translate(cx, cy); x.fillStyle = gr; x.fillRect(-130, -130, 260, 260); x.restore(); }
+    for (let i = 0; i < 14000; i++) { const v = Math.random(); x.fillStyle = v < 0.45 ? 'rgba(45,80,35,.22)' : v < 0.9 ? 'rgba(150,190,105,.2)' : 'rgba(230,220,140,.25)'; x.fillRect(Math.random() * n, Math.random() * n, 1.2, 2.5 + Math.random() * 3.5); }
   } else if (f.id === 'camino') {
     for (let i = 0; i < 5000; i++) { x.fillStyle = 'rgba(40,90,30,.14)'; x.fillRect(Math.random() * n, Math.random() * n, 1.5, 5); }
     for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { x.fillStyle = f.b; x.beginPath(); x.ellipse(i * 256 + 128 + (j ? 30 : -20), j * 256 + 128, 100, 82, (i + j) * 0.5, 0, 7); x.fill(); x.strokeStyle = 'rgba(0,0,0,.15)'; x.lineWidth = 3; x.stroke(); }
@@ -3120,10 +3122,12 @@ const TOOLS = [
 const EXTRA_TOOLS = { paint: { name: 'Pintar pared', hint: 'Pinta la cara que tocas: cada habitación con su color' }, floor: { name: 'Poner suelo', hint: 'Arrastra para cubrir un área' } };
 let tool = null, levelGroups = [], wallMeshes = [{}, {}, {}], wallMode = 'auto', preview = null;
 const floorMats = {}, wallMats = {}, boxCache = {}, tileGeos = {};
+const MATTE_FLOORS = new Set(['cesped', 'grava', 'camino']);
 function floorMatFor(id) {
   if (floorMats[id]) return floorMats[id];
   const cv = document.createElement('canvas'); cv.width = cv.height = 512; paintFloor(FLOORS.find(f => f.id === id), cv);
   const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+  if (MATTE_FLOORS.has(id)) return (floorMats[id] = new THREE.MeshLambertMaterial({ map: t })); // grass, gravel and stone paths never shine
   const fm = floorMats[id] = std({ map: t, roughness: 0.82 }); floorFinish(fm, id); return fm;
 }
 const wallMatFor = id => wallMats[id] || (wallMats[id] = (w => std(w.pat ? { color: 0xFFFFFF, map: wallPatTex(w.id), roughness: 0.9 } : { color: w.hex, roughness: 0.92 }))(WALLS.find(w => w.id === id)));
@@ -3160,7 +3164,10 @@ let clouds = null;
 function buildSite(g) {
   const high = HOUSE.site === 'piso'; app.classList.toggle('highrise', high); scene.fog = high ? skyFog : null; clouds = null;
   if (!high) {
-    const lot = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.3), M(0x9CCB8A)); lot.position.y = -0.2; lot.receiveShadow = true; g.add(lot);
+    // the plot is the same matte lawn as the Césped floor, on a band of earth
+    const grass = floorMatFor('cesped').map.clone(); grass.needsUpdate = true; grass.repeat.set((GW + 1.4) / 8, (GD + 1.4) / 8);
+    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(GW + 1.4, GD + 1.4), new THREE.MeshLambertMaterial({ map: grass })); lawn.rotation.x = -PI / 2; lawn.position.y = -0.001; lawn.receiveShadow = true; g.add(lawn);
+    const earth = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.08), new THREE.MeshLambertMaterial({ color: 0x8A6A4E })); earth.position.y = -0.202; earth.receiveShadow = true; g.add(earth);
     const lot2 = new THREE.Mesh(roundBox(GW + 2, 0.3, GD + 2, 0.15), M(0x8E83A8)); lot2.position.y = -0.5; g.add(lot2); return;
   }
   // the roof slab of our floor with a low parapet, and the tower dropping away beneath it
