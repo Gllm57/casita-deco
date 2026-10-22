@@ -30,6 +30,7 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Más muebles:** sofá Chester, butaca orejera, chaise longue, banco tapizado, cama con dosel, vitrina, aparador, estantería de cubos, consola de entrada, reloj de pie, escalera de mantas, jarrón con pampas, olivo, ficus y bambú, puf trenzado, cesta de mantas, carrito de cocina, mesa alta de bar, botellero, columna de horno, cafetera expreso, globo terráqueo, estante con plantas, tapiz, tríptico, mapamundi, perchero de pared, espejo con luz y tablero de corcho.
 - **Construcción:** escaleras en L y en U, barandillas (para balcones: pon suelo en el piso de arriba y rodéalo), media pared, tabiques sueltos y paredes en diagonal, papel pintado, azulejo, ladrillo, friso y piedra, tercer piso, puerta de garaje y coche.
 - **Jardín:** césped, camino de piedra, tarima y grava; árboles, palmera, setos, flores, vallas, piscina, tumbona, mesa con sombrilla, barbacoa, farola, columpio, fuente y caseta para Milo.
 - **Usar las cosas:** toca otra vez un objeto elegido (o el botón Usar) para encender o apagar lámparas, abrir puertas y correr cortinas, estores y persianas. Las puertas se abren solas cuando pasa Milo.
