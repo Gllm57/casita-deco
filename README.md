@@ -30,7 +30,8 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
-- **Paseo:** en Ver · Paseo caminas por dentro de la casa a la altura de los ojos, con joystick y arrastrando para mirar, siempre en horizontal; en el Constructor, flechas para subir y bajar de piso, y botón para hacer fotos al álbum.
+- **Paseo:** en Ver · Paseo caminas por dentro de la casa a la altura de los ojos, con joystick y arrastrando para mirar, siempre en horizontal; en el Constructor, flechas para subir y bajar de piso, y botón para hacer fotos al álbum. Toca puertas, ventanas, lámparas y cortinas para abrirlas, cerrarlas, encenderlas o apagarlas; Milo también te contesta.
+- **Ventanas que se abren** en el Constructor: las estrechas como una hoja, las anchas en dos o tres hojas y la alargada se inclina desde arriba.
 - **Gestos:** doble toque en un objeto para girarlo; en el Constructor, desliza rápido dos dedos hacia arriba o hacia abajo para cambiar de piso.
 - **Interfaz más limpia:** menú de inicio con los cuatro modos en una cuadrícula; en el juego, título y marcador en una sola fila (el marcador se despliega con la flecha y en el Constructor no aparece). Catálogo en diez pestañas (Puertas y ventanas juntas, Pintura y suelo juntas), cada una dividida en secciones: sofás, dormitorio, mesas y sillas, guardar, plantas, alfombras, cortinas, cuadros…
 - **Paredes:** sin líneas ni costuras en esquinas, uniones en T, junto a las ventanas ni entre pisos; cada cara de la pared se pinta entera.

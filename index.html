@@ -575,7 +575,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <button class="photo-exit glass top-exit" id="topExit">Salir del plano</button>
   <div class="walkui" id="walkUI"><div class="joy glass" id="joy"><i id="joyKnob"></i></div><button class="shutter walk-shot" id="walkShot" aria-label="Foto al álbum"><i></i></button>
     <div class="walk-floors glass" id="walkFloors"><button id="walkUp" aria-label="Subir de piso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button><button id="walkDown" aria-label="Bajar de piso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
-    <div class="walk-hint glass" id="walkHint">Joystick para andar · arrastra para mirar</div><button class="walk-exit glass" id="walkExit">Salir</button></div>
+    <div class="walk-hint glass" id="walkHint">Joystick para andar · arrastra para mirar · toca puertas, ventanas y luces</div><button class="walk-exit glass" id="walkExit">Salir</button></div>
   <button class="shutter" id="shutter" aria-label="Guardar la foto en el álbum"><i></i></button>
   <div class="flash" id="flash"></div>
   <button class="photo-exit glass" id="photoExit">Salir del modo foto · o toca la pantalla</button>
@@ -1458,8 +1458,30 @@ function muntins(g, h, mat, xs = [], ys = [], th = 0.035, depth = 0.05) {
   for (const y of ys) { const [a, b] = holeSpanX(h, y); BX(g, b - a, th, depth, mat, (a + b) / 2, y, 0); }
 }
 const OPEN_TAGS = 'salon dorm cocina bano oficina recibidor bebe gamer musica cafe yoga';
-const winItem = (name, w, hole, price, style, deco) => ({ name, tab: 'ventanas', wall: true, opening: 'window', hole, w, h: hole.y1 - hole.y0 + 0.12, y: (hole.y0 + hole.y1) / 2, tags: OPEN_TAGS, price, comfort: 1, style, role: 'ventana',
-  build(g, m) { holePane(g, hole); holeFrame(g, hole, m, true); if (hole.y0 > 0.3) BX(g, hole.hw * 2 + 0.24, 0.05, WALL_T + 0.18, m, hole.x || 0, hole.y0 - 0.04, 0); if (deco) deco(g, m, hole); } });
+// windows open in the Constructor (where the wall has a real hole): narrow ones as one casement, wide ones as two or three leaves, high ones tilt in at the top
+function clipX(pts, a, b) { // the part of a convex outline between x = a and x = b
+  const cut = (P, x, keepRight) => { const out = []; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length], pin = keepRight ? p[0] >= x : p[0] <= x, qin = keepRight ? q[0] >= x : q[0] <= x;
+    if (pin) out.push(p); if (pin !== qin) { const t = (x - p[0]) / (q[0] - p[0]); out.push([x, p[1] + (q[1] - p[1]) * t]); } } return out; };
+  return cut(cut(pts, a, true), b, false);
+}
+function sashLeaf(g, pts, h, mat, ys) { // one opening leaf: its glass, a slim frame all round and any glazing bars across
+  const pane = add(g, new THREE.ShapeGeometry(shapeOf(pts)), BM ? winPane : windowMat, 0, 0, BM ? 0 : 0.006); pane.castShadow = false;
+  for (let i = 0; i < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length], len = Math.hypot(bx - ax, by - ay); if (len < 0.02) continue;
+    BX(g, len + 0.035, 0.04, 0.045, mat, (ax + bx) / 2, (ay + by) / 2, 0).rotation.z = Math.atan2(by - ay, bx - ax); }
+  const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
+  for (const y of ys || []) { const [a, b] = holeSpanX(h, y), l = Math.max(a, x0), r = Math.min(b, x1); if (r - l > 0.05) BX(g, r - l, 0.035, 0.045, mat, (l + r) / 2, y, 0); }
+}
+function hinge(g, name, px, py = 0) { const piv = new THREE.Group(), inner = new THREE.Group(); piv.name = name; piv.position.set(px, py, 0); inner.position.set(-px, -py, 0); piv.add(inner); g.add(piv); return inner; }
+const winItem = (name, w, hole, price, style, deco, open = {}) => ({ name, tab: 'ventanas', wall: true, opening: 'window', hole, w, h: hole.y1 - hole.y0 + 0.12, y: (hole.y0 + hole.y1) / 2, tags: OPEN_TAGS, price, comfort: 1, style, role: 'ventana', swing: 'window',
+  build(g, m) {
+    holeFrame(g, hole, m, true); if (hole.y0 > 0.3) BX(g, hole.hw * 2 + 0.24, 0.05, WALL_T + 0.18, m, hole.x || 0, hole.y0 - 0.04, 0);
+    const cx = hole.x || 0, L = cx - hole.hw, Rr = cx + hole.hw;
+    if (open.splits) { // leaves between the split lines: the outer two swing on their outside edge, any middle one stays put
+      const xs = [L, ...open.splits.map(x => cx + x), Rr], pts = holePts(hole);
+      for (let i = 0; i < xs.length - 1; i++) { const name = i === 0 ? 'leafL' : i === xs.length - 2 ? 'leafR' : null;
+        const leaf = name ? hinge(g, name, name === 'leafL' ? L : Rr) : g; sashLeaf(leaf, clipX(pts, xs[i], xs[i + 1]), hole, m, open.ys); }
+    } else { const sash = open.top ? hinge(g, 'sashTop', cx, hole.y1) : hinge(g, 'sash', L); holePane(sash, hole); if (deco) deco(sash, m, hole); }
+  } });
 const doorItem = (name, w, hole, price, style, leaf, frameRole, swing = 'hinge') => ({ name, tab: 'puertas', wall: true, opening: 'door', hole, w, h: hole.y1 + 0.12, y: hole.y1 / 2, tags: OPEN_TAGS, price, comfort: 1, style, role: frameRole || 'puerta', swing: leaf ? swing : null,
   build(g, m) { if (!BM) add(g, new THREE.ShapeGeometry(shapeOf(holePts(hole))), passageMat, 0, 0, 0.004).castShadow = false; // flat rooms have no real hole, so show a shadowy way through
     holeFrame(g, hole, frameRole ? m : M(0xF4F1EA), false, 0.08); if (!leaf) return;
@@ -1491,14 +1513,14 @@ const H1 = { hw: 0.36, y0: 0.85, y1: 2.05 };
 Object.assign(CAT, {
   // ---- windows ----
   ventana: winItem('Ventana', 1, H1, 120, 3, (g, m, h) => muntins(g, h, m, [0], [1.45])),
-  ventanaDoble: winItem('Ventana doble', 2, { hw: 0.8, y0: 0.85, y1: 2.05 }, 200, 4, (g, m, h) => muntins(g, h, m, [0], [1.7])),
-  ventanaTriple: winItem('Ventana triple', 3, { hw: 1.26, y0: 0.85, y1: 2.05 }, 290, 5, (g, m, h) => muntins(g, h, m, [-0.42, 0.42], [1.7])),
-  ventanal: winItem('Ventanal de suelo a techo', 2, { hw: 0.8, y0: 0.14, y1: 2.32 }, 380, 7, (g, m, h) => muntins(g, h, m, [0], [], 0.045)),
-  ventanalPanoramico: winItem('Ventanal panorámico', 3, { hw: 1.28, y0: 0.14, y1: 2.32 }, 520, 8, (g, m, h) => muntins(g, h, m, [-0.43, 0.43], [], 0.045)),
+  ventanaDoble: winItem('Ventana doble', 2, { hw: 0.8, y0: 0.85, y1: 2.05 }, 200, 4, null, { splits: [0], ys: [1.7] }),
+  ventanaTriple: winItem('Ventana triple', 3, { hw: 1.26, y0: 0.85, y1: 2.05 }, 290, 5, null, { splits: [-0.42, 0.42], ys: [1.7] }),
+  ventanal: winItem('Ventanal de suelo a techo', 2, { hw: 0.8, y0: 0.14, y1: 2.32 }, 380, 7, null, { splits: [0] }),
+  ventanalPanoramico: winItem('Ventanal panorámico', 3, { hw: 1.28, y0: 0.14, y1: 2.32 }, 520, 8, null, { splits: [-0.43, 0.43] }),
   ventanaArco: winItem('Ventana en arco', 1, { hw: 0.36, y0: 0.85, y1: 2.25, sh: 'arch' }, 160, 6, (g, m, h) => muntins(g, h, m, [0], [1.89])),
-  ventanalArco: winItem('Ventanal en arco', 2, { hw: 0.78, y0: 0.4, y1: 2.38, sh: 'arch' }, 360, 8, (g, m, h) => { muntins(g, h, m, [0], [1.6]); for (const a of [PI / 4, PI * 3 / 4]) rod(g, V3(0, 1.6, 0), V3(Math.cos(a) * 0.78, 1.6 + Math.sin(a) * 0.78, 0), 0.016, m); }),
+  ventanalArco: winItem('Ventanal en arco', 2, { hw: 0.78, y0: 0.4, y1: 2.38, sh: 'arch' }, 360, 8, null, { splits: [0], ys: [1.6] }),
   ojoBuey: winItem('Ventana redonda', 1, { hw: 0.32, y0: 1.18, y1: 1.82, sh: 'circle' }, 140, 6, (g, m, h) => muntins(g, h, m, [0], [1.5])),
-  ventanaAlta: winItem('Ventana alargada', 2, { hw: 0.8, y0: 1.7, y1: 2.25 }, 150, 4, (g, m, h) => muntins(g, h, m, [-0.4, 0, 0.4])),
+  ventanaAlta: winItem('Ventana alargada', 2, { hw: 0.8, y0: 1.7, y1: 2.25 }, 150, 4, (g, m, h) => muntins(g, h, m, [-0.4, 0, 0.4]), { top: true }),
   ventanaEstrecha: winItem('Ventana estrecha', 1, { hw: 0.2, y0: 0.45, y1: 2.2 }, 110, 5, (g, m, h) => muntins(g, h, m, [], [1.03, 1.62])),
   vidriera: winItem('Vidriera de colores', 1, { hw: 0.36, y0: 0.85, y1: 2.25, sh: 'arch' }, 260, 9, (g, m, h) => { const p = holePane(g, h, stainMat); p.position.z = BM ? 0.001 : 0.007; }),
   // ---- doors ----
@@ -2910,7 +2932,7 @@ $('tSell').addEventListener('click', () => {
 });
 $('tDone').addEventListener('click', () => select(null));
 // lamps switch on and off, curtains and blinds draw, doors open: from the toolbar or by tapping the chosen thing again
-function useKind(D) { return D.light ? 'light' : D.opening === 'door' && D.swing ? 'door' : D.overWindow ? 'cover' : null; }
+function useKind(D) { return D.light ? 'light' : D.opening === 'door' && D.swing ? 'door' : D.opening === 'window' && BM ? 'door' : D.overWindow ? 'cover' : null; } // windows only open where the wall has a real hole
 function useItem(it) {
   const k = useKind(def(it)); if (!k) return false;
   pushUndo();
@@ -3008,13 +3030,16 @@ function animateDoors(dt) {
   for (const it of allItems()) {
     const D = def(it); if (!D.swing || !it.group) continue;
     let want = it.open ? 1 : 0;
-    if (!want && (!BM || it.lv === 0)) { it.group.getWorldPosition(doorPos); if (pets.some(c => c.g.visible && Math.hypot(doorPos.x + (D.hole.x || 0) - c.x, doorPos.z - c.z) < 1.0)) want = 1; }
+    if (D.opening === 'window' && !BM) continue;
+    if (!want && D.opening === 'door' && (!BM || it.lv === 0)) { it.group.getWorldPosition(doorPos); if (pets.some(c => c.g.visible && Math.hypot(doorPos.x + (D.hole.x || 0) - c.x, doorPos.z - c.z) < 1.0)) want = 1; }
     const a = it._a = (it._a || 0) + (want - (it._a || 0)) * Math.min(1, dt * 5); if (a < 0.002 && !want && !it._moved) continue; it._moved = a > 0.002;
     const L1 = it.group.getObjectByName('leaf'), Ll = it.group.getObjectByName('leafL'), Lr = it.group.getObjectByName('leafR');
     if (D.swing === 'hinge' && L1) L1.rotation.y = -a * 1.45;
     if (D.swing === 'double') { if (Ll) Ll.rotation.y = -a * 1.45; if (Lr) Lr.rotation.y = a * 1.45; }
     if (D.swing === 'slide' && L1) { const sl = L1.getObjectByName('slider') || L1; sl.userData.x0 ??= sl.position.x; sl.position.x = sl.userData.x0 + a * (D.w > 1 && D.hole.x ? 0.88 : -0.72); }
     if (D.swing === 'up' && L1) { L1.scale.y = 1 - a * 0.9; L1.position.y = D.hole.y1 * a * 0.9; }
+    if (D.swing === 'window') { const sa = it.group.getObjectByName('sash'), st = it.group.getObjectByName('sashTop');
+      if (sa) sa.rotation.y = -a * 1.25; if (st) st.rotation.x = -a * 0.55; if (Ll) Ll.rotation.y = -a * 1.25; if (Lr) Lr.rotation.y = a * 1.25; }
   }
 }
 function petTarget(c) {
@@ -3292,6 +3317,17 @@ function walkFloor(dir) {
   setLevel(to); walkSpawn(); showCeilings(true); renderWalkFloors(); toast(FLOOR_NAMES[to]); buzz(10); sfx('click');
 }
 $('walkUp').addEventListener('click', () => walkFloor(1)); $('walkDown').addEventListener('click', () => walkFloor(-1));
+// on the tour, a tap opens and shuts doors and windows, switches lamps and draws curtains (Milo answers too)
+function walkTap(cx, cy) {
+  let u, v; if (app.classList.contains('rot')) { u = cy; v = innerWidth - cx; } else { const r = canvas.getBoundingClientRect(); u = cx - r.left; v = cy - r.top; }
+  ndc.set(u / W * 2 - 1, -(v / H) * 2 + 1); ray.setFromCamera(ndc, walkCam);
+  for (const c of pets) if (c.g.visible && ray.intersectObject(c.g, true).some(h => h.distance < 5)) { c.jump = 1; c.mode = null; c.goRest = null; c.awakeUntil = c.t + 10; buzz(20); sfx('bark'); miloSays(); return; }
+  const scope = [BM ? levelGroups[HOUSE.cur].geo : roomGroup, ...R.items.filter(i => i.group).map(i => i.group)];
+  const hit = ray.intersectObjects(scope, true).find(h => h.object.visible && h.object.material !== blobMat);
+  const it = hit && hit.distance < 5 && hit.object.userData.item;
+  if (!it || !useKind(def(it))) return;
+  useItem(it); const k = useKind(def(it)); toast(k === 'light' ? (it.off ? 'Apagada' : 'Encendida') : k === 'door' ? (it.open ? 'Abierta' : 'Cerrada') : it.closed ? 'Cortina cerrada' : 'Cortina abierta');
+}
 function walkBlocked(x, z) {
   if (Math.abs(x) > GW / 2 - 0.2 || Math.abs(z) > GD / 2 - 0.2) return true;
   const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2), list = BM ? HOUSE.levels[HOUSE.cur].items : R.items;
@@ -4250,7 +4286,7 @@ canvas.addEventListener('pointerdown', e => {
   if (state.menu) return;
   canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   dismissHint(); closePalette();
-  if (state.walk) { gesture = { kind: 'look', x: e.clientX, y: e.clientY }; return; }
+  if (state.walk) { gesture = { kind: 'look', x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY }; return; }
   if (pointers.size === 2) {
     if (gesture && /drag/.test(gesture.kind)) endDrag(gesture);
     clearPreview(); const [a, b] = [...pointers.values()];
@@ -4333,6 +4369,7 @@ function endPointer(e) {
   pointers.delete(e.pointerId);
   if (!gesture) return;
   if (gesture.kind === 'pinch' && floorFlick(gesture)) { gesture = null; return; }
+  if (gesture.kind === 'look') { if (Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) < TAP) walkTap(e.clientX, e.clientY); gesture = null; return; }
   if (gesture.kind === 'tool') toolEnd(gesture);
   else if (/drag/.test(gesture.kind)) { endDrag(gesture); if (!gesture.moved && gesture.x0 != null && Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) < TAP) tapItem(gesture.it, false); }
   else if (gesture.kind === 'orbit' && gesture.moved >= 99) tutEvent('orbit');
