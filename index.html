@@ -588,9 +588,9 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <div class="panel">
       <div class="panel-head"><div><h2>Cómo jugar</h2><p class="sub">Lo básico en un minuto · <button class="linkbtn" id="tutAgain">Repetir el tutorial</button></p></div><button class="close" data-close aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="help">
-        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></span><p><b>Mover la vista</b>Arrastra con un dedo para girar. Con dos dedos: pellizca para acercar, arrastra para desplazarte y gira los dedos para rotar. Abajo a la derecha: girar de 90 en 90 y centrar.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></span><p><b>Mover la vista</b>Arrastra con un dedo para girar. Con dos dedos: pellizca para acercar, arrastra para desplazarte y gira los dedos para rotar. Abajo a la derecha: girar de 90 en 90 y centrar. En el Constructor, desliza rápido dos dedos hacia arriba o hacia abajo para subir o bajar de piso.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg></span><p><b>Añadir y colocar</b>Elige un objeto del catálogo (o búscalo con la lupa) y toca en la sala dónde lo quieres, o mantén pulsada la tarjeta y arrástrala a la sala. La estrella de cada tarjeta lo guarda en Favoritos (pestaña ★, junto con lo último que pusiste). Para mover varias cosas juntas, elige una y mantén pulsadas las demás. Para moverlo, tócalo para elegirlo y arrástralo: así no se mueve nada sin querer. Las flechas curvas de arriba lo inclinan de 15 en 15 grados. Si se pone rojo, ahí no cabe. Con el candado lo bloqueas, y las flechas que salen a la derecha lo mueven casilla a casilla. El botón Mover/Fijado de la derecha fija todos los objetos para que solo se mueva la cámara. Lo de la pestaña Encima va sobre mesas, encimeras, islas y cómodas, y viaja con ellas.</p></div>
-        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/></svg></span><p><b>Editar</b>Con un objeto seleccionado puedes girarlo, cambiarle el color, copiarlo o quitarlo. Deshacer y Rehacer están abajo a la izquierda.</p></div>
+        <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/></svg></span><p><b>Editar</b>Doble toque en un objeto para girarlo. Con un objeto seleccionado también puedes girarlo, cambiarle el color, copiarlo o quitarlo. Deshacer y Rehacer están abajo a la izquierda.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><p><b>Ver y usar</b>Toca otra vez algo elegido para usarlo: enciende lámparas, abre puertas y corre cortinas. El botón de la luz cambia entre día, tarde, noche y ciclo automático. En Ver tienes foto, compartir y plano desde arriba.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4 6.8 19.2l1-5.9L3.5 9.2l5.9-.8z"/></svg></span><p><b>Encargos y estrellas</b>Cumple la lista del cliente y pulsa Entregar. Más estilo y comodidad dan más estrellas, que abren encargos, salas de Mi casa y suben tu rango.</p></div>
         <div><span class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8-16 8 16z"/><path d="M8 13h8"/></svg></span><p><b>Ganar estilo</b>Variedad de objetos, cosas propias de la sala, tres o más de la misma colección y pared y suelo que combinan.</p></div>
@@ -4155,7 +4155,8 @@ canvas.addEventListener('pointerdown', e => {
   if (pointers.size === 2) {
     if (gesture && /drag/.test(gesture.kind)) endDrag(gesture);
     clearPreview(); const [a, b] = [...pointers.values()];
-    gesture = { kind: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y), z0: view.zoom, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, ang: Math.atan2(b.y - a.y, b.x - a.x) }; return;
+    gesture = { kind: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y), z0: view.zoom, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, ang: Math.atan2(b.y - a.y, b.x - a.x),
+      t0: performance.now(), sx: (a.x + b.x) / 2, sy: (a.y + b.y) / 2, rot: 0, z1: view.zoom, view0: { x: view.target.x, z: view.target.z, az: view.az, zoom: view.zoom } }; return;
   }
   if (pointers.size > 2) return;
   if (e.button === 2 || e.shiftKey) { gesture = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: 99 }; return; }
@@ -4177,7 +4178,7 @@ canvas.addEventListener('pointermove', e => {
     view.zoom = THREE.MathUtils.clamp(gesture.z0 * Math.hypot(a.x - b.x, a.y - b.y) / gesture.d0, 0.6, 3.4);
     panBy(mx - gesture.mx, my - gesture.my); gesture.mx = mx; gesture.my = my;
     let da = ang - gesture.ang; if (da > PI) da -= 2 * PI; if (da < -PI) da += 2 * PI;
-    view.az -= da; gesture.ang = ang; view.azGoal = null;
+    view.az -= da; gesture.ang = ang; gesture.rot += da; gesture.z1 = view.zoom; view.azGoal = null;
   } else if (gesture.kind === 'tool') {
     toolMove(gesture, e);
   } else if (gesture.kind === 'bwdrag') {
@@ -4209,17 +4210,37 @@ canvas.addEventListener('pointermove', e => {
     placeMesh(it, 0.14);
   }
 });
+// a quick two-finger flick up or down in the Constructor changes floor; a slow one still pans the view
+function floorFlick(g) {
+  if (!BM || g.kind !== 'pinch') return false;
+  const dx = g.mx - g.sx, dy = g.my - g.sy, dt = performance.now() - g.t0, zr = g.z1 / g.view0.zoom;
+  if (dt > 450 || Math.abs(dy) < 50 || Math.abs(dy) < Math.abs(dx) * 2.2 || zr < 0.85 || zr > 1.18 || Math.abs(g.rot) > 0.3) return false;
+  Object.assign(view.target, { x: g.view0.x, z: g.view0.z }); view.az = g.view0.az; view.zoom = g.view0.zoom; // undo the little pan the flick made
+  const to = HOUSE.cur + (dy < 0 ? 1 : -1);
+  if (to < 0 || to >= HOUSE.levels.length) { toast(dy < 0 ? 'Ya estás en el piso más alto' : 'Ya estás en la planta baja'); buzz(20); return true; }
+  setLevel(to); toast(FLOOR_NAMES[to]); buzz(10); sfx('click'); return true;
+}
+// double tap on an object turns it; a single tap on the chosen one still uses it (lamp, door, curtain), just a moment later
+const dbl = { it: null, t: 0, use: 0 };
+function tapItem(it, selectIt) {
+  const now = performance.now(), twice = dbl.it === it && now - dbl.t < 320;
+  clearTimeout(dbl.use); dbl.it = twice ? null : it; dbl.t = now;
+  if (twice) { if (sel !== it) select(it); const b = $('tRotate'); if (!b.disabled) { b.click(); buzz(8); } return; }
+  if (selectIt) { select(it); buzz(8); return; }
+  if (useKind(def(it))) dbl.use = setTimeout(() => { if (sel === it) useItem(it); }, 300);
+}
 function endPointer(e) {
   pointers.delete(e.pointerId);
   if (!gesture) return;
+  if (gesture.kind === 'pinch' && floorFlick(gesture)) { gesture = null; return; }
   if (gesture.kind === 'tool') toolEnd(gesture);
-  else if (/drag/.test(gesture.kind)) { endDrag(gesture); if (!gesture.moved && gesture.x0 != null && Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) < TAP) useItem(gesture.it); }
+  else if (/drag/.test(gesture.kind)) { endDrag(gesture); if (!gesture.moved && gesture.x0 != null && Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) < TAP) tapItem(gesture.it, false); }
   else if (gesture.kind === 'orbit' && gesture.moved >= 99) tutEvent('orbit');
   if (gesture.kind === 'orbit') clearTimeout(gesture.hold);
   if (!gesture.held && gesture.kind === 'orbit' && gesture.moved < 99) {
     if (placing) placeAt({ clientX: gesture.x0, clientY: gesture.y0 });
-    else if (gesture.tapItem && gesture.tapItem === sel) useItem(sel);
-    else if (gesture.tapItem && gesture.tapItem !== sel) { select(gesture.tapItem); buzz(8); }
+    else if (gesture.tapItem && gesture.tapItem === sel) tapItem(sel, false);
+    else if (gesture.tapItem && gesture.tapItem !== sel) tapItem(gesture.tapItem, true);
     else if (!gesture.tapItem && sel) select(null);
   }
   gesture = null;

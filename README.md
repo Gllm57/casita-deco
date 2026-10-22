@@ -30,6 +30,7 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Gestos:** doble toque en un objeto para girarlo; en el Constructor, desliza rápido dos dedos hacia arriba o hacia abajo para cambiar de piso.
 - **Interfaz más limpia:** menú de inicio con los cuatro modos en una cuadrícula; en el juego, título y marcador en una sola fila (el marcador se despliega con la flecha y en el Constructor no aparece). Catálogo en diez pestañas (Puertas y ventanas juntas, Pintura y suelo juntas), cada una dividida en secciones: sofás, dormitorio, mesas y sillas, guardar, plantas, alfombras, cortinas, cuadros…
 - **Paredes:** sin líneas ni costuras en esquinas, uniones en T, junto a las ventanas ni entre pisos; cada cara de la pared se pinta entera.
 - **Más muebles:** sofá Chester, butaca orejera, chaise longue, banco tapizado, cama con dosel, vitrina, aparador, estantería de cubos, consola de entrada, reloj de pie, escalera de mantas, jarrón con pampas, olivo, ficus y bambú, puf trenzado, cesta de mantas, carrito de cocina, mesa alta de bar, botellero, columna de horno, cafetera expreso, globo terráqueo, estante con plantas, tapiz, tríptico, mapamundi, perchero de pared, espejo con luz y tablero de corcho.
