@@ -1458,7 +1458,7 @@ function muntins(g, h, mat, xs = [], ys = [], th = 0.035, depth = 0.05) {
   for (const y of ys) { const [a, b] = holeSpanX(h, y); BX(g, b - a, th, depth, mat, (a + b) / 2, y, 0); }
 }
 const OPEN_TAGS = 'salon dorm cocina bano oficina recibidor bebe gamer musica cafe yoga';
-// windows open in the Constructor (where the wall has a real hole): narrow ones as one casement, wide ones as two or three leaves, high ones tilt in at the top
+// windows open outwards in the Constructor (where the wall has a real hole): narrow ones as one casement, wide ones as two or three leaves, high ones tilt out at the top
 function clipX(pts, a, b) { // the part of a convex outline between x = a and x = b
   const cut = (P, x, keepRight) => { const out = []; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length], pin = keepRight ? p[0] >= x : p[0] <= x, qin = keepRight ? q[0] >= x : q[0] <= x;
     if (pin) out.push(p); if (pin !== qin) { const t = (x - p[0]) / (q[0] - p[0]); out.push([x, p[1] + (q[1] - p[1]) * t]); } } return out; };
@@ -1472,11 +1472,12 @@ function sashLeaf(g, pts, h, mat, ys) { // one opening leaf: its glass, a slim f
   for (const y of ys || []) { const [a, b] = holeSpanX(h, y), l = Math.max(a, x0), r = Math.min(b, x1); if (r - l > 0.05) BX(g, r - l, 0.035, 0.045, mat, (l + r) / 2, y, 0); }
 }
 function hinge(g, name, px, py = 0) { const piv = new THREE.Group(), inner = new THREE.Group(); piv.name = name; piv.position.set(px, py, 0); inner.position.set(-px, -py, 0); piv.add(inner); g.add(piv); return inner; }
-const winItem = (name, w, hole, price, style, deco, open = {}) => ({ name, tab: 'ventanas', wall: true, opening: 'window', hole, w, h: hole.y1 - hole.y0 + 0.12, y: (hole.y0 + hole.y1) / 2, tags: OPEN_TAGS, price, comfort: 1, style, role: 'ventana', swing: 'window',
+const winItem = (name, w, hole, price, style, deco, open = {}) => ({ name, tab: 'ventanas', wall: true, opening: 'window', hole, w, h: hole.y1 - hole.y0 + 0.12, y: (hole.y0 + hole.y1) / 2, tags: OPEN_TAGS, price, comfort: 1, style, role: 'ventana', swing: open.fixed ? null : 'window',
   build(g, m) {
     holeFrame(g, hole, m, true); if (hole.y0 > 0.3) BX(g, hole.hw * 2 + 0.24, 0.05, WALL_T + 0.18, m, hole.x || 0, hole.y0 - 0.04, 0);
     const cx = hole.x || 0, L = cx - hole.hw, Rr = cx + hole.hw;
-    if (open.splits) { // leaves between the split lines: the outer two swing on their outside edge, any middle one stays put
+    if (open.fixed) { holePane(g, hole); if (deco) deco(g, m, hole); } // picture windows, portholes and stained glass don't open
+    else if (open.splits) { // leaves between the split lines: the outer two swing on their outside edge, any middle one stays put
       const xs = [L, ...open.splits.map(x => cx + x), Rr], pts = holePts(hole);
       for (let i = 0; i < xs.length - 1; i++) { const name = i === 0 ? 'leafL' : i === xs.length - 2 ? 'leafR' : null;
         const leaf = name ? hinge(g, name, name === 'leafL' ? L : Rr) : g; sashLeaf(leaf, clipX(pts, xs[i], xs[i + 1]), hole, m, open.ys); }
@@ -1516,13 +1517,13 @@ Object.assign(CAT, {
   ventanaDoble: winItem('Ventana doble', 2, { hw: 0.8, y0: 0.85, y1: 2.05 }, 200, 4, null, { splits: [0], ys: [1.7] }),
   ventanaTriple: winItem('Ventana triple', 3, { hw: 1.26, y0: 0.85, y1: 2.05 }, 290, 5, null, { splits: [-0.42, 0.42], ys: [1.7] }),
   ventanal: winItem('Ventanal de suelo a techo', 2, { hw: 0.8, y0: 0.14, y1: 2.32 }, 380, 7, null, { splits: [0] }),
-  ventanalPanoramico: winItem('Ventanal panorámico', 3, { hw: 1.28, y0: 0.14, y1: 2.32 }, 520, 8, null, { splits: [-0.43, 0.43] }),
+  ventanalPanoramico: winItem('Ventanal panorámico', 3, { hw: 1.28, y0: 0.14, y1: 2.32 }, 520, 8, (g, m, h) => muntins(g, h, m, [-0.43, 0.43], [], 0.045), { fixed: true }),
   ventanaArco: winItem('Ventana en arco', 1, { hw: 0.36, y0: 0.85, y1: 2.25, sh: 'arch' }, 160, 6, (g, m, h) => muntins(g, h, m, [0], [1.89])),
-  ventanalArco: winItem('Ventanal en arco', 2, { hw: 0.78, y0: 0.4, y1: 2.38, sh: 'arch' }, 360, 8, null, { splits: [0], ys: [1.6] }),
-  ojoBuey: winItem('Ventana redonda', 1, { hw: 0.32, y0: 1.18, y1: 1.82, sh: 'circle' }, 140, 6, (g, m, h) => muntins(g, h, m, [0], [1.5])),
+  ventanalArco: winItem('Ventanal en arco', 2, { hw: 0.78, y0: 0.4, y1: 2.38, sh: 'arch' }, 360, 8, (g, m, h) => { muntins(g, h, m, [0], [1.6]); for (const a of [PI / 4, PI * 3 / 4]) rod(g, V3(0, 1.6, 0), V3(Math.cos(a) * 0.78, 1.6 + Math.sin(a) * 0.78, 0), 0.016, m); }, { fixed: true }),
+  ojoBuey: winItem('Ventana redonda', 1, { hw: 0.32, y0: 1.18, y1: 1.82, sh: 'circle' }, 140, 6, (g, m, h) => muntins(g, h, m, [0], [1.5]), { fixed: true }),
   ventanaAlta: winItem('Ventana alargada', 2, { hw: 0.8, y0: 1.7, y1: 2.25 }, 150, 4, (g, m, h) => muntins(g, h, m, [-0.4, 0, 0.4]), { top: true }),
   ventanaEstrecha: winItem('Ventana estrecha', 1, { hw: 0.2, y0: 0.45, y1: 2.2 }, 110, 5, (g, m, h) => muntins(g, h, m, [], [1.03, 1.62])),
-  vidriera: winItem('Vidriera de colores', 1, { hw: 0.36, y0: 0.85, y1: 2.25, sh: 'arch' }, 260, 9, (g, m, h) => { const p = holePane(g, h, stainMat); p.position.z = BM ? 0.001 : 0.007; }),
+  vidriera: winItem('Vidriera de colores', 1, { hw: 0.36, y0: 0.85, y1: 2.25, sh: 'arch' }, 260, 9, (g, m, h) => { const p = holePane(g, h, stainMat); p.position.z = BM ? 0.001 : 0.007; }, { fixed: true }),
   // ---- doors ----
   puerta: doorItem('Puerta clásica', 1, { hw: 0.4, y0: 0, y1: 2.1 }, 150, 3, panelLeaf),
   puertaModerna: doorItem('Puerta moderna', 1, { hw: 0.4, y0: 0, y1: 2.15 }, 190, 5, (g, m, h) => {
@@ -2932,9 +2933,14 @@ $('tSell').addEventListener('click', () => {
 });
 $('tDone').addEventListener('click', () => select(null));
 // lamps switch on and off, curtains and blinds draw, doors open: from the toolbar or by tapping the chosen thing again
-function useKind(D) { return D.light ? 'light' : D.opening === 'door' && D.swing ? 'door' : D.opening === 'window' && BM ? 'door' : D.overWindow ? 'cover' : null; } // windows only open where the wall has a real hole
+function useKind(D) { return D.light ? 'light' : D.opening === 'door' && D.swing ? 'door' : D.opening === 'window' && D.swing && BM ? 'door' : D.overWindow ? 'cover' : null; } // windows only open where the wall has a real hole
+function curtainShut(it) { // a closed curtain, blind or shutter hanging over this window
+  const mine = new Set([...Array(def(it).w).keys()].map(n => edgeShift(it.edge, n)));
+  return HOUSE.levels[it.lv ?? HOUSE.cur].items.some(c => def(c).overWindow && c.closed && (c.side || 1) === (it.side || 1) && [...Array(def(c).w).keys()].some(n => mine.has(edgeShift(c.edge, n))));
+}
 function useItem(it) {
   const k = useKind(def(it)); if (!k) return false;
+  if (BM && def(it).opening === 'window' && !it.open && curtainShut(it)) { buzz(30); toast('Abre primero la cortina'); return false; }
   pushUndo();
   if (k === 'light') { it.off = !it.off; if (!it.off) delete it.off; buildItem(it); applyNight(); }
   else if (k === 'door') { it.open = !it.open; if (!it.open) delete it.open; }
@@ -3026,6 +3032,12 @@ function stepBlocked(x1, z1, x2, z2) {
   return false;
 }
 const doorPos = new THREE.Vector3();
+// which way is outside for a window: away from the indoor floor (a window hung from the garden side still opens out)
+function outSign(it) {
+  const lv = HOUSE.levels[it.lv ?? HOUSE.cur], inside = c => { const f = lv.tiles[ckey(...c)]; return !!f && !OUTDOOR.has(f); };
+  const front = inside(cellOnSide(it.edge, it.side || 1)), back = inside(cellOnSide(it.edge, -(it.side || 1)));
+  return !front && back ? -1 : 1;
+}
 function animateDoors(dt) {
   for (const it of allItems()) {
     const D = def(it); if (!D.swing || !it.group) continue;
@@ -3038,8 +3050,8 @@ function animateDoors(dt) {
     if (D.swing === 'double') { if (Ll) Ll.rotation.y = -a * 1.45; if (Lr) Lr.rotation.y = a * 1.45; }
     if (D.swing === 'slide' && L1) { const sl = L1.getObjectByName('slider') || L1; sl.userData.x0 ??= sl.position.x; sl.position.x = sl.userData.x0 + a * (D.w > 1 && D.hole.x ? 0.88 : -0.72); }
     if (D.swing === 'up' && L1) { L1.scale.y = 1 - a * 0.9; L1.position.y = D.hole.y1 * a * 0.9; }
-    if (D.swing === 'window') { const sa = it.group.getObjectByName('sash'), st = it.group.getObjectByName('sashTop');
-      if (sa) sa.rotation.y = -a * 1.25; if (st) st.rotation.x = -a * 0.55; if (Ll) Ll.rotation.y = -a * 1.25; if (Lr) Lr.rotation.y = a * 1.25; }
+    if (D.swing === 'window') { const sa = it.group.getObjectByName('sash'), st = it.group.getObjectByName('sashTop'), o = a * outSign(it); // windows swing outwards
+      if (sa) sa.rotation.y = o * 1.25; if (st) st.rotation.x = o * 0.55; if (Ll) Ll.rotation.y = o * 1.25; if (Lr) Lr.rotation.y = -o * 1.25; }
   }
 }
 function petTarget(c) {
@@ -3326,7 +3338,7 @@ function walkTap(cx, cy) {
   const hit = ray.intersectObjects(scope, true).find(h => h.object.visible && h.object.material !== blobMat);
   const it = hit && hit.distance < 5 && hit.object.userData.item;
   if (!it || !useKind(def(it))) return;
-  useItem(it); const k = useKind(def(it)); toast(k === 'light' ? (it.off ? 'Apagada' : 'Encendida') : k === 'door' ? (it.open ? 'Abierta' : 'Cerrada') : it.closed ? 'Cortina cerrada' : 'Cortina abierta');
+  if (!useItem(it)) return; const k = useKind(def(it)); toast(k === 'light' ? (it.off ? 'Apagada' : 'Encendida') : k === 'door' ? (it.open ? 'Abierta' : 'Cerrada') : it.closed ? 'Cortina cerrada' : 'Cortina abierta');
 }
 function walkBlocked(x, z) {
   if (Math.abs(x) > GW / 2 - 0.2 || Math.abs(z) > GD / 2 - 0.2) return true;
