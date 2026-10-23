@@ -30,6 +30,8 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Más fluido y gasta menos batería:** a toda velocidad mientras tocas o algo se mueve y a 30 imágenes por segundo cuando solo miras; sombras y espejos se refrescan menos en reposo. La calidad se ajusta sola si el móvil va justo (también en modo de ahorro de energía no la baja sin motivo).
+- **Sombra suave donde la pared toca el suelo** en el Constructor, más oscura en los rincones.
 - **Paseo:** en Ver · Paseo caminas por dentro de la casa a la altura de los ojos, con joystick y arrastrando para mirar, siempre en horizontal; en el Constructor, flechas para subir y bajar de piso, y botón para hacer fotos al álbum. Toca puertas, ventanas, lámparas y cortinas para abrirlas, cerrarlas, encenderlas o apagarlas; Milo también te contesta.
 - **Ventanas que se abren hacia fuera** en el Constructor: las estrechas como una hoja, las anchas en dos hojas (en las triples solo las de los lados) y la alargada se abate por arriba. El ventanal panorámico, el ventanal en arco, la ventana redonda y la vidriera son fijos, y una ventana con la cortina cerrada no se abre hasta correrla.
 - **Gestos:** doble toque en un objeto para girarlo; en el Constructor, desliza rápido dos dedos hacia arriba o hacia abajo para cambiar de piso.

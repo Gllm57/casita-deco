@@ -2278,7 +2278,7 @@ const homeUnlocked = h => totalStars() >= h.unlock;
 /* ---------- renderer & scene ---------- */
 const canvas = $('room');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false; // the frame loop says when
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 100);
 const view = { az: PI / 4, el: 0.62, zoom: 1, azGoal: null, target: new THREE.Vector3(0, 0.5, 0) };
@@ -2287,10 +2287,12 @@ const hemi = new THREE.HemisphereLight(0xFFF6EE, 0x8E83B0, 0.78); scene.add(hemi
 const sun = new THREE.DirectionalLight(0xFFF0DD, 0.85);
 sun.position.set(6, 11, 5); sun.castShadow = true; sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.035; sun.shadow.radius = 2.5; scene.add(sun);
 const fill = new THREE.DirectionalLight(0xD8D0FF, 0.22); fill.position.set(-6, 5, -4); scene.add(fill);
+let autoQ = { level: +(settings.autoQ || 0), acc: 0, n: 0, since: 0 };
+const AUTO_STEPS = [[1, 1024], [0.85, 1024], [0.72, 768], [0.6, 512]]; // share of the best pixel ratio, sun shadow size
 function applyQuality() {
   const hi = settings.quality === 'alta';
-  const phone = matchMedia('(pointer: coarse)').matches, size = hi && !phone ? 2048 : 1024;
-  renderer.setPixelRatio(hi ? Math.min(devicePixelRatio, phone ? 1.6 : 2) : 1);
+  const phone = matchMedia('(pointer: coarse)').matches, [k, sz] = AUTO_STEPS[hi ? autoQ.level : 0], size = hi ? (phone ? sz : sz * 2) : 1024;
+  renderer.setPixelRatio(hi ? Math.max(1, Math.min(devicePixelRatio, phone ? 1.6 : 2) * k) : 1);
   sun.shadow.mapSize.set(size, size); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
   resize();
 }
@@ -2506,7 +2508,7 @@ function renderMirrors(cam) {
   const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha();
   o.visible = false; renderer.shadowMap.autoUpdate = false; renderer.clippingPlanes = [mv.plane]; renderer.setClearColor(0xE6DCEF, 1);
   renderer.setRenderTarget(M0.rt); renderer.clear(); renderer.render(scene, vc); renderer.setRenderTarget(null);
-  renderer.clippingPlanes = []; renderer.setClearColor(cc, ca); renderer.shadowMap.autoUpdate = true; o.visible = true;
+  renderer.clippingPlanes = []; renderer.setClearColor(cc, ca); o.visible = true;
 }
 function buildItem(it) {
   if (it.group && it.group.parent) it.group.parent.remove(it.group);
@@ -3611,7 +3613,8 @@ function dropEndSides(geo, x0, x1) { // the slab's ends and underside sit inside
     out.setAttribute(name, new THREE.BufferAttribute(arr, n)); }
   geo.dispose(); return out;
 }
-const trimGeos = {};
+const trimGeos = {}, aoGeos = {};
+const aoGeo = len => aoGeos[len] || (aoGeos[len] = new THREE.PlaneGeometry(len, 0.52));
 const trimGeo = (w, ends) => trimGeos[w + ends] || (trimGeos[w + ends] = (() => { const g = new THREE.BoxGeometry(w, 0.1, 0.02), ix = Array.from(g.index.array); // skirting without the ends that meet the next piece
   g.setIndex([...(ends.includes('r') ? ix.slice(0, 6) : []), ...(ends.includes('l') ? ix.slice(6, 12) : []), ...ix.slice(12)]); g.clearGroups(); return g; })());
 function holeWallGeo(type, e0, e1) { // one wall slab with the item's hole cut out, spanning every edge the item covers
@@ -3678,7 +3681,9 @@ function makeEdge(i, k, e, op) {
   if (i > 0) W(g, sw, LEVEL_H - WALL_H, sx, -(LEVEL_H - WALL_H) / 2, butt);
   // skirting only on faces that look into a room, running through the corner posts
   for (const sz of [-1, 1]) if (hasTile(i, ...cellOnSide(k, sz))) { const lo = -(L1 + T) / 2 - 0.003, hi = (L1 + T) / 2 + 0.003, thru = v => straightV.has(v) && straightV.get(v).has(k);
-    for (const [a, b] of cut(lo, hi)) add(body, trimGeo(b - a, (a > lo || !thru(v0) ? 'l' : '') + (b < hi || !thru(v1) ? 'r' : '')), trimMat, (a + b) / 2, 0.05, sz * (T / 2 + 0.01)); } // a hair longer, so the skirting runs on without gaps
+    for (const [a, b] of cut(lo, hi)) { add(body, trimGeo(b - a, (a > lo || !thru(v0) ? 'l' : '') + (b < hi || !thru(v1) ? 'r' : '')), trimMat, (a + b) / 2, 0.05, sz * (T / 2 + 0.01)); // a hair longer, so the skirting runs on without gaps
+      // soft shade on the floor along the wall (and darker in the corners where two meet), so rooms look grounded
+      const ao = new THREE.Mesh(aoGeo(+(b - a).toFixed(3)), aoMat); ao.rotation.set(-PI / 2, 0, sz > 0 ? 0 : PI); ao.position.set((a + b) / 2, 0.004, sz * (T / 2 + 0.26)); ao.renderOrder = 1; g.add(ao); } }
   for (const [a, b] of cut(-L1 / 2 - e0, L1 / 2 + e1)) { W(stub, b - a, STUB_H, (a + b) / 2, STUB_H / 2, gap ? 'all' : ''); P(stub, b - a, 0.04, T + 0.03, capMat, (a + b) / 2, STUB_H + 0.02, 0); }
   g.traverse(o => { if (o.isMesh) o.userData.edge = k; });
   levelGroups[i].geo.add(g);
@@ -4419,8 +4424,32 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 /* ---------- loop ---------- */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let last = performance.now(), frameN = 0, sunAt = 0;
+// frame pacing: full speed while you touch or something moves, a calm 30 fps when you only watch, less in the menu.
+// Shadows and mirrors are refreshed less often while idle. Saves battery and keeps the phone cool.
+let lastInput = performance.now(), rendered = 0;
+for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown']) document.addEventListener(ev, () => { lastInput = performance.now(); }, { capture: true, passive: true });
+function busyNow(now) {
+  return now - lastInput < 1500 || !!gesture || state.walk || view.azGoal != null || view.elGoal != null || !!popAnim || !!cardDrag.ghost || !loaderGone
+    || allItems().some(it => it._moved);
+}
+// automatic quality: while busy, watch how long frames really take and step sharpness and shadow detail down (or back up)
+function autoQuality(now, interval) {
+  if (settings.quality !== 'alta' || state.walk) return;
+  if (interval > 250) return; // the page was hidden or busy elsewhere
+  autoQ.acc += interval > 40 ? 1 : 0; autoQ.fast = (autoQ.fast || 0) + (interval < 20 ? 1 : 0); autoQ.n++; if (now - autoQ.since < 2500 || autoQ.n < 40) return;
+  // a phone in Low Power Mode runs at a steady 30 fps: that is not struggling, so only frames that miss even that count as slow
+  const slow = autoQ.acc / autoQ.n, fast = autoQ.fast / autoQ.n; autoQ.acc = 0; autoQ.fast = 0; autoQ.n = 0; autoQ.since = now;
+  const was = autoQ.level;
+  if (slow > 0.25 && autoQ.level < AUTO_STEPS.length - 1) autoQ.level++; // dropping frames: lighten the load
+  else if (fast > 0.9 && autoQ.level > 0) autoQ.level--; // smooth with room to spare: look better again
+  if (autoQ.level !== was) { settings.autoQ = autoQ.level; applyQuality(); }
+}
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  requestAnimationFrame(frame);
+  const busy = busyNow(now), gap = state.menu ? 1000 / 24 : busy ? 0 : 1000 / 30;
+  if (gap && now - last < gap - 4) return; // nothing needs a fresh picture this soon
+  if (busy && !state.menu) autoQuality(now, now - last);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; rendered++;
   if (state.menu && !reduce) view.az += dt * 0.12;
   if (view.azGoal != null) { view.az += (view.azGoal - view.az) * Math.min(1, dt * 8); if (Math.abs(view.azGoal - view.az) < 0.002) { view.az = view.azGoal; view.azGoal = null; } }
   if (view.elGoal != null) { view.el += (view.elGoal - view.el) * Math.min(1, dt * 6); if (Math.abs(view.elGoal - view.el) < 0.002) { view.el = view.elGoal; view.elGoal = null; } }
@@ -4450,11 +4479,11 @@ function frame(now) {
   updateCat(dt);
   if (!state.menu && (frameN = (frameN + 1) % 6) === 0) { if (state.sky === 'auto') setSky(skyPhase()); else if (now - sunAt > 30000) { sunAt = now; placeSun(skyP); } updateSunPatches(); } // the real-clock sun creeps along
   const cam = state.walk ? walkCam : camera;
-  if (settings.quality === 'alta' && !state.menu) renderMirrors(cam);
+  if (settings.quality === 'alta' && !state.menu && (busy || rendered % 3 === 0)) renderMirrors(cam);
   updatePools();
+  renderer.shadowMap.needsUpdate = busy || rendered % 2 === 0; // shadows only follow every other frame while idle
   renderer.render(scene, cam);
   if (!loaderGone) hideLoader();
-  requestAnimationFrame(frame);
 }
 let loaderGone = false;
 function hideLoader() { // the first frame is on screen: finish the bar and fade out (it stays at least a moment so it never just flickers)
@@ -4465,7 +4494,7 @@ function hideLoader() { // the first frame is on screen: finish the bar and fade
 /* ---------- start ---------- */
 state.sky = settings.sky || (saved && saved.night ? 'noche' : 'dia');
 state.lockAll = !!settings.lockAll; renderLockAll();
-applyQuality();
+autoQ.level = Math.min(AUTO_STEPS.length - 1, +(settings.autoQ || 0)); applyQuality();
 const PHONE = matchMedia('(pointer: coarse)').matches;
 if (settings.metersMin ?? (PHONE ? 1 : 0)) $('meters').classList.add('min');
 loadRoom(saved && ALL.some(l => l.id === saved.level) ? saved.level : 'lucia');
