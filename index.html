@@ -845,6 +845,13 @@ const aoMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false
 /* ---------- catalog ----------
    tab: muebles | cocina | bano | deco | pared.  tags: room themes that earn a style bonus.
    floor items: w × d cells.  wall items: w cells along the wall, built facing +z at world height. */
+// a flower pot with a real rim and wall, and the soil sunk a little below it (soil flush with the rim flickered dark)
+const SOIL = M(0x4A3528);
+function pot(g, m, rt, rb, h, x = 0, y = 0, z = 0, seg = 28) {
+  const t = Math.min(0.02, rt * 0.12), lip = Math.min(0.03, h * 0.12), prof = [[0.001, 0], [rb, 0], [rt - t * 0.4, h - lip], [rt + t * 0.6, h - lip], [rt + t * 0.6, h], [rt - t, h], [rt - t * 1.2, h - lip * 1.6], [0.001, h - lip * 1.6]];
+  const o = add(g, new THREE.LatheGeometry(prof.map(([r, hh]) => new THREE.Vector2(r, hh)), seg), m, x, y, z);
+  const soil = add(g, new THREE.CircleGeometry(rt - t * 1.15, seg), SOIL, x, y + h - Math.max(0.018, lip * 0.9), z); soil.rotation.x = -PI / 2; soil.castShadow = false; return o;
+}
 const CAT = {
   sofa: { name: 'Sofá', tab: 'muebles', tags: 'salon', w: 2, d: 1, price: 450, comfort: 9, style: 4, role: 'tela',
     build(g, m) { const wd = M(WOOD); for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = C(g, 0.034, 0.02, 0.15, wd, sx * 0.82, 0.072, 0.03 + sz * 0.3, 12); l.rotation.set(sz * 0.14, 0, -sx * 0.14); }
@@ -1014,17 +1021,17 @@ const CAT = {
       B(g, 0.08, 0.02, 0.04, M(METAL), 0.12, 0.85, -0.3); } },
   // deco
   planta: { name: 'Planta', tab: 'deco', tags: 'dorm salon bano cocina', w: 1, d: 1, price: 60, comfort: 1, style: 5, role: 'maceta',
-    build(g, m) { C(g, 0.2, 0.15, 0.34, m, 0, 0.17, 0); add(g, new THREE.TorusGeometry(0.2, 0.024, 8, 36), m, 0, 0.34, 0).rotation.x = PI / 2; C(g, 0.185, 0.185, 0.02, M(0x5A4032), 0, 0.33, 0);
+    build(g, m) { pot(g, m, 0.2, 0.15, 0.34);
       S(g, 0.1, M(0x4E8A4A), 0, 0.42, 0).scale.set(1, 0.9, 1);
       for (let i = 0; i < 22; i++) { const a = i * 2.4, t = i / 22, r = 0.08 + t * 0.16, h = 0.46 + (1 - t) * 0.42 + (i % 3) * 0.035;
         const l = S(g, 0.13, M(i % 2 ? LEAF : LEAF2), Math.cos(a) * r, h, Math.sin(a) * r); l.scale.set(1, 0.17, 0.52); l.rotation.set(0, -a, 0.15 - t * 0.75); } } },
   monstera: { name: 'Planta alta', tab: 'deco', tags: 'salon musica', w: 1, d: 1, price: 140, comfort: 1, style: 7, role: 'maceta',
-    build(g, m) { C(g, 0.24, 0.18, 0.42, m, 0, 0.21, 0); C(g, 0.22, 0.22, 0.02, M(0x5A4032), 0, 0.41, 0);
+    build(g, m) { pot(g, m, 0.24, 0.18, 0.42);
       for (let i = 0; i < 7; i++) { const a = i * 2.4, h = 0.75 + (i % 3) * 0.28, r = 0.18 + (i % 2) * 0.08;
         const st = C(g, 0.012, 0.012, h - 0.4, M(0x4E8A4A), Math.cos(a) * r * 0.5, 0.4 + (h - 0.4) / 2, Math.sin(a) * r * 0.5, 6); st.rotation.set(Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3);
         leafBlob(g, Math.cos(a) * r, h, Math.sin(a) * r, 1.2, -a, 0.35); } } },
   cactus: { name: 'Cactus', tab: 'deco', tags: 'dorm musica bano', w: 1, d: 1, price: 45, comfort: 0, style: 4, role: 'maceta',
-    build(g, m) { C(g, 0.15, 0.12, 0.24, m, 0, 0.12, 0); const c = M(0x4E9A5E);
+    build(g, m) { pot(g, m, 0.15, 0.12, 0.24); const c = M(0x4E9A5E);
       C(g, 0.09, 0.09, 0.45, c, 0, 0.46, 0, 14); S(g, 0.09, c, 0, 0.68, 0);
       C(g, 0.05, 0.05, 0.16, c, 0.13, 0.5, 0, 10); S(g, 0.05, c, 0.13, 0.58, 0); C(g, 0.05, 0.05, 0.06, c, 0.09, 0.42, 0, 10).rotation.z = PI / 2;
       S(g, 0.035, M(0xFF7A9A), 0, 0.78, 0); } },
@@ -1109,7 +1116,7 @@ const CAT = {
       for (let i = 0; i < 4; i++) B(g, 0.06, 0.22 - i * 0.02, 0.18, M([0xFF7A59, 0x5B7FA6, 0xE0B04A, 0x7FA87A][i]), 0.25 + i * 0.07, 1.43 - i * 0.01, 0.13); } },
   colgante: { name: 'Macetero colgante', tab: 'pared', wall: true, tags: 'bano cocina dorm musica', w: 1, h: 0.9, y: 1.6, price: 80, comfort: 0, style: 5, role: 'maceta',
     build(g, m) { B(g, 0.08, 0.05, 0.14, M(DARK), 0, 2.05, 0.07); for (const a of [0, 2.1, 4.2]) { const r = C(g, 0.005, 0.005, 0.4, M(0xC9B48A), Math.cos(a) * 0.05, 1.86, 0.22 + Math.sin(a) * 0.05, 4); r.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
-      C(g, 0.14, 0.1, 0.16, m, 0, 1.65, 0.22, 18); C(g, 0.125, 0.125, 0.01, M(0x5A4032), 0, 1.725, 0.22, 18);
+      pot(g, m, 0.14, 0.1, 0.16, 0, 1.57, 0.22, 18);
       S(g, 0.1, M(LEAF), 0, 1.76, 0.22).scale.set(1.2, 0.6, 1.2);
       for (const [a, n] of [[0.3, 6], [2.4, 5], [4.3, 7]]) {
         const sx = Math.cos(a) * 0.12, sz = 0.22 + Math.sin(a) * 0.1;
@@ -1260,7 +1267,7 @@ Object.assign(CAT, {
     build(g, m) { const f = new THREE.Group(); f.position.set(0, 0.14, 0); f.rotation.x = -0.18; g.add(f);
       B(f, 0.22, 0.28, 0.025, m, 0, 0, 0); add(f, new THREE.PlaneGeometry(0.17, 0.23), artLandscape, 0, 0, 0.014); B(g, 0.03, 0.2, 0.02, m, 0, 0.1, -0.06).rotation.x = 0.35; } },
   suculenta: { name: 'Suculenta', tab: 'encima', top: true, tags: 'oficina dorm cocina bano', w: 1, d: 1, price: 18, comfort: 0, style: 3, role: 'maceta',
-    build(g, m) { C(g, 0.075, 0.06, 0.09, m, 0, 0.045, 0, 20); C(g, 0.068, 0.068, 0.01, M(0x5A4032), 0, 0.088, 0, 20);
+    build(g, m) { pot(g, m, 0.075, 0.06, 0.09, 0, 0, 0, 20);
       for (let i = 0; i < 14; i++) { const a = i * 2.4, r = i < 6 ? 0.025 : 0.05, l = K(g, 0.022, 0.08, M(i % 2 ? 0x8FBF8A : 0x6FA77A), Math.cos(a) * r, 0.12, Math.sin(a) * r); l.rotation.set(Math.sin(a) * (i < 6 ? 0.3 : 0.8), 0, -Math.cos(a) * (i < 6 ? 0.3 : 0.8)); } } },
   portatil: { name: 'Portátil', tab: 'encima', top: true, tags: 'oficina dorm gamer', w: 1, d: 1, price: 600, comfort: 0, style: 3, role: 'acento',
     build(g, m) { B(g, 0.36, 0.018, 0.25, M(METAL), 0, 0.009, 0.04); BX(g, 0.3, 0.004, 0.11, M(DARK), 0, 0.02, 0.01);
@@ -1951,7 +1958,7 @@ Object.assign(CAT, {
       for (let i = 0; i < 9; i++) { const a = i / 9 * 2 * PI, tip = V3(Math.cos(a) * (0.18 + (i % 3) * 0.06), 1.15 + (i % 4) * 0.12, Math.sin(a) * (0.16 + (i % 2) * 0.05));
         rod(g, V3(0, 0.6, 0), tip, 0.006, M(0xC9A97E)); const p = S(g, 0.06, M(0xEBDDC4), tip.x * 1.02, tip.y + 0.08, tip.z * 1.02, 12); p.scale.set(0.7, 2.2, 0.7); } } },
   olivoMaceta: { name: 'Olivo en maceta', tab: 'deco', tags: 'salon cocina yoga recibidor exterior', w: 1, d: 1, price: 210, comfort: 1, style: 8, role: 'maceta', sway: [0.9, 0.025],
-    build(g, m) { lathe(g, [[0.001, 0], [0.17, 0], [0.24, 0.42], [0.25, 0.44], [0.001, 0.44]], m); C(g, 0.23, 0.23, 0.02, M(0x5A4032), 0, 0.43, 0, 24);
+    build(g, m) { pot(g, m, 0.24, 0.17, 0.44);
       rod(g, V3(0, 0.42, 0), V3(0.05, 0.85, 0.02), 0.035, M(0x7A6650)); rod(g, V3(0.05, 0.85, 0.02), V3(-0.08, 1.25, -0.02), 0.028, M(0x7A6650)); rod(g, V3(0.05, 0.85, 0.02), V3(0.18, 1.2, 0.05), 0.022, M(0x7A6650));
       [[-0.08, 1.38, 0, 0.26], [0.2, 1.3, 0.06, 0.22], [0.04, 1.52, -0.04, 0.2], [-0.2, 1.22, 0.05, 0.16]].forEach(([x, y, z, r], i) => { S(g, r, M(i % 2 ? 0x8FA67A : 0x7E9669), x, y, z, 16).scale.set(1, 0.75, 1); }); } },
   ficusCesta: { name: 'Ficus en cesta', tab: 'deco', tags: 'salon oficina recibidor', w: 1, d: 1, price: 170, comfort: 1, style: 7, role: 'tela', sway: [0.5, 0.025],
@@ -1959,7 +1966,7 @@ Object.assign(CAT, {
       rod(g, V3(0, 0.4, 0), V3(0.02, 1.5, 0.01), 0.022, M(0x6B5444));
       for (let i = 0; i < 16; i++) { const a = i * 2.4, h = 0.75 + (i % 8) * 0.11, r = 0.12 + (i % 3) * 0.06; leafBlob(g, Math.cos(a) * r, h, Math.sin(a) * r, 0.7, -a, 0.45); } } },
   bambu: { name: 'Bambú', tab: 'deco', tags: 'yoga salon bano oficina', w: 1, d: 1, price: 120, comfort: 1, style: 7, role: 'maceta', sway: [0.4, 0.02],
-    build(g, m) { B(g, 0.5, 0.36, 0.5, m, 0, 0.18, 0); BX(g, 0.44, 0.02, 0.44, M(0x5A4032), 0, 0.36, 0);
+    build(g, m) { B(g, 0.5, 0.36, 0.5, m, 0, 0.18, 0); BX(g, 0.44, 0.02, 0.44, SOIL, 0, 0.355, 0); for (const sz of [-1, 1]) { BX(g, 0.5, 0.03, 0.03, m, 0, 0.375, sz * 0.235); BX(g, 0.03, 0.03, 0.5, m, sz * 0.235, 0.375, 0); }
       [[-0.1, -0.08, 1.7], [0.08, -0.05, 1.45], [0, 0.1, 1.9], [0.12, 0.12, 1.3]].forEach(([x, z, h]) => { C(g, 0.022, 0.025, h - 0.36, M(0x9CB86A), x, 0.36 + (h - 0.36) / 2, z, 10);
         for (let y = 0.6; y < h; y += 0.3) { add(g, new THREE.TorusGeometry(0.025, 0.006, 6, 14), M(0x7E9A52), x, y, z).rotation.x = PI / 2; } for (let k = 0; k < 3; k++) { const l = S(g, 0.08, M(LEAF2), x + 0.06 * (k - 1), h - 0.05 - k * 0.12, z, 10); l.scale.set(1, 0.12, 0.35); l.rotation.z = (k - 1) * 0.5; } }); } },
   pufTrenzado: { name: 'Puf trenzado', tab: 'deco', tags: 'salon dorm bebe yoga', w: 1, d: 1, price: 85, comfort: 3, style: 6, role: 'tela',
@@ -3357,7 +3364,7 @@ function paintChrome() { // what shows around and under the game: browser bar, i
   document.querySelector('meta[name="theme-color"]').setAttribute('content', c);
 }
 // each look is [hemi, hemiSky, hemiGround, sun, sunColor, fill, windowColor, windowGlow, lampGlow]
-const SKY_KEYS = [[0.6, 0xFFF2E6, 0x7A6EA0, 0.88, 0xFFEBD2, 0.26, 0xA9D6EE, 0x5E9CC4, 0.5], [0.46, 0xFFC9A8, 0x6A4F7A, 0.72, 0xFF9455, 0.1, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
+const SKY_KEYS = [[0.5, 0xFFF0E2, 0x5C5180, 0.98, 0xFFE6C8, 0.15, 0xA9D6EE, 0x5E9CC4, 0.5], [0.4, 0xFFC4A0, 0x553E66, 0.8, 0xFF8E4D, 0.07, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
 const SKY_MODES = ['dia', 'tarde', 'noche', 'auto', 'hora'], SKY_P = { dia: 0, tarde: 0.5, noche: 1 };
 const clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
 // the hour you pick on the slider: dawn from 5 to 8, full day until half past five, dusk until 20:30, then night
