@@ -59,7 +59,7 @@ body { -webkit-touch-callout: none; background: var(--page); color: var(--ink); 
 button { font-family: var(--body); color: inherit; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
-.app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #F6D9C9 0%, #DFCDEC 50%, #B7A6DC 100%); transition: background .6s; }
+.app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #FFEBD8 0%, #F2CFB2 55%, #D69F7E 100%); transition: background .6s; }
 .app.highrise { background: radial-gradient(130% 90% at 50% 10%, #F2F7FD 0%, #D6E6F5 45%, #B4CCE6 100%); }
 .app.dusk { background: radial-gradient(130% 90% at 50% 15%, #FFC9A0 0%, #E8A8B8 45%, #8E74B8 100%); }
 .app.night { background: var(--stars, none) 0 0 / 420px repeat, radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
@@ -2504,8 +2504,8 @@ function buildRoom() {
   roomGroup = new THREE.Group(); scene.add(roomGroup);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(GW, GD), floorMat); floor.rotation.x = -PI / 2; floor.receiveShadow = true; roomGroup.add(floor);
   floorTex.repeat.set(GW / 8, GD / 8);
-  const base = new THREE.Mesh(roundBox(GW + 0.5, 0.5, GD + 0.5, 0.22), M(0x8E83A8)); base.position.y = -0.255; base.receiveShadow = true; roomGroup.add(base);
-  const plinth = new THREE.Mesh(roundBox(GW + 1.1, 0.25, GD + 1.1, 0.12), M(0x73689A)); plinth.position.y = -0.55; roomGroup.add(plinth);
+  const base = new THREE.Mesh(roundBox(GW + 0.5, 0.5, GD + 0.5, 0.22), M(0xB98A6C)); base.position.y = -0.255; base.receiveShadow = true; roomGroup.add(base);
+  const plinth = new THREE.Mesh(roundBox(GW + 1.1, 0.25, GD + 1.1, 0.12), M(0x9A6F55)); plinth.position.y = -0.55; roomGroup.add(plinth);
   for (const k of ['N', 'S', 'W', 'E']) makeWall(k);
   walkCeil = new THREE.Mesh(new THREE.PlaneGeometry(GW + 0.3, GD + 0.3), ceilMat); walkCeil.rotation.x = PI / 2; walkCeil.position.y = WALL_H; walkCeil.visible = false; roomGroup.add(walkCeil);
   grid = makeGrid(); roomGroup.add(grid);
@@ -3403,12 +3403,12 @@ function updateLights() {
     l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(it.lc ?? Lc.color); l.intensity = Lc.power * (state.lampK ?? 1); l.userData.base = l.intensity; l.userData.fire = FIRE.has(it.type); });
 }
 function paintChrome() { // what shows around and under the game: browser bar, iPhone home strip, overscroll
-  const c = state.menu ? '#1E1830' : state.night ? '#1D1A3A' : app.classList.contains('dusk') ? '#E9C9CF' : '#EEE4F3';
+  const c = state.menu ? '#1E1830' : state.night ? '#1D1A3A' : app.classList.contains('dusk') ? '#E9C9CF' : '#F6DCC6';
   document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
   document.querySelector('meta[name="theme-color"]').setAttribute('content', c);
 }
 // each look is [hemi, hemiSky, hemiGround, sun, sunColor, fill, windowColor, windowGlow, lampGlow]
-const SKY_KEYS = [[0.5, 0xFFF0E2, 0x5C5180, 0.98, 0xFFE6C8, 0.15, 0xA9D6EE, 0x5E9CC4, 0.5], [0.4, 0xFFC4A0, 0x553E66, 0.8, 0xFF8E4D, 0.07, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
+const SKY_KEYS = [[0.48, 0xFFF0DE, 0x5A4234, 1.05, 0xFFDDB0, 0.1, 0xA9D6EE, 0x5E9CC4, 0.5], [0.4, 0xFFC4A0, 0x553E66, 0.8, 0xFF8E4D, 0.07, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
 const SKY_MODES = ['dia', 'tarde', 'noche', 'auto', 'hora'], SKY_P = { dia: 0, tarde: 0.5, noche: 1 };
 const clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
 // the hour you pick on the slider: dawn from 5 to 8, full day until half past five, dusk until 20:30, then night
@@ -3479,7 +3479,7 @@ function sharePhoto() {
   const src = renderer.domElement, pad = Math.round(Math.min(src.width, src.height) * 0.05), foot = pad * 2.6, c = document.createElement('canvas');
   c.width = src.width + pad * 2; c.height = src.height + pad + foot; const x = c.getContext('2d');
   const bg = x.createLinearGradient(0, 0, 0, c.height); bg.addColorStop(0, '#FFF8F1'); bg.addColorStop(1, '#F3E9F7'); x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height);
-  const sky = x.createLinearGradient(0, pad, 0, pad + src.height); sky.addColorStop(0, state.night ? '#433C7A' : '#F6D9C9'); sky.addColorStop(1, state.night ? '#161331' : '#B7A6DC');
+  const sky = x.createLinearGradient(0, pad, 0, pad + src.height); sky.addColorStop(0, state.night ? '#433C7A' : '#FFEBD8'); sky.addColorStop(1, state.night ? '#161331' : '#D69F7E');
   x.fillStyle = sky; x.fillRect(pad, pad, src.width, src.height); x.drawImage(src, pad, pad);
   x.fillStyle = '#2B2140'; x.font = `800 ${Math.round(foot * 0.34)}px Baloo 2, system-ui, sans-serif`; x.textBaseline = 'middle';
   x.fillText(BM ? (projects[projCur] || {}).name || 'Mi proyecto' : L.room, pad, pad + src.height + foot * 0.4);
@@ -3628,7 +3628,7 @@ async function albumTx(mode, fn) { const db = await albumDB(); return new Promis
 function grabFrame(cam) { // the picture exactly as the camera sees it, scaled for the album
   renderer.render(scene, cam); const src = renderer.domElement, k = Math.min(1, 1400 / Math.max(src.width, src.height)), c = document.createElement('canvas');
   c.width = Math.round(src.width * k); c.height = Math.round(src.height * k); const x = c.getContext('2d');
-  const bg = x.createLinearGradient(0, 0, 0, c.height); bg.addColorStop(0, state.night ? '#433C7A' : '#F6D9C9'); bg.addColorStop(1, state.night ? '#161331' : '#B7A6DC'); x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height);
+  const bg = x.createLinearGradient(0, 0, 0, c.height); bg.addColorStop(0, state.night ? '#433C7A' : '#FFEBD8'); bg.addColorStop(1, state.night ? '#161331' : '#D69F7E'); x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height);
   x.drawImage(src, 0, 0, c.width, c.height); return c;
 }
 function toAlbum(canvasOrBlob) {
@@ -3734,7 +3734,7 @@ function buildSite(g) {
     const grass = floorMatFor('cesped').map.clone(); grass.needsUpdate = true; grass.repeat.set((GW + 1.4) / 8, (GD + 1.4) / 8);
     const lawn = new THREE.Mesh(new THREE.PlaneGeometry(GW + 1.4, GD + 1.4), new THREE.MeshLambertMaterial({ map: grass })); lawn.rotation.x = -PI / 2; lawn.position.y = -0.001; lawn.receiveShadow = true; g.add(lawn);
     const earth = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.08), new THREE.MeshLambertMaterial({ color: 0x8A6A4E })); earth.position.y = -0.202; earth.receiveShadow = true; g.add(earth);
-    const lot2 = new THREE.Mesh(roundBox(GW + 2, 0.3, GD + 2, 0.15), M(0x8E83A8)); lot2.position.y = -0.5; g.add(lot2); return;
+    const lot2 = new THREE.Mesh(roundBox(GW + 2, 0.3, GD + 2, 0.15), M(0x9A6F55)); lot2.position.y = -0.5; g.add(lot2); return;
   }
   // the roof slab of our floor with a low parapet, and the tower dropping away beneath it
   const slab = new THREE.Mesh(roundBox(GW + 1.4, 0.4, GD + 1.4, 0.1), M(0xCFC8C0)); slab.position.y = -0.2; slab.receiveShadow = true; g.add(slab);
