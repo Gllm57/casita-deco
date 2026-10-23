@@ -272,11 +272,6 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .walk-hint { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); border-radius: 999px; padding: 8px 14px; font: 800 12px var(--body); white-space: nowrap; pointer-events: none !important; transition: opacity .6s; }
 .walk-hint.gone { opacity: 0; }
 .walk-exit { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); border: 0; border-radius: 999px; padding: 10px 16px; font: 800 13px var(--body); cursor: pointer; }
-.walk-floors { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(160px + env(safe-area-inset-bottom, 0px)); display: none; flex-direction: column; gap: 2px; padding: 4px; border-radius: 22px; }
-.app.walk.build .walk-floors { display: flex; }
-.walk-floors button { width: 48px; height: 44px; border: 0; background: transparent; border-radius: 16px; display: grid; place-items: center; cursor: pointer; color: inherit; font: 800 11px var(--body); }
-.walk-floors button svg { width: 20px; height: 20px; }
-.walk-floors button[disabled] { opacity: .3; }
 .app.walk .walk-shot { display: block; left: auto; right: max(22px, env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); margin: 0; width: 64px; height: 64px; }
 .app.walk .walk-shot i { width: 44px; height: 44px; }
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 50; transition: opacity .35s; }
@@ -593,7 +588,6 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   </div>
   <button class="photo-exit glass top-exit" id="topExit">Salir del plano</button>
   <div class="walkui" id="walkUI"><div class="joy glass" id="joy"><i id="joyKnob"></i></div><button class="shutter walk-shot" id="walkShot" aria-label="Foto al álbum"><i></i></button>
-    <div class="walk-floors glass" id="walkFloors"><button id="walkUp" aria-label="Subir de piso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button><button id="walkDown" aria-label="Bajar de piso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="walk-hint glass" id="walkHint">Joystick para andar · arrastra para mirar · toca puertas, ventanas y luces</div><button class="walk-exit glass" id="walkExit">Salir</button></div>
   <button class="shutter" id="shutter" aria-label="Guardar la foto en el álbum"><i></i></button>
   <div class="flash" id="flash"></div>
@@ -1298,7 +1292,8 @@ Object.assign(CAT, {
     build(g, m) { C(g, 0.18, 0.2, 0.04, m, 0, 0.02, 0, 28); C(g, 0.02, 0.02, 1.0, M(METAL), 0, 0.52, 0, 10); S(g, 0.08, m, 0, 1.07, -0.06).scale.set(1, 1, 1.3);
       for (const z of [0.04, 0.12]) add(g, new THREE.TorusGeometry(0.24, 0.008, 6, 40), M(METAL), 0, 1.07, z);
       for (let i = 0; i < 8; i++) { const a = i * PI / 4; rod(g, V3(0, 1.07, 0.04), V3(Math.cos(a) * 0.24, 1.07 + Math.sin(a) * 0.24, 0.08), 0.003, M(METAL)); }
-      for (let i = 0; i < 3; i++) { const a = i * 2 * PI / 3, b = S(g, 0.1, M(0xDDEBF2), Math.cos(a) * 0.11, 1.07 + Math.sin(a) * 0.11, 0.08); b.scale.set(1, 0.45, 0.12); b.rotation.z = a; } S(g, 0.035, m, 0, 1.07, 0.12); } },
+      const bl = new THREE.Group(); bl.name = 'rotor'; bl.position.set(0, 1.07, 0.08); g.add(bl);
+      for (let i = 0; i < 3; i++) { const a = i * 2 * PI / 3, b = S(bl, 0.1, M(0xDDEBF2), Math.cos(a) * 0.11, Math.sin(a) * 0.11, 0); b.scale.set(1, 0.45, 0.12); b.rotation.z = a; } S(g, 0.035, m, 0, 1.07, 0.12); } },
   mecedora: { name: 'Mecedora', tab: 'muebles', tags: 'salon bebe dorm', w: 1, d: 1, price: 280, comfort: 6, style: 6, role: 'madera',
     build(g, m) { for (const sx of [-1, 1]) { let prev = null; for (let i = 0; i <= 10; i++) { const z = -0.42 + i * 0.084, y = 0.9 - Math.sqrt(0.81 - z * z) + 0.025, pt = V3(sx * 0.24, y, z); if (prev) rod(g, prev, pt, 0.022, m); prev = pt; }
         C(g, 0.022, 0.022, 0.36, m, sx * 0.22, 0.22, 0.17, 10); C(g, 0.022, 0.022, 0.36, m, sx * 0.22, 0.22, -0.17, 10);
@@ -1449,7 +1444,7 @@ Object.assign(CAT, {
       const u = new THREE.Group(); u.position.set(x, 0.05, z); u.rotation.z = t; g.add(u); C(u, 0.01, 0.01, 0.85, M(DARK), 0, 0.42, 0, 6); K(u, 0.06, 0.45, M(c), 0, 0.5, 0).rotation.x = PI; add(u, new THREE.TorusGeometry(0.035, 0.008, 6, 14, PI), M(DARK), 0.035, 0.88, 0); }); } },
   // ---- on top of furniture ----
   tocadiscos: { name: 'Tocadiscos', tab: 'encima', top: true, tags: 'musica salon dorm', w: 1, d: 1, price: 220, comfort: 0, style: 6, role: 'madera',
-    build(g, m) { B(g, 0.42, 0.08, 0.34, m, 0, 0.04, 0); C(g, 0.14, 0.14, 0.012, M(0x15121E), -0.04, 0.088, 0, 36); C(g, 0.045, 0.045, 0.014, M(0xE5533D), -0.04, 0.09, 0, 20);
+    build(g, m) { B(g, 0.42, 0.08, 0.34, m, 0, 0.04, 0); const rec = new THREE.Group(); rec.name = 'rotor'; rec.position.set(-0.04, 0.088, 0); g.add(rec); C(rec, 0.14, 0.14, 0.012, M(0x15121E), 0, 0, 0, 36); C(rec, 0.045, 0.045, 0.014, M(0xE5533D), 0.02, 0.002, 0, 20);
       rod(g, V3(0.15, 0.1, -0.11), V3(0.02, 0.1, 0.06), 0.006, M(METAL)); C(g, 0.02, 0.02, 0.03, M(METAL), 0.15, 0.095, -0.11, 10); } },
   consola: { name: 'Videoconsola', tab: 'encima', top: true, tags: 'gamer salon dorm', w: 1, d: 1, price: 450, comfort: 1, style: 4, role: 'acento',
     build(g, m) { B(g, 0.32, 0.07, 0.22, M(0x2B2638), 0, 0.035, -0.04); B(g, 0.3, 0.005, 0.01, G(0x6A8CFF), 0, 0.05, 0.072);
@@ -2615,11 +2610,59 @@ function renderMirrors(cam) {
   renderer.setRenderTarget(M0.rt); renderer.clear(); renderer.render(scene, vc); renderer.setRenderTarget(null);
   renderer.clippingPlanes = []; renderer.setClearColor(cc, ca); o.visible = true;
 }
+/* ---------- things that work: screens, taps, hobs, washing machines, fans ---------- */
+const tvCanvas = document.createElement('canvas'); tvCanvas.width = 160; tvCanvas.height = 90; const tvTex = new THREE.CanvasTexture(tvCanvas);
+let tvAt = 0;
+function drawTv(now) { // a little cartoon that keeps changing: sky, hills, a bouncing ball and the channel's colours
+  if (now - tvAt < 120) return; tvAt = now; const x = tvCanvas.getContext('2d'), t = now / 1000, sc = Math.floor(t / 6) % 3;
+  const sky = [['#7EC8F2', '#CDEBFA'], ['#FF9E7A', '#FFD9A0'], ['#4B3F8C', '#8E7CC8']][sc], g = x.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]); x.fillStyle = g; x.fillRect(0, 0, 160, 90);
+  x.fillStyle = ['#FFE27A', '#FFF1C4', '#F5F1FF'][sc]; x.beginPath(); x.arc(130, 20, 9, 0, 2 * PI); x.fill();
+  for (const [k, col] of [[0, '#6DBA6A'], [1, '#4E9A5E']]) { x.fillStyle = col; x.beginPath(); x.moveTo(0, 90); for (let i = 0; i <= 160; i += 8) x.lineTo(i, 62 + k * 8 + Math.sin(i / 25 + t * (0.6 + k * 0.5) + k) * 6); x.lineTo(160, 90); x.fill(); }
+  const bx = (t * 40) % 190 - 15; x.fillStyle = '#FF6F4D'; x.beginPath(); x.arc(bx, 60 - Math.abs(Math.sin(t * 4)) * 26, 6, 0, 2 * PI); x.fill();
+  tvTex.needsUpdate = true;
+}
+const tvMat = new THREE.MeshBasicMaterial({ map: tvTex });
+const streamTex = (() => { const c = document.createElement('canvas'); c.width = 32; c.height = 128; const x = c.getContext('2d'); x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(0, 0, 32, 128);
+  for (let i = 0; i < 26; i++) { x.fillStyle = `rgba(255,255,255,${0.5 + Math.random() * 0.5})`; x.fillRect(Math.random() * 32, Math.random() * 128, 1.5, 10 + Math.random() * 30); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+const streamMat = new THREE.MeshBasicMaterial({ color: 0xBFE8F7, map: streamTex, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide });
+const hobMat = new THREE.MeshBasicMaterial({ color: 0xFF5A2A }), ovenGlow = new THREE.MeshBasicMaterial({ color: 0xFFC46A });
+function stream(fx, x, y0, y1, z, r = 0.012) { const m = add(fx, new THREE.CylinderGeometry(r, r * 1.3, y0 - y1, 10, 1, true), streamMat, x, (y0 + y1) / 2, z); m.castShadow = false; return m; }
+function screen(fx, w, h, x, y, z) { const m = add(fx, new THREE.PlaneGeometry(w, h), tvMat, x, y, z); m.castShadow = false; return m; }
+const APPLIANCE = {
+  tv: { kind: 'screen', fx: fx => screen(fx, 1.25, 0.71, 0, 1.08, -0.298) },
+  telePared: { kind: 'screen', fx: fx => screen(fx, 1.46, 0.82, 0, 1.55, 0.089) },
+  fregadero: { kind: 'tap', fx: fx => stream(fx, 0, 1.17, 0.91, -0.21) },
+  lavabo: { kind: 'tap', fx: fx => stream(fx, 0, 1.03, 0.9, -0.27, 0.009) },
+  lavaboDoble: { kind: 'tap', fx: fx => { for (const x of [-0.42, 0.42]) stream(fx, x, 1.02, 0.93, -0.3, 0.009); } },
+  banera: { kind: 'tap', fx: fx => stream(fx, -0.63, 0.81, 0.46, 0, 0.014) },
+  ducha: { kind: 'tap', fx: fx => { for (let k = 0; k < 9; k++) { const a = k * 2.4, r = (k % 3) * 0.035; stream(fx, -0.12 + Math.cos(a) * r, 1.9, 0.09, -0.3 + Math.sin(a) * r, 0.005); } } },
+  fogon: { kind: 'hob', fx: fx => { for (const x of [-0.2, 0.2]) for (const z of [-0.32, -0.02]) if (!(x > 0 && z > -0.1)) add(fx, new THREE.TorusGeometry(0.08, 0.012, 6, 24), hobMat, x, 0.922, z).rotation.x = PI / 2;
+    add(fx, new THREE.PlaneGeometry(0.58, 0.28), ovenGlow, 0, 0.42, 0.181); } },
+  islaPlaca: { kind: 'hob', fx: fx => { for (const [x, z, r] of [[-0.6, -0.2, 0.08], [-0.3, -0.2, 0.06], [-0.6, 0.02, 0.06], [-0.3, 0.02, 0.08]]) add(fx, new THREE.CircleGeometry(r, 24), hobMat, x, 0.954, z).rotation.x = -PI / 2; } },
+  microondas: { kind: 'machine', fx: fx => add(fx, new THREE.PlaneGeometry(0.3, 0.18), ovenGlow, -0.07, 0.15, 0.187) },
+  lavadora: { kind: 'machine', fx: fx => { const d = new THREE.Group(); d.name = 'drum'; d.position.set(0, 0.4, 0.2); fx.add(d); for (const [a, c] of [[0, 0xE5533D], [2.1, 0xF2B33D], [4.2, 0xFFFFFF]]) S(d, 0.07, M(c), Math.cos(a) * 0.08, Math.sin(a) * 0.08, 0, 10).scale.z = 0.4; } },
+  secadora: { kind: 'machine', fx: fx => { const d = new THREE.Group(); d.name = 'drum'; d.position.set(0, 0.4, 0.2); fx.add(d); for (const [a, c] of [[0, 0x4F7CB8], [2.1, 0xF4C4CE], [4.2, 0xB7CBB3]]) S(d, 0.07, M(c), Math.cos(a) * 0.08, Math.sin(a) * 0.08, 0, 10).scale.z = 0.4; } },
+  ventilador: { kind: 'machine', rotor: 'z' },
+  tocadiscos: { kind: 'machine', rotor: 'y' },
+};
+const keyOf = D => (D.key = Object.keys(CAT).find(k => CAT[k] === D));
+const APP_WORDS = { screen: ['Encender', 'Apagar', 'Encendida', 'Apagada'], tap: ['Abrir grifo', 'Cerrar grifo', 'Grifo abierto', 'Grifo cerrado'], hob: ['Encender', 'Apagar', 'Encendido', 'Apagado'], machine: ['Encender', 'Apagar', 'En marcha', 'Parado'] };
+function animateAppliances(now, dt) {
+  let tvOn = false;
+  for (const it of allItems()) { const A = APPLIANCE[it.type]; if (!A || !it.on || !it.group) continue;
+    if (A.kind === 'screen') tvOn = true;
+    if (A.rotor) { const r = it.group.getObjectByName('rotor'); if (r) r.rotation[A.rotor] -= dt * (A.rotor === 'z' ? 14 : 3.5); }
+    const d = it.group.getObjectByName('drum'); if (d) d.rotation.z -= dt * 6; }
+  if (tvOn) drawTv(now);
+  streamTex.offset.y = (streamTex.offset.y - dt * 2.2) % 1; hobMat.color.setHSL(0.03, 1, 0.5 + Math.sin(now / 300) * 0.05);
+}
 function buildItem(it) {
   if (it.group && it.group.parent) it.group.parent.remove(it.group);
   const D = def(it), hex = itemHex(it);
   const m = roleMat(D, hex);
   const g = new THREE.Group(); D.build(g, m, it);
+  const AP = APPLIANCE[it.type]; if (AP && AP.fx) { const fx = new THREE.Group(); fx.name = 'fx'; fx.visible = !!it.on; g.add(fx); AP.fx(fx, it); fx.traverse(o => { o.userData.fx = true; }); }
   if (D.sway) { const [py, , hang] = D.sway, sw = new THREE.Group(); sw.name = 'sway'; sw.position.y = py; sw.userData.ph = Math.random() * 6;
     for (const o of [...g.children]) if (o.isMesh && (hang ? o.position.y < py : o.position.y > py)) { g.remove(o); o.position.y -= py; sw.add(o); } g.add(sw); }
   g.traverse(o => { if (o.material === mirrorMat) { o.userData.mirrorish = true; if (settings.quality === 'alta') makeMirror(o); } });
@@ -2970,7 +3013,7 @@ function refreshLock() {
   $('tLock').classList.toggle('on', lk); $('tLock').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${lk ? LOCK_SHUT : LOCK_OPEN}</svg><span>${lk ? 'Bloqueado' : 'Bloquear'}</span>`;
   $('tRotate').disabled = lk || !!def(it).wall || group.size > 0; $('tSell').disabled = lk;
   const D = def(it), use = useKind(D); $('tSize').hidden = !(D.family && D.family.length > 1); $('tSize').disabled = lk; $('tUse').hidden = !use;
-  if (use) $('tUseTxt').textContent = use === 'light' ? (it.off ? 'Encender' : 'Apagar') : (use === 'door' ? it.open : !it.closed) ? 'Cerrar' : 'Abrir';
+  if (use) $('tUseTxt').textContent = use === 'on' ? APP_WORDS[APPLIANCE[it.type].kind][it.on ? 1 : 0] : use === 'light' ? (it.off ? 'Encender' : 'Apagar') : (use === 'door' ? it.open : !it.closed) ? 'Cerrar' : 'Abrir';
 }
 function nudge(dir) {
   const it = sel; if (!it || it.locked) return;
@@ -3066,7 +3109,7 @@ $('tSell').addEventListener('click', () => {
 });
 $('tDone').addEventListener('click', () => select(null));
 // lamps switch on and off, curtains and blinds draw, doors open: from the toolbar or by tapping the chosen thing again
-function useKind(D) { return D.light ? 'light' : D.opening === 'door' && D.swing ? 'door' : D.opening === 'window' && D.swing && BM ? 'door' : D.overWindow ? 'cover' : null; } // windows only open where the wall has a real hole
+function useKind(D) { return D.light ? 'light' : APPLIANCE[D.key || keyOf(D)] ? 'on' : D.opening === 'door' && D.swing ? 'door' : D.opening === 'window' && D.swing && BM ? 'door' : D.overWindow ? 'cover' : null; } // windows only open where the wall has a real hole
 function curtainShut(it) { // a closed curtain, blind or shutter hanging over this window
   const mine = new Set([...Array(def(it).w).keys()].map(n => edgeShift(it.edge, n)));
   return HOUSE.levels[it.lv ?? HOUSE.cur].items.some(c => def(c).overWindow && c.closed && (c.side || 1) === (it.side || 1) && [...Array(def(c).w).keys()].some(n => mine.has(edgeShift(c.edge, n))));
@@ -3076,6 +3119,7 @@ function useItem(it) {
   if (BM && def(it).opening === 'window' && !it.open && curtainShut(it)) { buzz(30); toast('Abre primero la cortina'); return false; }
   pushUndo();
   if (k === 'light') { it.off = !it.off; if (!it.off) delete it.off; buildItem(it); applyNight(); }
+  else if (k === 'on') { it.on = !it.on; if (!it.on) delete it.on; const fx = it.group && it.group.getObjectByName('fx'); if (fx) fx.visible = !!it.on; }
   else if (k === 'door') { it.open = !it.open; if (!it.open) delete it.open; }
   else { it.closed = !it.closed; if (!it.closed) delete it.closed; buildItem(it); }
   if (sel === it) { refreshLock(); updateMarker(true); } buzz(8); sfx('click'); return true;
@@ -3499,7 +3543,7 @@ function startWalk() {
   setTopView(false); select(null); if (placing) startPlacing(null); if (tool) setTool(null);
   walk.x = view.target.x; walk.z = view.target.z; walk.yaw = view.az + PI; walk.pitch = -0.05;
   if (BM || walkBlocked(walk.x, walk.z)) walkSpawn();
-  state.walk = true; app.classList.add('walk'); setRoofView(false); showCeilings(true); walkOrient(); renderWalkFloors();
+  state.walk = true; app.classList.add('walk'); setRoofView(false); showCeilings(true); walkOrient(); walk.y = walk.gy = BM ? HOUSE.cur * LEVEL_H : 0;
   $('walkHint').classList.remove('gone'); clearTimeout(walk.hintT); walk.hintT = setTimeout(() => $('walkHint').classList.add('gone'), 4000);
   // best looks while walking: full sharpness and finer sun shadows
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2.5)); sun.shadow.mapSize.set(2048, 2048); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
@@ -3514,12 +3558,23 @@ function showCeilings(on) { // walking around you want a ceiling: the floor abov
   if (BM) levelGroups.forEach((lg, j) => { lg.root.visible = on ? j <= HOUSE.cur + 1 : j <= HOUSE.cur; lg.roof.visible = on ? j === HOUSE.cur : !!state.showRoof; });
   if (walkCeil) walkCeil.visible = on && !BM;
 }
-function renderWalkFloors() { if (!BM) return; $('walkUp').disabled = !Object.keys((HOUSE.levels[HOUSE.cur + 1] || { tiles: {} }).tiles).length; $('walkDown').disabled = HOUSE.cur === 0; }
-function walkFloor(dir) {
-  const to = HOUSE.cur + dir; if (to < 0 || to >= HOUSE.levels.length || !Object.keys(HOUSE.levels[to].tiles).length) return;
-  setLevel(to); walkSpawn(); showCeilings(true); renderWalkFloors(); toast(FLOOR_NAMES[to]); buzz(10); sfx('click');
+// stairs: the ground under you is the highest step or floor within a stride; climb past the top and you're on the next floor
+const downRay = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0), gP = new THREE.Vector3(), gN = new THREE.Vector3();
+function groundAt(x, z, fromY) {
+  if (!BM) return 0;
+  const cur = HOUSE.cur, cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2), top = fromY + 0.45; let best = hasTile(cur, cx, cz) ? cur * LEVEL_H : null;
+  if (hasTile(cur + 1, cx, cz) && (cur + 1) * LEVEL_H <= top) best = (cur + 1) * LEVEL_H; // stepping off the top step onto the floor above
+  const groups = []; for (const i of [cur, cur - 1]) if (i >= 0) for (const o of HOUSE.levels[i].items) if (def(o).stairs && o.group) groups.push(o.group);
+  if (groups.length) { downRay.set(gP.set(x, top, z), DOWN); downRay.far = 6;
+    const h = downRay.intersectObjects(groups, true).find(q => q.face && gN.copy(q.face.normal).transformDirection(q.object.matrixWorld).y > 0.7);
+    if (h && (best == null || h.point.y > best)) best = h.point.y; }
+  return best;
 }
-$('walkUp').addEventListener('click', () => walkFloor(1)); $('walkDown').addEventListener('click', () => walkFloor(-1));
+function walkLevelCheck() { // stepped off the top of a flight, or down through the hole: the house follows
+  const cur = HOUSE.cur, up = HOUSE.levels[cur + 1];
+  if (up && Object.keys(up.tiles).length && walk.gy > (cur + 1) * LEVEL_H - 0.2) { setLevel(cur + 1); showCeilings(true); toast(FLOOR_NAMES[cur + 1]); }
+  else if (cur > 0 && walk.gy < cur * LEVEL_H - 0.25) { setLevel(cur - 1); showCeilings(true); toast(FLOOR_NAMES[cur - 1]); }
+}
 // on the tour, a tap opens and shuts doors and windows, switches lamps and draws curtains (Milo answers too)
 function walkTap(cx, cy) {
   let u, v; if (app.classList.contains('rot')) { u = cy; v = innerWidth - cx; } else { const r = canvas.getBoundingClientRect(); u = cx - r.left; v = cy - r.top; }
@@ -3529,12 +3584,11 @@ function walkTap(cx, cy) {
   const hit = ray.intersectObjects(scope, true).find(h => h.object.visible && h.object.material !== blobMat);
   const it = hit && hit.distance < 5 && hit.object.userData.item;
   if (!it || !useKind(def(it))) return;
-  if (!useItem(it)) return; const k = useKind(def(it)); toast(k === 'light' ? (it.off ? 'Apagada' : 'Encendida') : k === 'door' ? (it.open ? 'Abierta' : 'Cerrada') : it.closed ? 'Cortina cerrada' : 'Cortina abierta');
+  if (!useItem(it)) return; const k = useKind(def(it)); toast(k === 'on' ? APP_WORDS[APPLIANCE[it.type].kind][it.on ? 2 : 3] : k === 'light' ? (it.off ? 'Apagada' : 'Encendida') : k === 'door' ? (it.open ? 'Abierta' : 'Cerrada') : it.closed ? 'Cortina cerrada' : 'Cortina abierta');
 }
 function walkBlocked(x, z) {
   if (Math.abs(x) > GW / 2 - 0.2 || Math.abs(z) > GD / 2 - 0.2) return true;
   const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2), list = BM ? HOUSE.levels[HOUSE.cur].items : R.items;
-  if (BM && !hasTile(HOUSE.cur, cx, cz)) return true; // no walking off the edge of the floor
   return list.some(o => { const D = def(o); if (D.wall || D.flat || D.top || D.ceil || D.stairs) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; });
 }
 function wallBetween(x1, z1, x2, z2) { // walls (but not doorways) between two points on the current floor
@@ -3550,9 +3604,12 @@ function wallBetween(x1, z1, x2, z2) { // walls (but not doorways) between two p
 function updateWalk(dt) {
   const sp = 1.7 * dt, fx = Math.sin(walk.yaw), fz = Math.cos(walk.yaw), mx = (fx * -walk.jy - fz * walk.jx) * sp, mz = (fz * -walk.jy + fx * walk.jx) * sp;
   // -jy is forward on the stick; slide along walls when going straight in is blocked
-  for (const [dx, dz] of [[mx, mz], [mx, 0], [0, mz]]) { const nx = walk.x + dx, nz = walk.z + dz; if ((dx || dz) && !walkBlocked(nx, nz) && !wallBetween(walk.x, walk.z, nx, nz)) { walk.x = nx; walk.z = nz; break; } }
+  for (const [dx, dz] of [[mx, mz], [mx, 0], [0, mz]]) { const nx = walk.x + dx, nz = walk.z + dz; if (!(dx || dz) || walkBlocked(nx, nz) || wallBetween(walk.x, walk.z, nx, nz)) continue;
+    const gy = groundAt(nx, nz, walk.gy); if (gy == null || Math.abs(gy - walk.gy) > 0.45) continue; // no floor there, or a drop or wall too big to step
+    walk.x = nx; walk.z = nz; walk.gy = gy; walkLevelCheck(); break; }
+  walk.y += ((walk.gy ?? 0) - (walk.y ?? 0)) * Math.min(1, dt * 12);
   const moving = Math.hypot(walk.jx, walk.jy) > 0.1; walk.bob += moving ? dt * 9 : 0;
-  const y = (BM ? HOUSE.cur * LEVEL_H : 0) + 1.3 + (moving ? Math.sin(walk.bob) * 0.02 : 0); // a little below the hanging lamps
+  const y = (walk.y ?? 0) + 1.3 + (moving ? Math.sin(walk.bob) * 0.02 : 0); // a little below the hanging lamps
   walkCam.position.set(walk.x, y, walk.z);
   walkCam.lookAt(walk.x + Math.sin(walk.yaw) * Math.cos(walk.pitch), y + Math.sin(walk.pitch), walk.z + Math.cos(walk.yaw) * Math.cos(walk.pitch));
 }
@@ -4689,6 +4746,7 @@ function frame(now) {
   if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
   animateDoors(dt);
   if (!reduce && sunPatches.size) updateDust(now);
+  animateAppliances(now, dt);
   if (!reduce) for (const l of lightPool) if (l.userData.fire && l.intensity > 0) l.intensity = l.userData.base * (0.84 + 0.1 * Math.sin(now / 83) + 0.06 * Math.sin(now / 41 + 2));
   if (!reduce) { waterTex.offset.x = (now / 1000 * 0.025) % 1; waterTex.offset.y = Math.sin(now / 1000 * 0.3) * 0.04; }
   if (clouds && !reduce) clouds.rotation.y += dt * 0.006; // clouds drift past below the balcony

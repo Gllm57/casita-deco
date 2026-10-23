@@ -30,6 +30,7 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Cosas que funcionan:** teles con dibujos animados, grifos del fregadero, lavabos, bañera y ducha con agua corriendo, fogones y placa que se encienden con el horno iluminado, microondas, lavadora y secadora girando, ventilador y tocadiscos. Tócalos (o usa el botón) para encender y apagar, también en el paseo.
 - **Piscina con la forma que quieras** (Obra · Piscina): arrastra para darle forma, más azul y honda en el centro, con borde de piedra; arrastra encima para taparla.
 - **Gráficos:** reflejos en suelos brillantes (mármol, azulejo, terrazo), rayos de sol con polvo flotando por las ventanas, noche con estrellas, luna y ventanas iluminadas, agua que ondula, fuego de chimenea que parpadea y tejados con chimenea y canalones.
 - **Nuevos modelos:** tumbona de teca con respaldo regulable, fuente de dos pisos con agua que cae y coche con lunas, llantas, faros y retrovisores.
@@ -40,7 +41,7 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 - **Plantillas:** guarda una habitación copiada y pégala en cualquier proyecto.
 - **Más fluido y gasta menos batería:** a toda velocidad mientras tocas o algo se mueve y a 30 imágenes por segundo cuando solo miras; sombras y espejos se refrescan menos en reposo. La calidad se ajusta sola si el móvil va justo (también en modo de ahorro de energía no la baja sin motivo).
 - **Sombra suave donde la pared toca el suelo** en el Constructor, más oscura en los rincones.
-- **Paseo:** en Ver · Paseo caminas por dentro de la casa a la altura de los ojos, con joystick y arrastrando para mirar, siempre en horizontal; en el Constructor, flechas para subir y bajar de piso, y botón para hacer fotos al álbum. Toca puertas, ventanas, lámparas y cortinas para abrirlas, cerrarlas, encenderlas o apagarlas; Milo también te contesta.
+- **Paseo:** en Ver · Paseo caminas por dentro de la casa a la altura de los ojos, con joystick y arrastrando para mirar, siempre en horizontal; en el Constructor subes y bajas de piso caminando por las escaleras, y hay un botón para hacer fotos al álbum. Toca puertas, ventanas, lámparas y cortinas para abrirlas, cerrarlas, encenderlas o apagarlas; Milo también te contesta.
 - **Ventanas que se abren hacia fuera** en el Constructor: las estrechas como una hoja, las anchas en dos hojas (en las triples solo las de los lados) y la alargada se abate por arriba. El ventanal panorámico, el ventanal en arco, la ventana redonda y la vidriera son fijos, y una ventana con la cortina cerrada no se abre hasta correrla.
 - **Gestos:** doble toque en un objeto para girarlo; en el Constructor, desliza rápido dos dedos hacia arriba o hacia abajo para cambiar de piso.
 - **Interfaz más limpia:** menú de inicio con los cuatro modos en una cuadrícula; en el juego, título y marcador en una sola fila (el marcador se despliega con la flecha y en el Constructor no aparece). Catálogo en diez pestañas (Puertas y ventanas juntas, Pintura y suelo juntas), cada una dividida en secciones: sofás, dormitorio, mesas y sillas, guardar, plantas, alfombras, cortinas, cuadros…
