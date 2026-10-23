@@ -30,6 +30,14 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Piscina con la forma que quieras** (Obra · Piscina): arrastra para darle forma, más azul y honda en el centro, con borde de piedra; arrastra encima para taparla.
+- **Gráficos:** reflejos en suelos brillantes (mármol, azulejo, terrazo), rayos de sol con polvo flotando por las ventanas, noche con estrellas, luna y ventanas iluminadas, agua que ondula, fuego de chimenea que parpadea y tejados con chimenea y canalones.
+- **Nuevos modelos:** tumbona de teca con respaldo regulable, fuente de dos pisos con agua que cae y coche con lunas, llantas, faros y retrovisores.
+- **Hora del día:** el botón de la luz tiene un modo «Hora» con una barra para ver la casa a cualquier hora.
+- **Milo:** come de sus cuencos, persigue y empuja su pelota y te sigue durante el paseo.
+- **Ajustes nuevos:** modo una mano, vibraciones distintas (también en iPhone con iOS 18), agitar para deshacer y presupuesto opcional en los encargos.
+- **Lupa** encima del dedo al arrastrar objetos o dibujar paredes.
+- **Plantillas:** guarda una habitación copiada y pégala en cualquier proyecto.
 - **Más fluido y gasta menos batería:** a toda velocidad mientras tocas o algo se mueve y a 30 imágenes por segundo cuando solo miras; sombras y espejos se refrescan menos en reposo. La calidad se ajusta sola si el móvil va justo (también en modo de ahorro de energía no la baja sin motivo).
 - **Sombra suave donde la pared toca el suelo** en el Constructor, más oscura en los rincones.
 - **Paseo:** en Ver · Paseo caminas por dentro de la casa a la altura de los ojos, con joystick y arrastrando para mirar, siempre en horizontal; en el Constructor, flechas para subir y bajar de piso, y botón para hacer fotos al álbum. Toca puertas, ventanas, lámparas y cortinas para abrirlas, cerrarlas, encenderlas o apagarlas; Milo también te contesta.

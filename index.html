@@ -62,7 +62,10 @@ button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 .app { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); overflow: hidden; background: radial-gradient(130% 90% at 50% 15%, #F6D9C9 0%, #DFCDEC 50%, #B7A6DC 100%); transition: background .6s; }
 .app.highrise { background: radial-gradient(130% 90% at 50% 10%, #F2F7FD 0%, #D6E6F5 45%, #B4CCE6 100%); }
 .app.dusk { background: radial-gradient(130% 90% at 50% 15%, #FFC9A0 0%, #E8A8B8 45%, #8E74B8 100%); }
-.app.night { background: radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
+.app.night { background: var(--stars, none) 0 0 / 420px repeat, radial-gradient(130% 90% at 50% 15%, #433C7A 0%, #2A2557 50%, #161331 100%); --sheet-rgb: 36, 30, 64; --card: #322A57; --card-ink: #F1ECFF; --thumb: linear-gradient(160deg, #3D3468, #2B244F); }
+.moon { position: absolute; top: 15%; right: 16%; width: 52px; height: 52px; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity .8s;
+  background: radial-gradient(circle at 36% 34%, #FFFDF2 0%, #F1E8C9 55%, #DCCFA8 100%); box-shadow: 0 0 36px 10px rgba(255,243,210,.22), inset -6px -4px 0 rgba(170,150,110,.18); }
+.app.night .moon { opacity: .95; }
 canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 45%, transparent 60%, rgba(43,33,64,.18) 100%); }
 
@@ -127,6 +130,19 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 .mission.collapsed ul, .mission.collapsed .goal, .mission.collapsed .deliver { display: none; }
 .app.home .mission { display: none; }
 .side { display: flex; flex-direction: column; gap: 8px; margin-left: auto; }
+/* one-hand mode: the view buttons and the floor picker move down beside the thumb */
+.app.onehand .side { position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(var(--sheet-h) + 70px); }
+.app.onehand .floors { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(var(--sheet-h) + 70px); }
+.app.onehand.has-sel .side { display: none; } /* while editing a thing its arrows sit there */
+.app.onehand.has-sel .floors { bottom: calc(var(--sheet-h) + 166px); }
+.app.onehand.tool-on .side, .app.onehand.tool-on .floors { bottom: calc(var(--sheet-h) + 136px); }
+.hourbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--sheet-h) + 70px); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; width: min(300px, calc(100% - 210px)); min-width: 170px; }
+.hourbar[hidden], .app.has-sel .hourbar, .app.tool-on .hourbar, .app.in-menu .hourbar, .app.walk .hourbar { display: none; }
+.hourbar span { font: 800 14px var(--display); font-variant-numeric: tabular-nums; min-width: 42px; }
+.hourbar input { flex: 1; accent-color: var(--coral); min-width: 0; }
+.loupe { position: absolute; width: 112px; height: 112px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 20px rgba(0,0,0,.3); pointer-events: none; display: none; z-index: 20; background: #EDE8F5; }
+.loupe.on { display: block; }
+.loupe::after { content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%; border: 2px solid var(--coral); }
 .round { width: 44px; height: 44px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer; }
 .round svg { width: 21px; height: 21px; }
 .round[disabled] { opacity: .4; cursor: default; }
@@ -479,6 +495,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="ld-tip" id="ldTip">Preparando la casa…</div>
 </div>
 <div class="app" id="app">
+  <div class="moon" aria-hidden="true"></div>
   <canvas id="room" aria-label="Habitación 3D: arrastra para girar la cámara, toca un objeto para moverlo"></canvas>
   <div class="vignette"></div>
 
@@ -554,7 +571,9 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
     <button data-n="right" aria-label="Mover a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
     <button data-n="down" aria-label="Mover abajo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
   </div>
+  <div class="hourbar glass" id="hourBar" hidden><span id="hourTxt">12:00</span><input type="range" id="hourIn" min="0" max="24" step="0.25" aria-label="Hora del día"></div>
   <div class="toast" id="toast"></div>
+  <canvas class="loupe" id="loupe" width="224" height="224" aria-hidden="true"></canvas>
   <div class="bubble" id="bubble" hidden></div>
   <div class="tut" id="tut" hidden><div class="tut-hand" id="tutHand"><svg viewBox="0 0 64 64"><path d="M26 6c3 0 5 2 5 5v17l2-1c2-1 5 0 6 2l1 1c2-1 5 0 6 2l1 1c2-1 5 1 5 3v12c0 7-5 13-12 13h-6c-4 0-7-2-9-5l-10-14c-2-2-1-5 1-6 2-2 5-1 7 1l3 4V11c0-3 2-5 5-5z" fill="#fff" stroke="#2B2140" stroke-width="3" stroke-linejoin="round"/></svg></div>
     <div class="tut-msg glass"><span class="tut-step" id="tutStep">1/4</span><b id="tutText"></b><button id="tutSkip">Saltar</button></div></div>
@@ -685,7 +704,10 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
       <div class="setting"><span>Milo, el pug<small>Pasea por las habitaciones</small></span><div class="seg" data-setting="cat"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Sonidos<small>Al poner, quitar y usar cosas</small></span><div class="seg" data-setting="sound"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <div class="setting"><span>Música<small>Melodía tranquila de fondo</small></span><div class="seg" data-setting="music"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
-      <div class="setting"><span>Vibración<small>Al colocar objetos (Android)</small></span><div class="seg" data-setting="vibrate"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Vibración<small>Distinta al colocar, girar y cuando no cabe</small></span><div class="seg" data-setting="vibrate"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Presupuesto en los encargos<small>Dinero limitado: hay que elegir bien</small></span><div class="seg" data-setting="budget"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Modo una mano<small>Botones abajo, al alcance del pulgar</small></span><div class="seg" data-setting="oneHand"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
+      <div class="setting"><span>Agitar para deshacer<small>Sacude el móvil para deshacer lo último</small></span><div class="seg" data-setting="shake"><button data-v="1">Sí</button><button data-v="0">No</button></div></div>
       <button class="danger" id="wipe">Borrar toda la partida</button>
     </div>
   </div>
@@ -743,7 +765,15 @@ const roleMat = (D, hex) => (D.glow ? G(hex) : surface(hex, ROLE_KIND[D.role] ||
 const glowMats = new Set();
 function G(hex) { const m = std({ color: hex, emissive: hex, emissiveIntensity: 0.5 }); glowMats.add(m); return m; }
 const glassMat = std({ color: 0xD6F1FF, transparent: true, opacity: 0.3, roughness: 0.08, depthWrite: false });
-const waterMat = std({ color: 0x8FD3F0, transparent: true, opacity: 0.72, roughness: 0.12 });
+// a rippling caustic pattern that drifts slowly: pools, fountains and aquariums all shimmer
+const waterTex = (() => { const n = 256, c = document.createElement('canvas'); c.width = c.height = n; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, n, n);
+  const r = rng('agua'); x.lineCap = 'round';
+  for (let k = 0; k < 70; k++) { x.strokeStyle = `rgba(${r() < 0.5 ? '120,190,220' : '255,255,255'},${0.25 + r() * 0.35})`; x.lineWidth = 1 + r() * 2.5; x.beginPath(); let px = r() * n, py = r() * n; x.moveTo(px, py);
+    for (let s = 0; s < 4; s++) { const nx = px + (r() - 0.5) * 70, ny = py + (r() - 0.5) * 70; x.quadraticCurveTo((px + nx) / 2 + (r() - 0.5) * 30, (py + ny) / 2 + (r() - 0.5) * 30, nx, ny); px = nx; py = ny; } x.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+const waterMat = std({ color: 0x8FD3F0, transparent: true, opacity: 0.78, roughness: 0.12, map: waterTex });
+const poolWaterMat = new THREE.MeshStandardMaterial({ map: waterTex, vertexColors: true, roughness: 0.12, metalness: 0.1, emissive: 0x0B4766, emissiveIntensity: 0.3 });
+const copingMat = std({ color: 0xEDE6DA, roughness: 0.8 });
 
 function add(g, geo, mat, x, y, z) {
   const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z);
@@ -898,7 +928,8 @@ const CAT = {
   chimenea: { name: 'Chimenea', tab: 'muebles', tags: 'salon', w: 2, d: 1, price: 900, comfort: 8, style: 8, light: { y: 0.45, z: 0.3, color: 0xFF9A4A, power: 1.6 }, role: 'piedra',
     build(g, m) { B(g, 1.7, 1.1, 0.5, m, 0, 0.55, -0.22); B(g, 0.9, 0.62, 0.1, M(0x2A2333), 0, 0.4, 0.03);
       B(g, 1.9, 0.08, 0.6, M(WOOD), 0, 1.14, -0.2); for (const x of [-0.2, 0.15]) C(g, 0.05, 0.05, 0.5, M(0x6B4630), x, 0.16, 0.0, 10).rotation.z = PI / 2 + x;
-      K(g, 0.14, 0.38, G(0xFF8A3D), -0.05, 0.36, 0.02); K(g, 0.1, 0.28, G(0xFFC24A), 0.12, 0.32, 0.03); K(g, 0.08, 0.22, G(0xFFE08A), -0.17, 0.29, 0.04);
+      const fl = new THREE.Group(); fl.name = 'flame'; fl.position.set(0, 0.17, 0.03); g.add(fl);
+      K(fl, 0.14, 0.38, G(0xFF8A3D), -0.05, 0.19, -0.01); K(fl, 0.1, 0.28, G(0xFFC24A), 0.12, 0.15, 0); K(fl, 0.08, 0.22, G(0xFFE08A), -0.17, 0.12, 0.01);
       for (const x of [-0.7, -0.55, 0.65]) C(g, 0.03, 0.03, 0.12 + Math.abs(x) * 0.1, M(WHITE), x, 1.25, -0.2, 10);
       const f = B(g, 0.45, 0.35, 0.03, M(GOLD), 0.1, 1.38, -0.42); f.rotation.x = -0.1; } },
   cuna: { name: 'Cuna', tab: 'muebles', tags: 'bebe', w: 2, d: 1, price: 410, comfort: 6, style: 5, role: 'madera',
@@ -1037,6 +1068,12 @@ const CAT = {
     build(g, m) { B(g, 0.8, 0.68, 0.45, m, 0, 0.34, -0.12); B(g, 0.72, 0.36, 0.37, waterMat, 0, 0.88, -0.12); B(g, 0.76, 0.44, 0.41, glassMat, 0, 0.91, -0.12);
       B(g, 0.7, 0.04, 0.35, M(0xE6D3B3), 0, 0.72, -0.12); S(g, 0.06, M(LEAF), -0.22, 0.8, -0.18).scale.set(0.6, 1.8, 0.6);
       for (const [x, y, c] of [[0.1, 0.9, 0xFF8A3D], [-0.05, 0.98, 0xFFD43B], [0.2, 1.0, 0x5BC0EB]]) { S(g, 0.04, M(c), x, y, -0.1).scale.set(1.6, 1, 0.6); K(g, 0.03, 0.05, M(c), x - 0.08, y, -0.1).rotation.z = PI / 2; } } },
+  comederoMilo: { name: 'Cuencos de Milo', tab: 'deco', tags: 'cocina salon', w: 1, d: 1, price: 30, comfort: 1, style: 2, role: 'acento',
+    build(g, m) { SB(g, 0.62, 0.02, 0.34, M(0xE8D9C0), 0, 0.01, 0); for (const [x, c] of [[-0.14, 0xB5703F], [0.14, 0x8FD3F0]]) { lathe(g, [[0.001, 0.02], [0.1, 0.02], [0.11, 0.07], [0.09, 0.07], [0.08, 0.035], [0.001, 0.035]], m);
+        g.children[g.children.length - 1].position.x = x; const top = C(g, 0.085, 0.085, 0.01, c === 0x8FD3F0 ? waterMat : M(c), x, 0.055, 0, 18); top.castShadow = false; }
+      for (let k = 0; k < 6; k++) S(g, 0.012, M(0x8A5A34), -0.14 + Math.cos(k) * 0.04, 0.065, Math.sin(k * 1.7) * 0.04, 6); } },
+  pelotaMilo: { name: 'Pelota de Milo', tab: 'deco', tags: 'salon dorm bebe exterior', w: 1, d: 1, price: 15, comfort: 1, style: 2, flat: true, role: 'acento',
+    build(g, m) { const b = new THREE.Group(); b.name = 'ball'; b.position.y = 0.09; g.add(b); S(b, 0.09, m, 0, 0, 0, 18); add(b, new THREE.TorusGeometry(0.09, 0.008, 6, 24), M(WHITE), 0, 0, 0).rotation.y = 0.6; } },
   camaGato: { name: 'Cama de Milo', tab: 'deco', tags: 'dorm salon', w: 1, d: 1, price: 50, comfort: 2, style: 3, flat: false, role: 'tela',
     build(g, m) { const t = add(g, new THREE.TorusGeometry(0.26, 0.075, 14, 32), m, 0, 0.09, 0); t.rotation.x = PI / 2;
       C(g, 0.21, 0.23, 0.07, M(LINEN), 0, 0.045, 0, 28); SB(g, 0.18, 0.05, 0.14, M(0xFFFFFF), 0.04, 0.09, -0.03).rotation.y = 0.4;
@@ -1423,7 +1460,7 @@ Object.assign(CAT, {
 });
 /* ---------- windows and doors: catalogue items that open a real hole in constructor walls ---------- */
 const passageMat = std({ color: 0x4A4166, roughness: 1 });
-const winPane = std({ color: 0xCFEFFF, transparent: true, opacity: 0.3, roughness: 0.05, depthWrite: false, side: THREE.DoubleSide });
+const winPane = std({ color: 0xCFEFFF, transparent: true, opacity: 0.3, roughness: 0.05, depthWrite: false, side: THREE.DoubleSide, emissive: 0xFFC27A, emissiveIntensity: 0 });
 // points around a hole, in metres from the item centre (x) and the floor (y); door holes start and end on the floor
 function holePts(h) {
   const { x = 0, hw, y0, y1, sh = 'rect' } = h, pts = [];
@@ -1766,8 +1803,15 @@ Object.assign(CAT, {
   valla: { name: 'Valla de madera', tab: 'jardin', flat: true, tags: 'exterior', w: 1, d: 1, price: 40, comfort: 0, style: 3, role: 'madera', build(g, m) { picketFence(g, m, 1); } },
   vallaLarga: { name: 'Valla larga', tab: 'jardin', flat: true, tags: 'exterior', w: 3, d: 1, price: 100, comfort: 0, style: 3, role: 'madera', build(g, m) { picketFence(g, m, 3); } },
   tumbona: { name: 'Tumbona', tab: 'jardin', tags: 'exterior', w: 1, d: 2, price: 160, comfort: 4, style: 5, role: 'tela',
-    build(g, m) { for (const sx of [-1, 1]) { BX(g, 0.04, 0.04, 1.8, M(WHITE), sx * 0.3, 0.3, 0); for (const z of [-0.8, 0.8]) C(g, 0.02, 0.02, 0.3, M(WHITE), sx * 0.3, 0.15, z, 8); }
-      SB(g, 0.58, 0.08, 1.2, m, 0, 0.36, 0.25); const back = SB(g, 0.58, 0.08, 0.7, m, 0, 0.6, -0.68); back.rotation.x = -1.0; BX(g, 0.5, 0.03, 0.03, M(WHITE), 0, 0.33, -0.45); } },
+    build(g, m) { const fr = M(0xF4F1EA), wd = M(WOOD); // a teak lounger: frame, slats, a padded seat and a raised back on its prop
+      for (const sx of [-1, 1]) { BX(g, 0.05, 0.06, 1.86, fr, sx * 0.31, 0.31, 0); C(g, 0.025, 0.025, 0.3, fr, sx * 0.31, 0.15, 0.86, 10);
+        C(g, 0.025, 0.025, 0.2, fr, sx * 0.31, 0.18, -0.8, 10); const wh = C(g, 0.075, 0.075, 0.04, M(DARK), sx * 0.31, 0.075, -0.86, 16); wh.rotation.z = PI / 2; }
+      for (let k = 0; k < 9; k++) BX(g, 0.6, 0.02, 0.1, wd, 0, 0.35, -0.3 + k * 0.135);
+      SB(g, 0.58, 0.07, 1.2, m, 0, 0.395, 0.27);
+      const back = hinge(g, 'back', 0, 0.36); back.parent.position.z = -0.33; back.position.z = 0; back.parent.rotation.x = 0.85;
+      for (let k = 0; k < 5; k++) BX(back, 0.6, 0.02, 0.1, wd, 0, 0.36, -0.06 - k * 0.135); SB(back, 0.58, 0.07, 0.68, m, 0, 0.405, -0.35); SB(back, 0.42, 0.09, 0.2, M(WHITE), 0, 0.47, -0.58);
+      rod(g, V3(-0.25, 0.33, -0.45), V3(-0.25, 0.62, -0.55), 0.012, fr); rod(g, V3(0.25, 0.33, -0.45), V3(0.25, 0.62, -0.55), 0.012, fr);
+      SB(g, 0.5, 0.02, 0.36, M(0x6CC0E0), 0.04, 0.44, 0.62).rotation.y = 0.15; } }, // a folded towel
   mesaSombrilla: { name: 'Mesa con sombrilla', tab: 'jardin', tags: 'exterior', w: 2, d: 2, price: 340, comfort: 3, style: 6, role: 'tela',
     build(g, m) { C(g, 0.45, 0.45, 0.04, M(WHITE), 0, 0.74, 0, 32); C(g, 0.03, 0.05, 0.72, M(WHITE), 0, 0.36, 0, 10); C(g, 0.02, 0.02, 2.2, M(DARK), 0, 1.1, 0, 8);
       m.side = THREE.DoubleSide; add(g, new THREE.ConeGeometry(1.0, 0.35, 8, 1, true), m, 0, 2.05, 0); for (const a of [0, PI / 2, PI, PI * 1.5]) chair(g, Math.sin(a) * 0.72, Math.cos(a) * 0.72, a + PI, M(WHITE), m); } },
@@ -1790,11 +1834,40 @@ Object.assign(CAT, {
     build(g, m) { B(g, 0.7, 0.55, 0.8, m, 0, 0.28, 0); for (const sx of [-1, 1]) { const r = B(g, 0.5, 0.04, 0.9, M(0xC9714F), sx * 0.2, 0.66, 0); r.rotation.z = sx * -0.7; }
       add(g, new THREE.CircleGeometry(0.18, 24, 0, PI), M(0x2B2638), 0, 0.16, 0.401); BX(g, 0.36, 0.16, 0.005, M(0x2B2638), 0, 0.08, 0.401); BX(g, 0.3, 0.07, 0.01, M(WHITE), 0, 0.5, 0.405); } },
   fuente: { name: 'Fuente', tab: 'jardin', tags: 'exterior', w: 1, d: 1, price: 280, comfort: 2, style: 8, role: 'piedra',
-    build(g, m) { C(g, 0.45, 0.48, 0.3, m, 0, 0.15, 0, 32); add(g, new THREE.CircleGeometry(0.4, 32), waterMat, 0, 0.29, 0).rotation.x = -PI / 2; C(g, 0.06, 0.08, 0.6, m, 0, 0.55, 0, 16); C(g, 0.22, 0.12, 0.08, m, 0, 0.85, 0, 24); S(g, 0.05, waterMat, 0, 0.95, 0); } },
+    build(g, m) { // a two-tier stone fountain: a basin with a rounded rim, two bowls and water falling from each
+      lathe(g, [[0.001, 0], [0.44, 0], [0.47, 0.04], [0.45, 0.26], [0.47, 0.28], [0.47, 0.31], [0.4, 0.31], [0.39, 0.12], [0.001, 0.12]], m);
+      add(g, new THREE.TorusGeometry(0.43, 0.035, 8, 40), m, 0, 0.3, 0).rotation.x = PI / 2;
+      const w0 = add(g, new THREE.CircleGeometry(0.4, 40), waterMat, 0, 0.26, 0); w0.rotation.x = -PI / 2; w0.name = 'ripple';
+      lathe(g, [[0.001, 0.12], [0.09, 0.12], [0.06, 0.2], [0.05, 0.55], [0.07, 0.58], [0.001, 0.58]], m);
+      lathe(g, [[0.001, 0.55], [0.06, 0.55], [0.22, 0.62], [0.25, 0.66], [0.22, 0.66], [0.001, 0.63]], m);
+      lathe(g, [[0.001, 0.66], [0.04, 0.66], [0.035, 0.86], [0.06, 0.88], [0.001, 0.88]], m);
+      lathe(g, [[0.001, 0.86], [0.04, 0.86], [0.13, 0.92], [0.15, 0.95], [0.12, 0.95], [0.001, 0.92]], m);
+      add(g, new THREE.CircleGeometry(0.2, 28), waterMat, 0, 0.655, 0).rotation.x = -PI / 2; add(g, new THREE.CircleGeometry(0.115, 24), waterMat, 0, 0.945, 0).rotation.x = -PI / 2;
+      S(g, 0.035, m, 0, 1.0, 0); const jet = C(g, 0.012, 0.02, 0.1, waterMat, 0, 1.06, 0, 8); jet.castShadow = false;
+      // thin curtains of water spilling from both bowls, and drops that the frame loop keeps falling
+      const fall = std({ color: 0xBFE8F7, transparent: true, opacity: 0.4, roughness: 0.1, side: THREE.DoubleSide, depthWrite: false });
+      for (const [r, y0, y1] of [[0.24, 0.66, 0.27], [0.145, 0.95, 0.67]]) { const c = add(g, new THREE.CylinderGeometry(r, r + 0.015, y0 - y1, 32, 1, true), fall, 0, (y0 + y1) / 2, 0); c.castShadow = false; }
+      const drops = new THREE.Group(); drops.name = 'drops'; g.add(drops);
+      for (let k = 0; k < 10; k++) { const d = S(drops, 0.012, waterMat, Math.cos(k * 2.4) * 0.09, 1.05, Math.sin(k * 2.4) * 0.09, 6); d.castShadow = false; d.userData.ph = k / 10; } } },
   coche: { name: 'Coche', tab: 'jardin', tags: 'exterior', w: 2, d: 4, price: 1800, comfort: 2, style: 6, role: 'acento',
-    build(g, m) { B(g, 1.7, 0.55, 3.8, m, 0, 0.5, 0); B(g, 1.5, 0.5, 2.0, m, 0, 0.98, -0.2); const glass = std({ color: 0x2B3550, roughness: 0.1, metalness: 0.2 });
-      B(g, 1.52, 0.4, 1.7, glass, 0, 0.98, -0.2); for (const sx of [-1, 1]) for (const z of [-1.25, 1.25]) { const w = C(g, 0.33, 0.33, 0.24, M(0x2B2638), sx * 0.78, 0.33, z, 24); w.rotation.z = PI / 2; const c = C(g, 0.16, 0.16, 0.25, M(METAL), sx * 0.79, 0.33, z, 16); c.rotation.z = PI / 2; }
-      for (const sx of [-1, 1]) { BX(g, 0.3, 0.1, 0.02, G(0xFFF4D6), sx * 0.55, 0.6, 1.91); BX(g, 0.3, 0.08, 0.02, G(0xE5533D), sx * 0.6, 0.62, -1.91); } } },
+    build(g, m) { // a rounded hatchback drawn from its side profile, with glass all round, lights, bumpers, mirrors, handles and proper wheels
+      const prof = [[-1.88, 0.26], [-1.92, 0.62], [-1.75, 0.8], [-1.3, 0.84], [-0.95, 1.3], [0.35, 1.32], [0.9, 0.9], [1.78, 0.78], [1.92, 0.6], [1.9, 0.26]];
+      const body = new THREE.ExtrudeGeometry(shapeOf(prof), { depth: 1.56, bevelEnabled: true, bevelSize: 0.07, bevelThickness: 0.07, bevelSegments: 3, curveSegments: 4 });
+      body.translate(0, 0, -0.78); body.rotateY(-PI / 2); const paint = std({ color: m.color, roughness: 0.25, metalness: 0.35 }); add(g, body, paint, 0, 0, 0);
+      const glass = std({ color: 0x223049, roughness: 0.05, metalness: 0.4, side: THREE.DoubleSide }), dk = M(0x2B2638), chrome = std({ color: 0xDADDE3, roughness: 0.2, metalness: 0.9 });
+      for (const sx of [-1, 1]) { // side windows with a pillar between front and back
+        for (const pts of [[[-1.18, 0.9], [-0.9, 1.24], [-0.32, 1.25], [-0.32, 0.9]], [[-0.24, 0.9], [-0.24, 1.25], [0.3, 1.26], [0.78, 0.9]]]) {
+          const gw = new THREE.ShapeGeometry(shapeOf(pts)); gw.rotateY(-PI / 2); add(g, gw, glass, sx * 0.862, 0, 0); }
+        BX(g, 0.01, 0.5, 0.01, dk, sx * 0.862, 0.6, -0.28); BX(g, 0.01, 0.5, 0.01, dk, sx * 0.862, 0.6, 0.86); // door shut lines
+        for (const z of [-0.6, 0.45]) BX(g, 0.03, 0.03, 0.14, chrome, sx * 0.87, 0.78, z);
+        B(g, 0.12, 0.08, 0.14, paint, sx * 0.93, 0.98, 0.72); BX(g, 0.01, 0.06, 0.11, glass, sx * 0.995, 0.98, 0.72); } // mirrors
+      const wsh = BX(g, 1.42, 0.02, 0.66, glass, 0, 1.18, 0.68); wsh.rotation.x = 0.65; const rw = BX(g, 1.36, 0.02, 0.54, glass, 0, 1.125, -1.2); rw.rotation.x = 2.22;
+      for (const z of [-1.25, 1.3]) for (const sx of [-1, 1]) { // tyres, rims and five spokes
+        const t = C(g, 0.34, 0.34, 0.24, dk, sx * 0.8, 0.34, z, 28); t.rotation.z = PI / 2; const r = C(g, 0.2, 0.2, 0.25, chrome, sx * 0.81, 0.34, z, 20); r.rotation.z = PI / 2;
+        for (let k = 0; k < 5; k++) { const a = k * 2 * PI / 5, sp = BX(g, 0.02, 0.17, 0.04, dk, sx * 0.94, 0.34 + Math.sin(a) * 0.1, z + Math.cos(a) * 0.1); sp.rotation.x = -a; } C(g, 0.05, 0.05, 0.26, dk, sx * 0.81, 0.34, z, 12).rotation.z = PI / 2; }
+      for (const zs of [-1, 1]) { B(g, 1.72, 0.16, 0.12, dk, 0, 0.3, zs * 1.98); BX(g, 0.42, 0.11, 0.01, M(WHITE), 0, 0.48, zs * 2.0); } // bumpers, number plates
+      for (const sx of [-1, 1]) { BX(g, 0.34, 0.12, 0.02, G(0xFFF4D6), sx * 0.58, 0.64, 1.99); BX(g, 0.3, 0.1, 0.02, G(0xE5533D), sx * 0.6, 0.68, -1.99); }
+      BX(g, 0.7, 0.12, 0.02, dk, 0, 0.5, 1.99); BX(g, 0.06, 0.06, 0.02, chrome, 0, 0.5, 2.0); } },
   bicicleta: { name: 'Bicicleta', tab: 'jardin', tags: 'exterior dorm', w: 1, d: 2, price: 150, comfort: 1, style: 5, role: 'acento',
     build(g, m) { for (const z of [-0.55, 0.55]) { add(g, new THREE.TorusGeometry(0.32, 0.025, 8, 32), M(DARK), 0, 0.34, z).rotation.y = PI / 2; }
       rod(g, V3(0, 0.34, -0.55), V3(0, 0.75, -0.1), 0.025, m); rod(g, V3(0, 0.75, -0.1), V3(0, 0.82, 0.45), 0.025, m); rod(g, V3(0, 0.34, -0.55), V3(0, 0.36, 0.05), 0.025, m); rod(g, V3(0, 0.36, 0.05), V3(0, 0.75, -0.1), 0.025, m);
@@ -2141,7 +2214,7 @@ for (const h of HOMES) Object.assign(h, { home: true, color: '#3FB894', needs: [
 const ekey = (t, x, z) => `${t},${x},${z}`;
 const parseE = k => { const [t, x, z] = k.split(','); return [t, +x, +z]; };
 const ckey = (x, z) => `${x},${z}`;
-const newLevel = () => ({ tiles: {}, walls: {}, roof: {}, items: [] });
+const newLevel = () => ({ tiles: {}, walls: {}, roof: {}, pool: {}, items: [] });
 const FLOORS_N = 3, FLOOR_NAMES = ['Planta baja', 'Primer piso', 'Segundo piso'];
 const fillLevels = levels => { while (levels.length < FLOORS_N) levels.push(newLevel()); return levels; };
 // a wall edge keeps one colour per face: c = front (+1), b = back (-1)
@@ -2249,24 +2322,24 @@ const ALL = [...LEVELS, ...HOMES, ...RETOS, BUILD_DEF];
 const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, key: L.key, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
 const rooms = {}; for (const L of ALL) rooms[L.id] = L.build ? { cur: 0, best: 0, levels: exampleHouse() } : freshRoom(L);
 let projects = [], projCur = 0;
-const settings = { quality: 'alta', cat: '1', vibrate: '1', sound: '1', music: '1' };
+const settings = { quality: 'alta', cat: '1', vibrate: '1', sound: '1', music: '1', oneHand: '0', shake: '0', budget: '0' };
 
 // saved game lives in this browser only (v1 = earlier versions of the game)
 const SAVE_KEY = 'casita-deco-v2';
 let saved = null;
 try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || JSON.parse(localStorage.getItem('casita-deco-v1') || 'null'); } catch (e) { saved = null; }
 const cleanItems = list => (list || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length }));
-if (saved && saved.rooms && saved.rooms.build && saved.rooms.build.levels) rooms.build = { cur: 0, best: 0, levels: fillLevels(migrateOpenings(saved.rooms.build.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))) };
+if (saved && saved.rooms && saved.rooms.build && saved.rooms.build.levels) rooms.build = { cur: 0, best: 0, levels: fillLevels(migrateOpenings(saved.rooms.build.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, pool: l.pool || {}, items: cleanItems(l.items) })))) };
 if (saved && saved.rooms) for (const L of ALL) {
   const r = saved.rooms[L.id]; if (!r || L.build || (L.challenge && r.key !== L.key)) continue; // yesterday's challenge starts over
-  rooms[L.id] = { wall: r.wall || L.wall, floor: r.floor || L.floor, best: r.best || 0, op: r.op, key: r.key, items: (r.items || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length })) };
+  rooms[L.id] = { wall: r.wall || L.wall, floor: r.floor || L.floor, best: r.best || 0, op: r.op, key: r.key, budget: r.budget, items: (r.items || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length })) };
 }
 if (saved && saved.settings) Object.assign(settings, saved.settings);
 // projects: every house kept in the Constructor; the open one lives in rooms.build
-const plainLevels = levels => levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) }));
+const plainLevels = levels => levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, pool: lv.pool || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, _roll, ...i }) => i) }));
 if (saved && saved.projects && saved.projects.length) { projects = saved.projects; projCur = Math.min(saved.projCur || 0, projects.length - 1); }
 else projects = [{ name: 'Mi proyecto', levels: plainLevels(rooms.build.levels) }];
-projects.forEach(pr => { pr.levels = fillLevels(migrateOpenings(pr.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))); });
+projects.forEach(pr => { pr.levels = fillLevels(migrateOpenings(pr.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, pool: l.pool || {}, items: cleanItems(l.items) })))); });
 rooms.build = { cur: 0, best: 0, site: projects[projCur].site, levels: JSON.parse(JSON.stringify(projects[projCur].levels)) };
 BUILD_DEF.room = projects[projCur].name;
 const totalStars = () => LEVELS.reduce((a, l) => a + rooms[l.id].best, 0);
@@ -2306,7 +2379,32 @@ const envTex = (() => { const es = new THREE.Scene(), box = new THREE.Mesh(new T
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0xB9A98F })); fl.rotation.x = -PI / 2; fl.position.y = -2.9; es.add(fl);
   const pm = new THREE.PMREMGenerator(renderer), t = pm.fromScene(es, 0.02).texture; pm.dispose(); return t; })();
 const GLOSSY = { marmol: 0.22, azulejo: 0.28, ajedrez: 0.24, baldosa: 0.4, terrazo: 0.32, hormigon: 0.45 };
-function floorFinish(mat, id) { const r = GLOSSY[id]; mat.roughness = r ?? 0.82; mat.envMap = r != null ? envTex : null; mat.envMapIntensity = 0.32; mat.needsUpdate = true; } // only stone and tile shine; wood stays matte
+function floorFinish(mat, id) { const r = GLOSSY[id]; mat.roughness = r ?? 0.82; mat.envMap = r != null ? envTex : null; mat.envMapIntensity = 0.32; reflective(mat, r != null ? (0.5 - r) * 0.9 : 0); mat.needsUpdate = true; } // only stone and tile shine; wood stays matte
+// glossy floors mirror the room softly: one low-resolution picture from below the floor, mixed into every shiny tile of that floor
+const floorRefl = { rt: new THREE.WebGLRenderTarget(256, 256), tm: new THREE.Matrix4(), on: { value: 0 }, vp: new THREE.PerspectiveCamera(), vo: new THREE.OrthographicCamera() };
+function reflective(mat, k) {
+  if (!mat.userData.reflK) { mat.userData.reflK = { value: k };
+    mat.onBeforeCompile = sh => { Object.assign(sh.uniforms, { reflMap: { value: floorRefl.rt.texture }, reflTm: { value: floorRefl.tm }, reflK: mat.userData.reflK, reflOn: floorRefl.on });
+      sh.vertexShader = 'uniform mat4 reflTm;\nvarying vec4 vReflUv;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\nvReflUv = reflTm * modelMatrix * vec4(transformed, 1.0);');
+      sh.fragmentShader = 'uniform sampler2D reflMap;\nuniform float reflK;\nuniform float reflOn;\nvarying vec4 vReflUv;\n' + sh.fragmentShader.replace('#include <tonemapping_fragment>', 'gl_FragColor.rgb = mix(gl_FragColor.rgb, texture2DProj(reflMap, vReflUv).rgb, reflK * reflOn);\n#include <tonemapping_fragment>'); };
+    mat.customProgramCacheKey = () => 'refl'; }
+  mat.userData.reflK.value = k;
+}
+function renderFloorRefl(cam, busy) {
+  const want = settings.quality === 'alta' && autoQ.level <= 1 && !state.menu && !state.top && (BM ? Object.values(HOUSE.levels[HOUSE.cur].tiles).some(f => GLOSSY[f] != null) : GLOSSY[R.floor] != null);
+  floorRefl.on.value = want ? 1 : 0; if (!want || rendered % (busy ? 2 : 4)) return;
+  const Y = BM ? HOUSE.cur * LEVEL_H : 0, vc = cam.isPerspectiveCamera ? floorRefl.vp : floorRefl.vo;
+  const bw = Math.round(renderer.domElement.width * 0.4), bh = Math.round(renderer.domElement.height * 0.4); if (floorRefl.rt.width !== bw || floorRefl.rt.height !== bh) floorRefl.rt.setSize(bw, bh);
+  // the camera mirrored in the floor plane, looking up at the room from below
+  mv.cam.setFromMatrixPosition(cam.matrixWorld); mv.rot.extractRotation(cam.matrixWorld); mv.look.set(0, 0, -1).applyMatrix4(mv.rot).add(mv.cam);
+  vc.position.set(mv.cam.x, 2 * Y - mv.cam.y, mv.cam.z); vc.up.set(0, 1, 0).applyMatrix4(mv.rot); vc.up.y = -vc.up.y; vc.lookAt(mv.look.x, 2 * Y - mv.look.y, mv.look.z); vc.updateMatrixWorld();
+  vc.projectionMatrix.copy(cam.projectionMatrix); vc.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+  floorRefl.tm.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(vc.projectionMatrix).multiply(vc.matrixWorldInverse);
+  mv.plane.set(new THREE.Vector3(0, 1, 0), -(Y + 0.012)); // only what stands above the floor
+  const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha(), on = floorRefl.on.value; floorRefl.on.value = 0;
+  renderer.clippingPlanes = [mv.plane]; renderer.setClearColor(0xE6DCEF, 1); renderer.setRenderTarget(floorRefl.rt); renderer.clear(); renderer.render(scene, vc); renderer.setRenderTarget(null);
+  renderer.clippingPlanes = []; renderer.setClearColor(cc, ca); floorRefl.on.value = on;
+}
 for (const k of [METAL, GOLD, CERAMIC]) Object.assign(M(k), { envMap: envTex, envMapIntensity: 0.8 });
 const wallMat = std({ color: WALLS[0].hex, roughness: 0.92 }); wallMat.userData.pat = null;
 const capMat = M(0x5E537A);
@@ -2543,7 +2641,12 @@ function freeWallSpot(it) {
   }
   return null;
 }
+// optional budget for the client jobs: what is left after the room's furniture, set once per job
+const budgetOn = () => settings.budget === '1' && !BM && !L.home && LEVELS.includes(L);
+function budgetLeft() { if (!budgetOn()) return Infinity; const v = score().value; if (R.budget == null) R.budget = v + 2600 + LEVELS.indexOf(L) * 350; return R.budget - v; }
+function affordable(type) { const left = budgetLeft(); if (CAT[type].price <= left) return true; buzz(30); toast(`No llega el presupuesto: te quedan ${Math.max(0, left).toLocaleString('es-ES')}`); return false; }
 function placeNew(it) {
+  if (!BM && !affordable(it.type)) return false;
   if (BM) {
     it.lv = HOUSE.cur;
     if (def(it).wall) { const sp = freeWallSpotB(it); if (!sp) { toast('Sin pared libre'); return false; } [it.edge, it.side] = sp; }
@@ -2557,8 +2660,8 @@ function placeNew(it) {
 
 /* ---------- undo ---------- */
 const history = [];
-const houseJSON = () => JSON.stringify({ cur: HOUSE.cur, site: HOUSE.site, levels: HOUSE.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lifting, _a, _moved, ...i }) => i) })) });
-const snap = () => (BM ? { id: L.id, house: houseJSON() } : { id: L.id, wall: R.wall, floor: R.floor, items: JSON.stringify(R.items.map(({ group, _a, _moved, ...i }) => i)) });
+const houseJSON = () => JSON.stringify({ cur: HOUSE.cur, site: HOUSE.site, levels: HOUSE.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, pool: lv.pool || {}, items: lv.items.map(({ group, lifting, _a, _moved, _roll, ...i }) => i) })) });
+const snap = () => (BM ? { id: L.id, house: houseJSON() } : { id: L.id, wall: R.wall, floor: R.floor, items: JSON.stringify(R.items.map(({ group, _a, _moved, _roll, ...i }) => i)) });
 const future = [];
 function updHistory() { $('undoBtn').disabled = !history.length; $('redoBtn').disabled = !future.length; $('undoCount').textContent = history.length || ''; }
 function pushUndo(s = snap()) { history.push(s); if (history.length > 40) history.shift(); future.length = 0; updHistory(); }
@@ -2636,8 +2739,23 @@ function setMusic(on) {
 // browsers only allow sound after a touch: start the music on the first one
 document.addEventListener('pointerdown', () => { if (settings.music === '1' && !musicTimer) setMusic(true); }, true);
 document.addEventListener('visibilitychange', () => { if (!actx) return; if (document.hidden) actx.suspend(); else actx.resume(); });
+const hapLab = (() => { const l = document.createElement('label'), i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); l.append(i); l.style.cssText = 'position:fixed;left:-99px;top:0;opacity:0;pointer-events:none'; document.body.append(l); return l; })();
+const tick = () => { try { hapLab.click(); } catch (e) {} }; // iOS 18 Safari gives a light haptic tap when a switch flips
+function askMotion() { // iPhone asks once for permission to read the motion sensors
+  const D = window.DeviceMotionEvent; if (D && typeof D.requestPermission === 'function') D.requestPermission().then(r => { if (r !== 'granted') { settings.shake = '0'; renderSettings(); save(); toast('Sin permiso para el sensor de movimiento'); } }).catch(() => {});
+}
+let shakeAt = 0, shakeHits = 0, shakeT0 = 0;
+addEventListener('devicemotion', e => {
+  if (settings.shake !== '1' || state.menu || state.walk) return; const a = e.acceleration; if (!a || a.x == null) return;
+  const now = performance.now(), g2 = Math.hypot(a.x, a.y, a.z); if (g2 < 17 || now - shakeAt < 1500) return;
+  if (now - shakeT0 > 700) { shakeT0 = now; shakeHits = 0; } if (++shakeHits >= 3) { shakeAt = now; shakeHits = 0; if (!$('undoBtn').disabled) { $('undoBtn').click(); toast('Deshecho'); } }
+});
 function buzz(ms = 12) {
-  if (ms >= 30) sfx('bad'); if (settings.vibrate === '1' && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} }
+  if (ms >= 30) sfx('bad'); if (settings.vibrate !== '1') return;
+  // no room: a double knock · a placed thing: one firm tap · turning and small steps: a light tick
+  const pat = ms >= 30 ? [22, 50, 22] : ms <= 8 ? [6] : [14];
+  if (navigator.vibrate) { try { navigator.vibrate(pat); } catch (e) {} } else { tick(); if (pat.length > 1) setTimeout(tick, 90); }
+}
 
 /* ---------- scoring & HUD ---------- */
 const hexCss = h => '#' + h.toString(16).padStart(6, '0');
@@ -2671,6 +2789,7 @@ function refreshHud() {
   $('setBonus').textContent = set.n >= 3 ? `+${set.bonus}` : 'desde 3';
   $('metersMini').innerHTML = `<i title="Comodidad"><b class="dot" style="background:var(--mint)"></b>${s.comfort}</i><i title="Estilo"><b class="dot" style="background:var(--coral)"></b>${s.style}</i><i title="Conjunto ${c.name}"><b class="dot" style="background:${hexCss(c.tela)}"></b>${set.n >= 3 ? '+' + set.bonus : set.n}</i>`;
   $('roomValue').textContent = s.value.toLocaleString('es-ES');
+  if (budgetOn()) $('metersMini').insertAdjacentHTML('beforeend', `<i title="Presupuesto que queda"><span class="coin" style="width:10px;height:10px"></span>${Math.max(0, budgetLeft()).toLocaleString('es-ES')}</i>`);
   if (!L.home) {
     const done = L.needs.map(n => needCount(n) >= n.n);
     $('mList').innerHTML = L.needs.map((n, i) => `<li class="${done[i] ? 'ok' : ''}">${n.label}${n.n > 1 ? ` (${Math.min(needCount(n), n.n)}/${n.n})` : ''}</li>`).join('');
@@ -2730,6 +2849,8 @@ function renderStrip() {
   } else if (tab === 'obra') {
     const hi = HOUSE && HOUSE.site === 'piso';
     html = `<span class="strip-label">Obra</span><button class="card" data-site="1"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${hi ? '<rect x="6" y="2" width="12" height="20" rx="1"/><path d="M9 6h2M13 6h2M9 10h2M13 10h2M9 14h2M13 14h2"/>' : '<path d="M3 20h18"/><path d="M5 20v-8l7-5 7 5v8"/><path d="M2 20c3-2 5-2 8 0"/>'}</svg></span><span class="nm">${hi ? 'En altura' : 'Con jardín'}</span><span class="pr">Cambiar</span></button>` + TOOLS.filter(t => t.id !== 'paste' || clip).map(t => `<button class="card ${tool && tool.id === t.id ? 'active' : ''}" data-tool="${t.id}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></span><span class="nm">${t.name}</span><span class="pr">Obra</span></button>`).join('')
+      + (clip ? `<button class="card" data-tplsave="1"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg></span><span class="nm">Guardar plantilla</span><span class="pr">La copia</span></button>` : '')
+      + ((settings.templates || []).length ? '<span class="strip-label">Plantillas</span>' + settings.templates.map((t, i) => `<button class="card" data-tpl="${i}"><span class="fav" data-tpldel="${i}" role="button" aria-label="Borrar plantilla">×</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 12h7v7"/></svg></span><span class="nm">${t.n}</span><span class="pr">${t.c.w}×${t.c.d}</span></button>`).join('') : '')
       + Object.entries(CAT).filter(([, D]) => D.tab === 'obra').sort((a, b) => !!b[1].stairs - !!a[1].stairs).map(([k, D], i, arr) => (i === 0 ? '<span class="strip-label">Escaleras</span>' : !D.stairs && arr[i - 1][1].stairs ? '<span class="strip-label">Muretes</span>' : '') + `<button class="card" data-buy="${k}"><img src="${getThumb(k)}" alt=""><span class="nm">${D.name}</span><span class="pr">${D.stairs ? 'Une dos pisos' : `<span class="coin"></span>${D.price}`}</span></button>`).join('');
   } else if (tab === 'acabados') {
     html = `<span class="strip-label">Paredes</span>` + WALLS.map(w => `<button class="card ${(BM ? tool && tool.id === 'paint' && brush.wall === w.id : R.wall === w.id) ? 'active' : ''}" data-wall="${w.id}"><span class="sw" style="background:${wallSwatch(w)}"></span><span class="nm">${w.name}</span>${HARMONY.has(w.id + '|' + R.floor) ? '<span class="want">combina</span>' : ''}</button>`).join('')
@@ -2750,11 +2871,14 @@ function applySurfaces() {
   paintFloor(FLOORS.find(f => f.id === R.floor)); floorFinish(floorMat, R.floor);
 }
 $('strip').addEventListener('click', e => {
+  const del = e.target.closest('[data-tpldel]'); if (del) { settings.templates.splice(+del.dataset.tpldel, 1); save(); renderStrip(); buzz(); return; }
   const f = e.target.closest('[data-fav]');
   if (f) { const k = f.dataset.fav, list = settings.fav = settings.fav || []; const i = list.indexOf(k); if (i >= 0) list.splice(i, 1); else list.unshift(k); save(); renderStrip(); buzz(6); sfx('click'); if (i < 0) toast('Guardado en favoritos ★'); return; }
   if (cardDrag.done) { cardDrag.done = false; return; } // the press became a drag into the room
   const b = e.target.closest('.card'); if (!b) return;
   dismissHint();
+  if (BM && b.dataset.tplsave && clip) { const list = settings.templates = settings.templates || []; list.unshift({ n: `Plantilla ${list.length + 1}`, c: JSON.parse(JSON.stringify(clip)) }); if (list.length > 12) list.pop(); save(); renderStrip(); buzz(); toast('Guardada: la tienes en todos tus proyectos'); return; }
+  if (BM && b.dataset.tpl != null) { const t = settings.templates[+b.dataset.tpl]; if (!t) return; clip = JSON.parse(JSON.stringify(t.c)); setTool('paste'); toast(`${t.n}: toca dónde ponerla`); return; }
   if (b.dataset.site && BM) { pushUndo(); HOUSE.site = HOUSE.site === 'piso' ? undefined : 'piso'; rebuildHouse(); renderStrip(); buzz(); sfx('pop'); toast(HOUSE.site ? 'Departamento en altura' : 'Casa con jardín'); return; }
   if (b.dataset.tool) { const id = tool && tool.id === b.dataset.tool ? null : b.dataset.tool; setTool(id); const T = id && TOOLS.find(t => t.id === id); if (T && T.roof) roofAll(T.roof); return; }
   if (BM && b.dataset.wall) { setTool('paint', { wall: b.dataset.wall }); return; }
@@ -3004,11 +3128,20 @@ const cat = { key: 'cat', isPet: true, g: new THREE.Group(), x: 0, z: 0, tx: 0, 
 function cellBlocked(x, z) {
   const cx = Math.floor(x + GW / 2), cz = Math.floor(z + GD / 2);
   if (cx < 0 || cz < 0 || cx >= GW || cz >= GD) return true;
-  if (BM) { const g0 = HOUSE.levels[0]; if (!g0.tiles[ckey(cx, cz)]) return true;
-    return g0.items.some(o => { if (def(o).wall || def(o).flat || def(o).top || def(o).ceil || PET_BEDS.has(o.type)) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; }); }
-  return floorItems().some(o => { if (def(o).flat || def(o).top || def(o).ceil || PET_BEDS.has(o.type)) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; });
+  if (BM) { const g0 = HOUSE.levels[0]; if (!g0.tiles[ckey(cx, cz)] || isPool(0, cx, cz)) return true;
+    return g0.items.some(o => { if (def(o).wall || def(o).flat || def(o).top || def(o).ceil || PET_WALK.has(o.type)) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; }); }
+  return floorItems().some(o => { if (def(o).flat || def(o).top || def(o).ceil || PET_WALK.has(o.type)) return false; const [w, d] = fp(o); return cx >= o.gx && cx < o.gx + w && cz >= o.gz && cz < o.gz + d; });
 }
-const PET_BEDS = new Set(['casetaPerro', 'camaGato']);
+const PET_BEDS = new Set(['casetaPerro', 'camaGato']), PET_WALK = new Set(['casetaPerro', 'camaGato', 'comederoMilo']);
+function reachable(c, x, z) { if (cellBlocked(x, z)) return false; const steps = Math.ceil(Math.hypot(x - c.x, z - c.z) / 0.2);
+  for (let i = 1; i <= steps; i++) if (stepBlocked(c.x + (x - c.x) * (i - 1) / steps, c.z + (z - c.z) * (i - 1) / steps, c.x + (x - c.x) * i / steps, c.z + (z - c.z) * i / steps)) return false; return true; }
+const milosThings = type => (BM ? HOUSE.levels[0].items : R.items).filter(o => o.type === type && o.group);
+const spotOf = o => [o.gx + 0.5 - GW / 2, o.gz + 0.5 - GD / 2];
+function kickBall(c, ball) { // he noses the ball and it rolls off a cell or two
+  const opts = []; for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) { const gx = ball.gx + dx, gz = ball.gz + dz; if ((dx || dz) && gx >= 0 && gz >= 0 && gx < GW && gz < GD && !cellBlocked(gx + 0.5 - GW / 2, gz + 0.5 - GD / 2) && !stepBlocked(...spotOf(ball), gx + 0.5 - GW / 2, gz + 0.5 - GD / 2)) opts.push([gx, gz]); }
+  if (!opts.length) return; const [gx, gz] = opts[Math.floor(Math.random() * opts.length)]; const from = ball.group.position.clone();
+  ball.gx = gx; ball.gz = gz; placeMesh(ball); const to = ball.group.position.clone(); ball.group.position.copy(from); ball._roll = { from, to, t: 0 };
+}
 function restSpot(c, bedsOnly) { // a reachable bed, doghouse or free spot on a rug
   const list = BM ? HOUSE.levels[0].items : R.items, beds = [], rugs = [];
   for (const o of list) { const [w, d] = fp(o);
@@ -3075,28 +3208,37 @@ function updatePet(c, dt) {
   c.g.visible = settings[c.key] === '1'; if (!c.g.visible) return;
   c.t += dt;
   if (cellBlocked(c.x, c.z)) resetPet(c);
+  // on the walking tour he trots along behind you
+  if (state.walk && (!BM || HOUSE.cur === 0) && !c.mode && c.goRest !== 'sleep') { const d = Math.hypot(walk.x - c.x, walk.z - c.z);
+    if (d > 1.6) { const tx = walk.x - (walk.x - c.x) / d * 0.9, tz = walk.z - (walk.z - c.z) / d * 0.9; if (reachable(c, tx, tz)) { c.tx = tx; c.tz = tz; c.wait = 0; c.goRest = null; } } }
   const dx = c.tx - c.x, dz = c.tz - c.z, dist = Math.hypot(dx, dz);
   let moving = false;
   // at night he heads for bed and sleeps till morning; by day he sometimes naps on a rug
   if (state.night && !c.mode && !c.goRest && c.t > (c.awakeUntil || 0)) { const sp = restSpot(c, true); if (sp) { [c.tx, c.tz] = sp; c.goRest = 'sleep'; c.wait = 0; } else { c.mode = 'sleep'; } }
   if (!state.night && c.mode === 'sleep') { c.mode = null; c.wait = 0.5; }
-  if (c.mode) { c.wait = Math.max(c.wait, 0.2); if (c.mode === 'nap' && (c.napLeft -= dt) <= 0) { c.mode = null; c.wait = 0.4; } }
+  if (c.mode) { c.wait = Math.max(c.wait, 0.2); if ((c.mode === 'nap' || c.mode === 'eat') && (c.napLeft -= dt) <= 0) { c.mode = null; c.wait = 0.4; } }
   else if (c.wait > 0) c.wait -= dt;
   else if (dist > 0.03) {
     const step = Math.min(dist, dt * c.speed), nx = c.x + dx / dist * step, nz = c.z + dz / dist * step;
     if (stepBlocked(c.x, c.z, nx, nz)) { c.tx = c.x; c.tz = c.z; c.wait = 0.6; }
     else { c.x = nx; c.z = nz; moving = true; c.g.rotation.y = Math.atan2(-dz, dx); }
-  } else if (c.goRest) { c.mode = c.goRest === 'sleep' ? 'sleep' : 'nap'; c.napLeft = 7 + Math.random() * 9; c.goRest = null; }
-  else { c.wait = c.rest + Math.random() * 3; const sp = Math.random() < 0.22 && restSpot(c); if (sp) { [c.tx, c.tz] = sp; c.goRest = 'nap'; c.wait = 0.3; } else petTarget(c); }
+  } else if (c.goRest === 'eat') { c.mode = 'eat'; c.napLeft = 4 + Math.random() * 2; c.fedAt = c.t; c.goRest = null; }
+  else if (c.goRest === 'ball') { if (c.ball && c.ball.group) kickBall(c, c.ball); c.goRest = null; c.ball = null; c.speed = c.speed0 ?? c.speed; c.wait = 0.4; c.jump = 0.6; }
+  else if (c.goRest) { c.mode = c.goRest === 'sleep' ? 'sleep' : 'nap'; c.napLeft = 7 + Math.random() * 9; c.goRest = null; }
+  else { c.wait = c.rest + Math.random() * 3; const bowl = milosThings('comederoMilo')[0], ball = milosThings('pelotaMilo')[0], r = Math.random();
+    if (bowl && c.t > (c.fedAt || 20) + 45 && r < 0.5 && reachable(c, ...spotOf(bowl))) { [c.tx, c.tz] = spotOf(bowl); c.goRest = 'eat'; c.wait = 0.2; } // time for a snack
+    else if (ball && r < 0.45 && reachable(c, ...spotOf(ball))) { const [bx, bz] = spotOf(ball), a = Math.atan2(c.z - bz, c.x - bx); [c.tx, c.tz] = [bx + Math.cos(a) * 0.3, bz + Math.sin(a) * 0.3]; c.goRest = 'ball'; c.ball = ball; c.wait = 0.1; c.speed0 ??= c.speed; c.speed = c.speed0 * 1.6; }
+    else { const sp = Math.random() < 0.22 && restSpot(c); if (sp) { [c.tx, c.tz] = sp; c.goRest = 'nap'; c.wait = 0.3; } else petTarget(c); } }
   if (c.jump > 0) c.jump = Math.max(0, c.jump - dt * 1.8);
   c.g.position.set(c.x, (moving ? Math.abs(Math.sin(c.t * 12)) * c.bounce : 0) + Math.sin(c.jump * PI) * c.hop, c.z);
   if (c.tail) c.tail.rotation.x = Math.sin(c.t * (moving ? 16 : 6)) * 0.4;
   if (c.body) c.body.rotation.x = moving ? Math.sin(c.t * 10) * 0.07 : 0;
   if (c.head) { c.head.rotation.x = moving ? 0 : Math.sin(c.t * 0.7) * 0.18; c.head.rotation.z = moving ? Math.sin(c.t * 10) * 0.05 : 0; }
   if (c.tongue) c.tongue.scale.y = moving ? 1 + Math.abs(Math.sin(c.t * 12)) * 0.8 : c.mode ? 0.01 : 1;
-  const lying = !!c.mode && c.jump <= 0, k2 = Math.min(1, dt * 4); c.lie = (c.lie || 0) + ((lying ? 1 : 0) - (c.lie || 0)) * k2;
+  const lying = (c.mode === 'nap' || c.mode === 'sleep') && c.jump <= 0, k2 = Math.min(1, dt * 4); c.lie = (c.lie || 0) + ((lying ? 1 : 0) - (c.lie || 0)) * k2;
   if (c.body) { c.body.position.y = -0.11 * c.lie; c.body.scale.y = 1 - 0.08 * c.lie + (c.mode === 'sleep' ? Math.sin(c.t * 1.6) * 0.02 : 0); } // breathing while asleep
   if (c.head && c.lie > 0.05) { c.head.rotation.z = -0.32 * c.lie; c.head.rotation.x = 0.2 * c.lie; }
+  if (c.head && c.mode === 'eat') c.head.rotation.x = 0.55 + Math.sin(c.t * 11) * 0.08; // nose in the bowl
   if (c === cat) { zzz.visible = c.mode === 'sleep' && c.g.visible; if (zzz.visible) { zzz.position.set(c.x, c.g.position.y + 0.72 + Math.sin(c.t * 1.2) * 0.05, c.z); zzz.material.opacity = 0.6 + Math.sin(c.t * 1.2) * 0.3; } }
   if (c.eyes && c.mode === 'sleep') for (const e of c.eyes) e.scale.y = 0.08;
   else if (c.eyes) { const blink = c.t > c.blinkAt && c.t < c.blinkAt + 0.13; if (c.t > c.blinkAt + 0.13) c.blinkAt = c.t + 2 + Math.random() * 3; for (const e of c.eyes) e.scale.y = blink ? 0.12 : 1; }
@@ -3158,30 +3300,56 @@ const poolTint = new THREE.Color(), WARM = new THREE.Color(0xFFE9CC);
 const pools = lightPool.map(() => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), poolMat.clone()); m.rotation.x = -PI / 2; m.visible = false; m.renderOrder = 2; scene.add(m); return m; });
 const sunPatchMat = new THREE.MeshBasicMaterial({ color: 0xFFE7B8, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending });
 const sunPatches = new Map(), spP = new THREE.Vector3();
+// sunlight through each window: a bright patch on the floor, a faint shaft of light in the air and dust drifting in it
+const beamMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+const dustMat = new THREE.PointsMaterial({ color: 0xFFF1D0, size: 0.025, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending });
+const spN = new THREE.Vector3();
 function updateSunPatches() {
-  const want = new Set();
-  if (!BM) for (const it of R.items) {
-    const D = def(it); if (D.opening !== 'window' || !it.group || !walls[it.wall]) continue;
-    const outward = walls[it.wall].normal; if (sunDir.dot(outward) < 0.05 || sunDir.y < 0.05 || sun.intensity < 0.3) continue; // the sun is on the other side
-    want.add(it); let m = sunPatches.get(it); const pts = holePts(D.hole);
-    if (!m || m.userData.n !== pts.length) { if (m) { scene.remove(m); m.geometry.dispose(); } const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(pts.length * 3), 3));
-      const idx = []; for (let i = 1; i < pts.length - 1; i++) idx.push(0, i, i + 1); geo.setIndex(idx); m = new THREE.Mesh(geo, sunPatchMat); m.userData.n = pts.length; m.renderOrder = 2; m.frustumCulled = false; scene.add(m); sunPatches.set(it, m); }
-    const pos = m.geometry.attributes.position, wg = walls[it.wall].g, cx = along(it.wall, it.u, D.w);
-    pts.forEach(([x, y], i) => { spP.set(cx + x, y, 0.08); wg.localToWorld(spP); const k = spP.y / sunDir.y;
-      pos.setXYZ(i, THREE.MathUtils.clamp(spP.x - sunDir.x * k, -GW / 2, GW / 2), 0.012, THREE.MathUtils.clamp(spP.z - sunDir.z * k, -GD / 2, GD / 2)); });
-    pos.needsUpdate = true;
+  const want = new Set(), list = BM ? HOUSE.levels.flatMap((lv, i) => (i <= HOUSE.cur ? lv.items : [])) : R.items;
+  for (const it of list) {
+    const D = def(it); if (D.opening !== 'window' || !it.group || !it.group.parent) continue;
+    let vis = true; for (let o = it.group; o; o = o.parent) if (!o.visible) vis = false; if (!vis) continue;
+    if (BM) { it.group.updateWorldMatrix(true, false); spN.set(0, 0, -outSign(it)).transformDirection(it.group.matrixWorld); } else { if (!walls[it.wall]) continue; spN.copy(walls[it.wall].normal); }
+    if (state.night || sunDir.dot(spN) < 0.05 || sunDir.y < 0.05 || sun.intensity < 0.3) continue; // night, or the sun is on the other side
+    want.add(it); let m = sunPatches.get(it); const pts = holePts(D.hole), n = pts.length;
+    if (!m || m.userData.n !== n) { if (m) dropPatch(m);
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(n * 3), 3));
+      const idx = []; for (let i = 1; i < n - 1; i++) idx.push(0, i, i + 1); geo.setIndex(idx); m = new THREE.Mesh(geo, sunPatchMat); m.userData.n = n; m.renderOrder = 2; m.frustumCulled = false; scene.add(m); sunPatches.set(it, m);
+      const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(n * 6), 3)); bg.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(n * 6), 3));
+      const bi = []; for (let i = 0; i < n; i++) { const a = i, b2 = (i + 1) % n; bi.push(a, b2, n + b2, a, n + b2, n + a); } bg.setIndex(bi);
+      const beam = new THREE.Mesh(bg, beamMat); beam.frustumCulled = false; beam.renderOrder = 3; scene.add(beam);
+      const dg = new THREE.BufferGeometry(), dn = 36; dg.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(dn * 3), 3));
+      const dust = new THREE.Points(dg, dustMat); dust.frustumCulled = false; dust.userData.p = Array.from({ length: dn }, () => [Math.random(), Math.random(), Math.random(), Math.random() * 6]); scene.add(dust);
+      m.userData.beam = beam; m.userData.dust = dust; m.userData.top = new Float32Array(n * 3); m.userData.bot = new Float32Array(n * 3); }
+    const pos = m.geometry.attributes.position, fy = (BM ? (it.lv || 0) * LEVEL_H : 0) + 0.012, U = m.userData, bp = U.beam.geometry.attributes.position, bc = U.beam.geometry.attributes.color;
+    pts.forEach(([x, y], i) => { spP.set(x, y, 0); it.group.localToWorld(spP); const k = (spP.y - fy) / sunDir.y;
+      const fx = THREE.MathUtils.clamp(spP.x - sunDir.x * k, -GW / 2, GW / 2), fz = THREE.MathUtils.clamp(spP.z - sunDir.z * k, -GD / 2, GD / 2);
+      pos.setXYZ(i, fx, fy, fz); bp.setXYZ(i, spP.x, spP.y, spP.z); bp.setXYZ(n + i, fx, fy, fz); U.top.set([spP.x, spP.y, spP.z], i * 3); U.bot.set([fx, fy, fz], i * 3); });
+    const c0 = sun.color.clone().multiplyScalar(0.16), c1 = sun.color.clone().multiplyScalar(0.03);
+    for (let i = 0; i < n; i++) { bc.setXYZ(i, c0.r, c0.g, c0.b); bc.setXYZ(n + i, c1.r, c1.g, c1.b); }
+    pos.needsUpdate = bp.needsUpdate = bc.needsUpdate = true;
   }
   sunPatchMat.color.copy(sun.color).multiplyScalar(0.45); sunPatchMat.opacity = 1;
-  for (const [it, m] of sunPatches) if (!want.has(it)) { scene.remove(m); m.geometry.dispose(); sunPatches.delete(it); }
+  for (const [it, m] of sunPatches) if (!want.has(it)) { dropPatch(m); sunPatches.delete(it); }
+}
+function dropPatch(m) { for (const o of [m, m.userData.beam, m.userData.dust]) if (o) { scene.remove(o); o.geometry.dispose(); } }
+function updateDust(now) { // specks drift slowly down through each shaft of light and twinkle in and out
+  for (const m of sunPatches.values()) { const U = m.userData, d = U.dust; if (!d) continue; const n = U.n, P = d.geometry.attributes.position;
+    U.dust.userData.p.forEach(([a, b, t0, ph], k) => { const t = (t0 + now / 1000 * 0.03) % 1, i = Math.floor(a * n) % n, j = (i + Math.max(1, Math.floor(n / 2))) % n, s2 = b;
+      const tx = U.top[i * 3] + (U.top[j * 3] - U.top[i * 3]) * s2, ty = U.top[i * 3 + 1] + (U.top[j * 3 + 1] - U.top[i * 3 + 1]) * s2, tz = U.top[i * 3 + 2] + (U.top[j * 3 + 2] - U.top[i * 3 + 2]) * s2;
+      const bx = U.bot[i * 3] + (U.bot[j * 3] - U.bot[i * 3]) * s2, by = U.bot[i * 3 + 1] + (U.bot[j * 3 + 1] - U.bot[i * 3 + 1]) * s2, bz = U.bot[i * 3 + 2] + (U.bot[j * 3 + 2] - U.bot[i * 3 + 2]) * s2;
+      P.setXYZ(k, tx + (bx - tx) * t + Math.sin(now / 1700 + ph) * 0.03, ty + (by - ty) * t, tz + (bz - tz) * t + Math.cos(now / 1900 + ph) * 0.03); });
+    P.needsUpdate = true; }
 }
 function updatePools() { lightPool.forEach((l, i) => { const p = pools[i], on = l.intensity > 0.01; p.visible = on; if (!on) return; const fy = BM ? Math.floor((l.position.y + 0.1) / LEVEL_H) * LEVEL_H : 0;
   p.position.set(l.position.x, fy + 0.03, l.position.z); const sz = 1.4 + l.intensity * 1.3; p.scale.set(sz, sz, 1); p.material.color.copy(WARM).lerp(poolTint.copy(l.color), 0.3).multiplyScalar(0.5 * Math.min(1, l.intensity)); }); }
+const FIRE = new Set(['chimenea', 'candelabro', 'velas', 'aranaRustica', 'barbacoa']); // flames flicker
 function updateLights() {
   const list = state.night ? allItems().filter(it => def(it).light && !it.off && it.group && it.group.parent && (!BM || it.lv <= HOUSE.cur)) : [];
   list.sort((a, b) => a.group.position.lengthSq() - b.group.position.lengthSq());
   // lamp bulbs cast no shadow maps: on phones their small soft shadow maps left speckles and coloured dots on the floor
   lightPool.forEach((l, i) => { if (l.castShadow) l.castShadow = false; const it = list[i]; if (!it) { l.intensity = 0; return; } const Lc = def(it).light; it.group.updateWorldMatrix(true, false);
-    l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(it.lc ?? Lc.color); l.intensity = Lc.power * (state.lampK ?? 1); });
+    l.position.copy(it.group.localToWorld(new THREE.Vector3(Lc.x || 0, Lc.y, Lc.z || 0))); l.color.setHex(it.lc ?? Lc.color); l.intensity = Lc.power * (state.lampK ?? 1); l.userData.base = l.intensity; l.userData.fire = FIRE.has(it.type); });
 }
 function paintChrome() { // what shows around and under the game: browser bar, iPhone home strip, overscroll
   const c = state.menu ? '#1E1830' : state.night ? '#1D1A3A' : app.classList.contains('dusk') ? '#E9C9CF' : '#EEE4F3';
@@ -3190,14 +3358,22 @@ function paintChrome() { // what shows around and under the game: browser bar, i
 }
 // each look is [hemi, hemiSky, hemiGround, sun, sunColor, fill, windowColor, windowGlow, lampGlow]
 const SKY_KEYS = [[0.6, 0xFFF2E6, 0x7A6EA0, 0.88, 0xFFEBD2, 0.26, 0xA9D6EE, 0x5E9CC4, 0.5], [0.46, 0xFFC9A8, 0x6A4F7A, 0.72, 0xFF9455, 0.1, 0xF7B58A, 0xD9784A, 0.8], [0.42, 0x9DA6E8, 0x8E83B0, 0.1, 0x8C9BE8, 0.06, 0x2C3570, 0x1B2150, 1.1]];
-const SKY_MODES = ['dia', 'tarde', 'noche', 'auto'], SKY_P = { dia: 0, tarde: 0.5, noche: 1 };
+const SKY_MODES = ['dia', 'tarde', 'noche', 'auto', 'hora'], SKY_P = { dia: 0, tarde: 0.5, noche: 1 };
+const clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+// the hour you pick on the slider: dawn from 5 to 8, full day until half past five, dusk until 20:30, then night
+function hourPhase(h) { return h < 5 ? 1 : h < 6.5 ? 1 - (h - 5) / 3 : h < 8 ? 0.5 - (h - 6.5) / 3 : h < 17.5 ? 0 : h < 19 ? (h - 17.5) / 3 : h < 20.5 ? 0.5 + (h - 19) / 3 : 1; }
 const sunsetIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 7v2M5.6 11.6l1.4 1.4M18.4 11.6L17 13M7 21h10"/></svg>';
 const autoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M21 3v6h-6"/><circle cx="12" cy="12" r="3"/></svg>';
-function skyPhase() { if (state.sky !== 'auto') return SKY_P[state.sky] ?? 0; const u = (performance.now() / 1000 / 240 + 0.2) % 1; // four minutes a day
+function skyPhase() { if (state.sky === 'hora') return hourPhase(settings.hour ?? 12); if (state.sky !== 'auto') return SKY_P[state.sky] ?? 0; const u = (performance.now() / 1000 / 240 + 0.2) % 1; // four minutes a day
   return u < 0.4 ? 0 : u < 0.5 ? (u - 0.4) * 5 : u < 0.55 ? 0.5 + (u - 0.5) * 10 : u < 0.88 ? 1 : u < 0.94 ? 1 - (u - 0.88) * 8.33 : 0.5 - (u - 0.94) * 8.33; }
 const cA = new THREE.Color(), cB = new THREE.Color();
 const mixHex = (a, b, t, out) => out.copy(cA.setHex(a)).lerp(cB.setHex(b), t);
 let skyP = -1;
+{ // a field of small stars, some brighter, drawn once and tiled behind the night sky
+  const c = document.createElement('canvas'); c.width = c.height = 420; const x = c.getContext('2d'), r = rng('estrellas');
+  for (let i = 0; i < 90; i++) { const big = r() < 0.12; x.fillStyle = `rgba(255,250,235,${big ? 0.95 : 0.35 + r() * 0.4})`; x.beginPath(); x.arc(r() * 420, r() * 420, big ? 1.4 : 0.7 + r() * 0.5, 0, 2 * PI); x.fill(); }
+  app.style.setProperty('--stars', `url(${c.toDataURL()})`);
+}
 function setSky(p) {
   p = Math.max(0, Math.min(1, p)); const i = p < 0.5 ? 0 : 1, t = (p - i * 0.5) * 2, A = SKY_KEYS[i], Bk = SKY_KEYS[i + 1], L2 = (a, b) => a + (b - a) * t;
   hemi.intensity = L2(A[0], Bk[0]); mixHex(A[1], Bk[1], t, hemi.color); mixHex(A[2], Bk[2], t, hemi.groundColor);
@@ -3207,6 +3383,7 @@ function setSky(p) {
   const glow = L2(A[8], Bk[8]); glowMats.forEach(m => { m.emissiveIntensity = m.userData.off ? 0 : m.userData.cityGlow ? Math.max(0.03, (p - 0.4) * 1.6) * (m.userData.k || 1) : glow; }); // city windows light up after sunset
   const night = p > 0.6, dusk = p > 0.25 && !night, changed = night !== state.night || skyP < 0;
   state.night = night; state.lampK = Math.max(0, Math.min(1, (p - 0.45) * 2.5)); skyP = p;
+  winPane.emissiveIntensity = state.lampK * 0.6; winPane.opacity = 0.3 + state.lampK * 0.3; // lit windows seen from the garden at night
   app.classList.toggle('night', night); app.classList.toggle('dusk', dusk); if (changed) paintChrome();
   updateLights();
 }
@@ -3214,6 +3391,7 @@ function setSky(p) {
 function sunFrac(p) {
   if (state.sky === 'auto') { const u = (performance.now() / 1000 / 240 + 0.2) % 1; return u < 0.5 ? Math.min(1, u / 0.5) : u > 0.94 ? (u - 0.94) / 0.06 * 0.1 : 1; }
   if (state.sky === 'tarde') return 0.92; if (state.sky === 'noche') return 0.5;
+  if (state.sky === 'hora') return THREE.MathUtils.clamp(((settings.hour ?? 12) - 6.5) / 14, 0.03, 0.97);
   const d = new Date(), h = d.getHours() + d.getMinutes() / 60; return THREE.MathUtils.clamp((h - 7) / 13, 0.08, 0.86); // day mode follows the real clock
 }
 const sunDir = new THREE.Vector3();
@@ -3224,10 +3402,14 @@ function placeSun(p) {
 function applyNight() {
   setSky(skyPhase());
   const m = state.sky || 'dia', i = SKY_MODES.indexOf(m);
-  $('nightBtn').innerHTML = [sunIcon, sunsetIcon, moonIcon, autoIcon][i] + `<span>${['Día', 'Tarde', 'Noche', 'Auto'][i]}</span>`;
-  $('nightBtn').classList.toggle('on', m === 'noche'); $('nightBtn').setAttribute('aria-label', 'Luz: ' + ['día', 'atardecer', 'noche', 'ciclo automático'][i] + '. Toca para cambiar');
+  $('nightBtn').innerHTML = [sunIcon, sunsetIcon, moonIcon, autoIcon, clockIcon][i] + `<span>${['Día', 'Tarde', 'Noche', 'Auto', 'Hora'][i]}</span>`;
+  $('nightBtn').classList.toggle('on', m === 'noche'); $('nightBtn').setAttribute('aria-label', 'Luz: ' + ['día', 'atardecer', 'noche', 'ciclo automático', 'hora a elegir'][i] + '. Toca para cambiar');
+  $('hourBar').hidden = m !== 'hora'; renderHour();
 }
-$('nightBtn').addEventListener('click', () => { state.sky = SKY_MODES[(SKY_MODES.indexOf(state.sky || 'dia') + 1) % 4]; settings.sky = state.sky; applyNight(); save(); buzz(6); sfx('click'); });
+$('nightBtn').addEventListener('click', () => { state.sky = SKY_MODES[(SKY_MODES.indexOf(state.sky || 'dia') + 1) % SKY_MODES.length]; settings.sky = state.sky; applyNight(); save(); buzz(6); sfx('click'); });
+function renderHour() { const h = settings.hour ?? 12; $('hourIn').value = h; $('hourTxt').textContent = `${String(Math.floor(h) % 24).padStart(2, '0')}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`; }
+$('hourIn').addEventListener('input', () => { settings.hour = +$('hourIn').value; applyNight(); placeSun(skyP); updateSunPatches(); });
+$('hourIn').addEventListener('change', () => save());
 function renderLockAll() {
   const on = !!state.lockAll; $('lockAllBtn').classList.toggle('on', on);
   $('lockAllBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${on ? '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>' : '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/>'}</svg><span>${on ? 'Fijado' : 'Mover'}</span>`;
@@ -3428,6 +3610,7 @@ const TOOLS = [
   { id: 'copy', name: 'Copiar habitación', hint: 'Arrastra por encima de una habitación para copiarla con todo lo que tiene', svg: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>' },
   { id: 'paste', name: 'Pegar copia', hint: 'Toca dónde quieres la copia (también en otro piso)', svg: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 12h6M9 16h4"/>' },
   { id: 'floor', name: 'Poner suelo', hint: 'Arrastra para cubrir un área · el tipo se elige en Suelo', svg: '<path d="M3 14l9-5 9 5-9 5z"/><path d="M7 12l9 5M11 10l9 5"/>' },
+  { id: 'pool', name: 'Piscina', hint: 'Arrastra para darle la forma que quieras · arrastra encima para quitarla', svg: '<path d="M3 17c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M3 12c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M8 9V5a2 2 0 0 1 4 0M14 9V5a2 2 0 0 1 4 0"/>' },
   { id: 'roofTeja', roof: 'teja', name: 'Tejado de teja', hint: 'Toda la casa tapada · arrastra sobre una zona para quitarlo o ponerlo', svg: '<path d="M3 12l9-7 9 7"/><path d="M6 10v9h12v-9"/>' },
   { id: 'roofPizarra', roof: 'pizarra', name: 'Tejado de pizarra', hint: 'Toda la casa tapada · arrastra sobre una zona para quitarlo o ponerlo', svg: '<path d="M3 12l9-7 9 7"/><path d="M5 12h14M7 9h10"/>' },
   { id: 'roofPlano', roof: 'plano', name: 'Azotea', hint: 'Toda la casa con azotea · arrastra sobre una zona para quitarla o ponerla', svg: '<rect x="3" y="9" width="18" height="4" rx="1"/><path d="M5 13v7M19 13v7"/>' },
@@ -3466,7 +3649,8 @@ const edgeShift = (k, n) => { const [t, x, z] = parseE(k); return t === 'h' ? ek
 const edgeCenter = k => { const [t, x, z] = parseE(k); return t === 'h' ? [x + 0.5 - GW / 2, z - GD / 2] : [x - GW / 2, z + 0.5 - GD / 2]; };
 const cellOnSide = (k, side) => { const [t, x, z] = parseE(k); return t === 'h' ? (side > 0 ? [x, z] : [x, z - 1]) : (side > 0 ? [x - 1, z] : [x, z]); };
 function stairHole(i, x, z) { return i > 0 && HOUSE.levels[i - 1].items.some(o => { if (!def(o).stairs) return false; const [w, d] = fp(o); return x >= o.gx && x < o.gx + w && z >= o.gz && z < o.gz + d; }); }
-const hasTile = (i, x, z) => !!HOUSE.levels[i] && !!HOUSE.levels[i].tiles[ckey(x, z)] && !stairHole(i, x, z);
+const isPool = (i, x, z) => !!HOUSE.levels[i] && !!(HOUSE.levels[i].pool || {})[ckey(x, z)];
+const hasTile = (i, x, z) => !!HOUSE.levels[i] && !!HOUSE.levels[i].tiles[ckey(x, z)] && !stairHole(i, x, z) && !isPool(i, x, z);
 
 // a flat tower face: rows of windows, some lit; the lit ones glow at night
 function towerTex(seed, lit) {
@@ -3560,7 +3744,9 @@ function buildRoof(i) {
       // a painted fascia board along every edge that looks out over open air
       for (const [ex, ez, p1, p2] of [[0, -1, a, b], [0, 1, d, c], [-1, 0, c, a], [1, 0, b, d]]) {
         const nx = Math.floor(px + 0.25 + ex * 0.5), nz = Math.floor(pz + 0.25 + ez * 0.5); if (inn(nx, nz) || !openAir(nx, nz)) continue;
-        fas.push(...p1, ...p2, p2[0], p2[1] - 0.09, p2[2], ...p1, p2[0], p2[1] - 0.09, p2[2], p1[0], p1[1] - 0.09, p1[2]); }
+        fas.push(...p1, ...p2, p2[0], p2[1] - 0.09, p2[2], ...p1, p2[0], p2[1] - 0.09, p2[2], p1[0], p1[1] - 0.09, p1[2]);
+        const o = (q, a2) => [q[0] + ex * a2, q[1] - 0.09 + (a2 ? 0.05 : 0), q[2] + ez * a2]; // the gutter: a lip just under the fascia
+        fas.push(...o(p1, 0), ...o(p2, 0), ...o(p2, 0.09), ...o(p1, 0), ...o(p2, 0.09), ...o(p1, 0.09)); }
     }
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.computeVertexNormals();
     // tiles run along each slope's eave: map every triangle on the plane it faces most
@@ -3568,6 +3754,9 @@ function buildRoof(i) {
     for (let t = 0; t < pos.length / 9; t++) { const xs = Math.abs(n.getX(t * 3)) > Math.abs(n.getZ(t * 3)); for (let v = 0; v < 3; v++) { const o = (t * 3 + v) * 3; uv.push(xs ? pos[o + 2] : pos[o], xs ? pos[o] * 1.15 : pos[o + 2] * 1.15); } }
     geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     const m = new THREE.Mesh(geo, roofMatDS(st)); m.castShadow = m.receiveShadow = true; lg.roof.add(m);
+    if (mine.length >= 6) { // a brick chimney stack poking out near the top of the roof
+      const best = mine.map(([x, z]) => [x, z, dist(x + 0.5, z + 0.5)]).sort((a, b) => b[2] - a[2] || a[0] - b[0])[0], h = best[2] * ROOF_PITCH + 0.55, brick = M(0xB0573F);
+      const cx = best[0] + 0.5 - GW / 2 + 0.28, cz = best[1] + 0.5 - GD / 2; P(lg.roof, 0.34, h, 0.34, brick, cx, y0 + h / 2, cz); P(lg.roof, 0.42, 0.06, 0.42, M(0x5E537A), cx, y0 + h + 0.03, cz); }
     if (fas.length) { const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(fas, 3)); fg.computeVertexNormals();
       const fm = new THREE.Mesh(fg, fasciaMat); fm.castShadow = true; lg.roof.add(fm); }
   }
@@ -3596,6 +3785,20 @@ function roofAll(st) {
   if (!Object.values(HOUSE.levels).some(lv => Object.keys(lv.roof).length)) return toast('Primero construye una habitación');
   if (changed) { pushUndo(before); HOUSE.levels.forEach((_, i) => buildRoof(i)); buzz(); sfx('pop'); save(); }
   toast(st === 'plano' ? 'Azotea puesta en toda la casa' : 'Tejado puesto en toda la casa');
+}
+// a pool of any shape: painted cell by cell, deeper blue towards the middle, with a stone edge wherever it meets dry ground
+function buildPool(i) {
+  const lv = HOUSE.levels[i], cells = Object.keys(lv.pool || {}).map(k => k.split(',').map(Number)); if (!cells.length) return;
+  const g = levelGroups[i].geo, wet = (x, z) => isPool(i, x, z);
+  const depth = (vx, vz) => { let d = 3; for (let x = vx - 3; x < vx + 3; x++) for (let z = vz - 3; z < vz + 3; z++) if (!wet(x, z)) d = Math.min(d, Math.max(Math.max(0, x - vx, vx - x - 1), Math.max(0, z - vz, vz - z - 1))); return d; };
+  const shallow = new THREE.Color(0xA8E6F7), deep = new THREE.Color(0x2E86BE), pos = [], col = [], uv = [], c = new THREE.Color();
+  for (const [x, z] of cells) for (const tri of [[[0, 0], [0, 1], [1, 0]], [[1, 0], [0, 1], [1, 1]]]) for (const [dx, dz] of tri) {
+    const vx = x + dx, vz = z + dz; pos.push(vx - GW / 2, 0.03, vz - GD / 2); c.copy(shallow).lerp(deep, Math.min(1, depth(vx, vz) / 1.6)); col.push(c.r, c.g, c.b); uv.push(vx / 1.7, vz / 1.7); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.computeVertexNormals();
+  const w = new THREE.Mesh(geo, poolWaterMat); w.receiveShadow = true; g.add(w);
+  for (const [x, z] of cells) { const cx = x + 0.5 - GW / 2, cz = z + 0.5 - GD / 2;
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (!wet(x + dx, z + dz)) { const e = P(g, dz ? 1.0 : 0.26, 0.09, dx ? 1.0 : 0.26, copingMat, cx + dx * 0.5, 0.045, cz + dz * 0.5); e.castShadow = true; }
+    for (const [dx, dz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) if (!wet(x + dx, z) && !wet(x, z + dz)) P(g, 0.26, 0.09, 0.26, copingMat, cx + dx * 0.5, 0.045, cz + dz * 0.5); }
 }
 function openingMap(lv) { // wall edges a door or window cuts through: edge -> { it, n }
   const out = {};
@@ -3632,13 +3835,13 @@ function buildLevelGeo(i) {
   for (const it of lv.items.slice()) if (def(it).wall && !it.lifting && !fitsWallB(it, it.edge, it.side)) { if (sel === it) select(null); lv.items.splice(lv.items.indexOf(it), 1); }
   lg.geo.clear(); wallMeshes[i] = {};
   for (const [k, f] of Object.entries(lv.tiles)) {
-    const [x, z] = k.split(',').map(Number); if (stairHole(i, x, z)) continue;
+    const [x, z] = k.split(',').map(Number); if (stairHole(i, x, z) || isPool(i, x, z)) continue;
     const t = new THREE.Mesh(tileGeo(x, z), floorMatFor(f)); t.rotation.x = -PI / 2; t.position.set(x + 0.5 - GW / 2, 0.002, z + 0.5 - GD / 2); t.receiveShadow = true; lg.geo.add(t);
     if (i > 0) P(lg.geo, 1, 0.15, 1, slabMat, x + 0.5 - GW / 2, -0.074, z + 0.5 - GD / 2);
   }
   const ops = openingMap(lv); straightV = straightVerts(lv);
   for (const [k, e] of Object.entries(lv.walls)) makeEdge(i, k, e, ops[k]);
-  makePosts(i); makeRuns(i); buildRoof(i);
+  makePosts(i); makeRuns(i); buildRoof(i); buildPool(i);
   for (const it of lv.items) if (def(it).wall && it.group) placeMeshB(it);
 }
 let straightV = new Map();
@@ -3898,7 +4101,8 @@ function surfaceHit(e) { // where a tap lands on a table top, so "on top" items 
   if (!h) return null; h.point.it = h.object.userData.item; return h.point;
 }
 function placeAt(e) {
-  const type = placing, D = CAT[type], it = findSpot(e, type);
+  const type = placing, D = CAT[type]; if (!affordable(type)) return;
+  const it = findSpot(e, type);
   if (!it) { buzz(30); const fpnt = !D.wall && floorPoint(e); return toast(D.wall ? 'Toca una pared libre' : D.top ? 'Toca una mesa libre' : BM && fpnt && !hasTile(HOUSE.cur, Math.floor(fpnt.x + GW / 2), Math.floor(fpnt.z + GD / 2)) ? 'Pon suelo ahí primero (Suelo · Césped)' : 'Ahí no cabe'); }
   const before = snap(); pushUndo(before); R.items.push(it); buildItem(it); afterItemsChanged(it);
   settings.recent = [type, ...(settings.recent || []).filter(k => k !== type)].slice(0, 12);
@@ -3972,7 +4176,7 @@ function toolEnd(g) {
     clip = { w: x1 - x0, d: z1 - z0, tiles: {}, walls: {}, roof: {}, items: [] };
     for (let x = x0; x < x1; x++) for (let z = z0; z < z1; z++) { const k = ckey(x, z); if (R.tiles[k]) clip.tiles[ckey(x - x0, z - z0)] = R.tiles[k]; if (R.roof && R.roof[k]) clip.roof[ckey(x - x0, z - z0)] = R.roof[k]; }
     for (const [k, w] of Object.entries(R.walls)) { const [t, x, z] = parseE(k); if (t === 'h' ? x >= x0 && x < x1 && z >= z0 && z <= z1 : x >= x0 && x <= x1 && z >= z0 && z < z1) clip.walls[ekey(t, x - x0, z - z0)] = { ...w }; }
-    for (const it of R.items) { const D = def(it); const { group, lv, lifting, _a, _moved, ...o } = it;
+    for (const it of R.items) { const D = def(it); const { group, lv, lifting, _a, _moved, _roll, ...o } = it;
       if (D.wall) { const [t, x, z] = parseE(it.edge); if (clip.walls[ekey(t, x - x0, z - z0)]) clip.items.push({ ...o, edge: ekey(t, x - x0, z - z0) }); }
       else { const [w, d] = fp(it); if (it.gx >= x0 && it.gz >= z0 && it.gx + w <= x1 && it.gz + d <= z1) clip.items.push({ ...o, gx: it.gx - x0, gz: it.gz - z0 }); } }
     toast('Copiada. Ahora toca dónde quieres ponerla'); setTool('paste'); return; }
@@ -3999,6 +4203,16 @@ function toolEnd(g) {
   } else if (id === 'room') {
     const r = gridRect(g.a, g.b); if (!r) return toast('Arrastra en diagonal');
     rectRoom(R, r.x0, r.z0, r.x1, r.z1, brush.floor, brush.wall); changed = true;
+  } else if (id === 'pool') {
+    if (HOUSE.cur !== 0) return toast('La piscina va en la planta baja');
+    const a = cellPt(g.a), b = cellPt(g.b), ks = []; R.pool = R.pool || {};
+    const taken = (x, z) => R.items.some(o => { if (def(o).wall) return false; const [w, d] = fp(o); return x >= o.gx && x < o.gx + w && z >= o.gz && z < o.gz + d; });
+    for (let x = Math.min(a.x, b.x); x <= Math.max(a.x, b.x); x++) for (let z = Math.min(a.z, b.z); z <= Math.max(a.z, b.z); z++) ks.push([x, z]);
+    const off = ks.every(([x, z]) => R.pool[ckey(x, z)]); let skipped = 0;
+    for (const [x, z] of ks) { const k = ckey(x, z);
+      if (off) { delete R.pool[k]; changed = true; }
+      else if (!R.pool[k]) { if (taken(x, z)) { skipped++; continue; } R.pool[k] = 1; if (!R.tiles[k]) R.tiles[k] = 'cesped'; changed = true; } } // the ground round it is lawn
+    if (changed) toast(off ? 'Piscina tapada' : skipped ? 'Piscina ampliada · donde había muebles no se cavó' : 'Piscina ampliada');
   } else if (TOOLS.find(t => t.id === id && 'roof' in t)) {
     // the roof you see from above is the one on the highest floor built there, whichever floor is selected
     const a = cellPt(g.a), b = cellPt(g.b), st = TOOLS.find(t => t.id === id).roof, ks = [];
@@ -4155,6 +4369,9 @@ document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e
   settings[seg.dataset.setting] = b.dataset.v; renderSettings(); save();
   if (seg.dataset.setting === 'quality') { applyQuality(); refreshMirrors(); }
   if (seg.dataset.setting === 'music') setMusic(settings.music === '1');
+  if (seg.dataset.setting === 'budget') refreshHud();
+  if (seg.dataset.setting === 'oneHand') { app.classList.toggle('onehand', settings.oneHand === '1'); queueLayout(); }
+  if (seg.dataset.setting === 'shake' && settings.shake === '1') askMotion();
   if (seg.dataset.setting === 'sound' && settings.sound === '1') sfx('pop');
 }));
 $('wipe').addEventListener('click', () => {
@@ -4413,7 +4630,7 @@ function save() {
   if (wiping) return;
   try {
     const out = {};
-    for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, op: r.op, key: r.key, items: r.items.map(({ group, _a, _moved, ...i }) => i) };
+    for (const [id, r] of Object.entries(rooms)) out[id] = r.levels ? { levels: r.levels.map(lv => ({ tiles: lv.tiles, walls: lv.walls, roof: lv.roof || {}, pool: lv.pool || {}, items: lv.items.map(({ group, lv: _lv, lifting, _a, _moved, _roll, ...i }) => i) })) } : { wall: r.wall, floor: r.floor, best: r.best, op: r.op, key: r.key, budget: r.budget, items: r.items.map(({ group, _a, _moved, _roll, ...i }) => i) };
     projects[projCur].levels = out.build.levels; projects[projCur].site = rooms.build.site;
     localStorage.setItem(SAVE_KEY, JSON.stringify({ rooms: out, level: L.id, settings, projects, projCur }));
   } catch (e) { /* storage blocked: the game still plays, it just won't remember */ }
@@ -4464,12 +4681,20 @@ function frame(now) {
   if (!BM) for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
   if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
   animateDoors(dt);
+  if (!reduce && sunPatches.size) updateDust(now);
+  if (!reduce) for (const l of lightPool) if (l.userData.fire && l.intensity > 0) l.intensity = l.userData.base * (0.84 + 0.1 * Math.sin(now / 83) + 0.06 * Math.sin(now / 41 + 2));
+  if (!reduce) { waterTex.offset.x = (now / 1000 * 0.025) % 1; waterTex.offset.y = Math.sin(now / 1000 * 0.3) * 0.04; }
   if (clouds && !reduce) clouds.rotation.y += dt * 0.006; // clouds drift past below the balcony
   if (!reduce) for (const it of allItems()) if (it.group) {
     const D = CAT[it.type]; if (D.spin) { const b = it.group.getObjectByName('blades'); if (b) b.rotation.y += dt * 2.6; }
     if (D.sway) { const sw = it.group.getObjectByName('sway'); if (sw) { const t = now / 1000 + sw.userData.ph, a = D.sway[1]; sw.rotation.z = Math.sin(t * 0.9) * a + Math.sin(t * 2.3) * a * 0.3; sw.rotation.x = Math.sin(t * 0.7 + 1) * a * (D.sway[2] ? 1.2 : 0.7); } }
     if (it.type === 'loro') { const b = it.group.getObjectByName('bob'); if (b) b.rotation.z = Math.sin(now / 300) * 0.15 + (Math.sin(now / 1700) > 0.8 ? Math.sin(now / 60) * 0.2 : 0); }
     else if (it.type === 'hamster') { const w = it.group.getObjectByName('wheel'); if (w) w.rotation.z -= dt * 5; }
+    else if (it._roll) { const R2 = it._roll; R2.t = Math.min(1, R2.t + dt * 1.6); const e = 1 - (1 - R2.t) ** 2; it.group.position.lerpVectors(R2.from, R2.to, e); // the ball rolls and slows down
+      const b = it.group.getObjectByName('ball'); if (b) { b.rotation.x += (R2.to.z - R2.from.z) * dt * 6 * (1 - e); b.rotation.z -= (R2.to.x - R2.from.x) * dt * 6 * (1 - e); } if (R2.t >= 1) { delete it._roll; placeMesh(it); } }
+    else if (it.type === 'chimenea') { const f = it.group.getObjectByName('flame'); if (f) { f.scale.set(1 + Math.sin(now / 130) * 0.05, 1 + Math.sin(now / 90) * 0.12 + Math.sin(now / 47) * 0.06, 1); f.rotation.y = Math.sin(now / 400) * 0.15; } }
+    else if (it.type === 'fuente') { const dr = it.group.getObjectByName('drops'); if (dr) for (const d of dr.children) { const t = (now / 900 + d.userData.ph) % 1, a = d.userData.ph * 2 * PI * 3.7; // drops arc up from the jet and fall into the top bowl
+        d.position.set(Math.cos(a) * 0.12 * t, 1.06 + Math.sin(t * PI) * 0.12 - t * 0.1, Math.sin(a) * 0.12 * t); } }
     else if (it.type === 'acuarioGigante' || it.type === 'pecera') { const f = it.group.getObjectByName('swim'); if (f) f.position.x = Math.sin(now / 1400) * 0.25; } }
   if (popAnim) {
     popAnim.t += dt * 3.2; const t = popAnim.t, s = t >= 1 ? 1 : 1 + Math.sin(t * PI) * 0.12;
@@ -4480,12 +4705,23 @@ function frame(now) {
   if (!state.menu && (frameN = (frameN + 1) % 6) === 0) { if (state.sky === 'auto') setSky(skyPhase()); else if (now - sunAt > 30000) { sunAt = now; placeSun(skyP); } updateSunPatches(); } // the real-clock sun creeps along
   const cam = state.walk ? walkCam : camera;
   if (settings.quality === 'alta' && !state.menu && (busy || rendered % 3 === 0)) renderMirrors(cam);
+  renderFloorRefl(cam, busy);
   updatePools();
   renderer.shadowMap.needsUpdate = busy || rendered % 2 === 0; // shadows only follow every other frame while idle
   renderer.render(scene, cam);
+  drawLoupe();
   if (!loaderGone) hideLoader();
 }
 let loaderGone = false;
+// while you drag a thing or draw walls, a round magnifier above your finger shows exactly where it lands
+const loupe = $('loupe'), loupeCtx = loupe.getContext('2d');
+function drawLoupe() {
+  const on = !!gesture && !state.walk && ((/drag/.test(gesture.kind) && gesture.moved) || (gesture.kind === 'tool' && tool && tool.id !== 'paint')) && pointers.size === 1;
+  loupe.classList.toggle('on', on); if (!on) return;
+  const [pt] = pointers.values(), r = canvas.getBoundingClientRect(), a = app.getBoundingClientRect(), x = pt.x - r.left, y = pt.y - r.top, k = renderer.domElement.width / r.width, sw = 56 * k;
+  loupeCtx.clearRect(0, 0, 224, 224); loupeCtx.drawImage(renderer.domElement, x * k - sw / 2, y * k - sw / 2, sw, sw, 0, 0, 224, 224);
+  const lx = THREE.MathUtils.clamp(pt.x - a.left - 56, 6, a.width - 118), ly = pt.y - a.top - 56 - 104; loupe.style.left = lx + 'px'; loupe.style.top = (ly < 60 ? pt.y - a.top + 50 : ly) + 'px';
+}
 function hideLoader() { // the first frame is on screen: finish the bar and fade out (it stays at least a moment so it never just flickers)
   loaderGone = true; $('ldBar').style.width = '100%';
   setTimeout(() => { $('loader').classList.add('gone'); setTimeout(() => $('loader').remove(), 600); }, Math.max(350, 1300 - (performance.now() - loadStart)));
@@ -4493,7 +4729,7 @@ function hideLoader() { // the first frame is on screen: finish the bar and fade
 
 /* ---------- start ---------- */
 state.sky = settings.sky || (saved && saved.night ? 'noche' : 'dia');
-state.lockAll = !!settings.lockAll; renderLockAll();
+state.lockAll = !!settings.lockAll; renderLockAll(); app.classList.toggle('onehand', settings.oneHand === '1');
 autoQ.level = Math.min(AUTO_STEPS.length - 1, +(settings.autoQ || 0)); applyQuality();
 const PHONE = matchMedia('(pointer: coarse)').matches;
 if (settings.metersMin ?? (PHONE ? 1 : 0)) $('meters').classList.add('min');
@@ -4506,7 +4742,7 @@ if (location.hash.startsWith('#casa=')) unpackHouse(location.hash.slice(6)).then
 $('importNo').addEventListener('click', () => { $('importOv').hidden = true; window.history.replaceState(null, '', location.pathname); });
 $('importGo').addEventListener('click', () => {
   $('importOv').hidden = true; window.history.replaceState(null, '', location.pathname); if (!incoming) return;
-  addProject(incoming.n ? incoming.n + ' (recibida)' : 'Casa recibida', fillLevels(migrateOpenings(incoming.l.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, items: cleanItems(l.items) })))), incoming.s);
+  addProject(incoming.n ? incoming.n + ' (recibida)' : 'Casa recibida', fillLevels(migrateOpenings(incoming.l.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, pool: l.pool || {}, items: cleanItems(l.items) })))), incoming.s);
   loadRoom('build'); closeMenu();
 });
 openMenu();
