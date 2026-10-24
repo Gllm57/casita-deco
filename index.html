@@ -13,6 +13,25 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-512.png">
 <link rel="apple-touch-icon" href="icon-512.png">
+<script>
+// if anything stops the game from opening, say so on the loading screen and offer a way out instead of hanging forever
+window.__errs = [];
+addEventListener('error', e => { if (e.message) { __errs.push(e.message + (e.lineno ? ' (línea ' + e.lineno + ')' : '')); setTimeout(() => window.__showErr && __showErr(), 0); } });
+addEventListener('unhandledrejection', e => { __errs.push(String(e.reason && e.reason.message || e.reason)); });
+window.__showErr = force => {
+  const L = document.getElementById('loader'); if (!L || L.classList.contains('gone') || document.getElementById('ldErr')) return; if (!force && !__errs.length) return;
+  const box = document.createElement('div'); box.id = 'ldErr';
+  box.style.cssText = 'max-width:300px;text-align:center;color:#F1E9FF;font:700 13px Nunito,system-ui,sans-serif;display:flex;flex-direction:column;gap:10px;align-items:center;padding:0 16px';
+  box.innerHTML = '<b style="font-size:16px">No se pudo abrir el juego</b><span style="opacity:.75">' + (__errs[0] || (window.THREE ? 'Tarda demasiado en cargar' : 'No se pudo descargar el motor 3D: revisa la conexión')).replace(/</g, '&lt;') + '</span>'
+    + '<button id="ldRetry" style="border:0;border-radius:999px;padding:11px 20px;font:800 14px Nunito,system-ui;background:#FF6F4D;color:#fff">Reintentar</button>'
+    + '<button id="ldFix" style="border:0;border-radius:999px;padding:9px 18px;font:800 13px Nunito,system-ui;background:rgba(255,255,255,.14);color:#fff">Reparar la partida guardada</button>'
+    + '<small style="opacity:.55;font-weight:700">Reparar guarda una copia y empieza limpio</small>';
+  L.appendChild(box);
+  document.getElementById('ldRetry').onclick = () => location.reload();
+  document.getElementById('ldFix').onclick = () => { try { const v = localStorage.getItem('casita-deco-v2'); if (v) localStorage.setItem('casita-deco-copia-' + Date.now(), v); localStorage.removeItem('casita-deco-v2'); } catch (e) {} location.reload(); };
+};
+setTimeout(() => { if (!window.__started) __showErr(true); }, 12000);
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
@@ -723,6 +742,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>if (!window.THREE) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>'); // a second source if the first one fails</script>
 <script>
 (() => {
 const loadStart = performance.now(); document.getElementById('ldBar').style.animation = 'none'; document.getElementById('ldBar').style.width = '80%';
@@ -4864,6 +4884,9 @@ function endPointer(e) {
   gesture = null;
 }
 canvas.addEventListener('contextmenu', e => e.preventDefault());
+// the phone can take the 3D drawing back when it runs short of memory: save and come back cleanly
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); try { save(); } catch (err) {} });
+canvas.addEventListener('webglcontextrestored', () => location.reload());
 canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (!state.menu) view.zoom = THREE.MathUtils.clamp(view.zoom * (e.deltaY > 0 ? 0.92 : 1.08), 0.6, 2.8); }, { passive: false });
 for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -4908,8 +4931,13 @@ function autoQuality(now, interval) {
   else if (fast > 0.9 && autoQ.level > 0) autoQ.level--; // smooth with room to spare: look better again
   if (autoQ.level !== was) { settings.autoQ = autoQ.level; applyQuality(); }
 }
+const broken = {};
+function safe(name, fn) { if (broken[name]) return; try { fn(); } catch (e) { broken[name] = 1; console.warn('desactivado:', name, e); } } // an extra effect that fails is switched off, the game goes on
 function frame(now) {
   requestAnimationFrame(frame);
+  try { frameBody(now); } catch (e) { console.error(e); if (!loaderGone) { __errs.push(e.message); __showErr(); } }
+}
+function frameBody(now) {
   const busy = busyNow(now), gap = state.menu ? 1000 / 24 : busy ? 0 : 1000 / 30;
   if (gap && now - last < gap - 4) return; // nothing needs a fresh picture this soon
   if (busy && !state.menu) autoQuality(now, now - last);
@@ -4927,9 +4955,9 @@ function frame(now) {
   }
   if (!BM) for (const it of R.items) if (def(it).wall && it.group) it.group.visible = walls[it.wall].h > 0.5;
   if (wallMarker.visible && sel && def(sel).wall) wallMarker.visible = BM ? (wallMeshes[sel.lv][sel.edge] || { h: 0 }).h > 0.5 : walls[sel.wall].h > 0.5;
-  animateDoors(dt);
-  if (!reduce && sunPatches.size) updateDust(now);
-  animateAppliances(now, dt);
+  safe('puertas', () => animateDoors(dt));
+  if (!reduce && sunPatches.size) safe('polvo', () => updateDust(now));
+  safe('aparatos', () => animateAppliances(now, dt));
   if (!reduce) for (const l of lightPool) if (l.userData.fire && l.intensity > 0) l.intensity = l.userData.base * (0.84 + 0.1 * Math.sin(now / 83) + 0.06 * Math.sin(now / 41 + 2));
   if (!reduce) { waterTex.offset.x = (now / 1000 * 0.025) % 1; waterTex.offset.y = Math.sin(now / 1000 * 0.3) * 0.04; }
   if (clouds && !reduce) clouds.rotation.y += dt * 0.006; // clouds drift past below the balcony
@@ -4949,15 +4977,15 @@ function frame(now) {
     popAnim.it.group.scale.set(s, 2 - s, s); if (t >= 1) popAnim = null;
   }
   if (sel && !(gesture && /drag/.test(gesture.kind))) markerMat.opacity = 0.32 + Math.sin(now / 260) * 0.12;
-  updateCat(dt);
-  if (!state.menu && (frameN = (frameN + 1) % 6) === 0) { if (state.sky === 'auto') setSky(skyPhase()); else if (now - sunAt > 30000) { sunAt = now; placeSun(skyP); } updateSunPatches(); } // the real-clock sun creeps along
+  safe('milo', () => updateCat(dt));
+  if (!state.menu && (frameN = (frameN + 1) % 6) === 0) { if (state.sky === 'auto') setSky(skyPhase()); else if (now - sunAt > 30000) { sunAt = now; placeSun(skyP); } safe('sol', updateSunPatches); } // the real-clock sun creeps along
   const cam = state.walk ? walkCam : camera;
-  if (settings.quality === 'alta' && !state.menu && (busy || rendered % 3 === 0)) renderMirrors(cam);
-  renderFloorRefl(cam, busy);
+  if (settings.quality === 'alta' && !state.menu && (busy || rendered % 3 === 0)) safe('espejos', () => renderMirrors(cam));
+  safe('reflejos', () => renderFloorRefl(cam, busy));
   updatePools();
   renderer.shadowMap.needsUpdate = busy || rendered % 2 === 0; // shadows only follow every other frame while idle
   renderer.render(scene, cam);
-  drawLoupe();
+  safe('lupa', drawLoupe);
   if (!loaderGone) hideLoader();
 }
 let loaderGone = false;
@@ -4971,7 +4999,7 @@ function drawLoupe() {
   const lx = THREE.MathUtils.clamp(pt.x - a.left - 56, 6, a.width - 118), ly = pt.y - a.top - 56 - 104; loupe.style.left = lx + 'px'; loupe.style.top = (ly < 60 ? pt.y - a.top + 50 : ly) + 'px';
 }
 function hideLoader() { // the first frame is on screen: finish the bar and fade out (it stays at least a moment so it never just flickers)
-  loaderGone = true; $('ldBar').style.width = '100%';
+  loaderGone = true; window.__started = true; $('ldBar').style.width = '100%';
   setTimeout(() => { $('loader').classList.add('gone'); setTimeout(() => $('loader').remove(), 600); }, Math.max(350, 1300 - (performance.now() - loadStart)));
 }
 
