@@ -7,6 +7,8 @@
 <meta name="description" content="Decora casas en 3D para tus clientes y para ti, y gana estrellas.">
 <meta name="theme-color" content="#E9DCF2">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Casita Deco">
@@ -35,6 +37,10 @@ window.__showErr = force => {
   document.getElementById('ldFix').onclick = () => { try { const v = localStorage.getItem('casita-deco-v2'); if (v) localStorage.setItem('casita-deco-copia-' + Date.now(), v); localStorage.removeItem('casita-deco-v2'); } catch (e) {} location.reload(); };
 };
 setTimeout(() => { if (!window.__started) __showErr(true); }, 12000);
+// the home-screen app likes to keep an old copy: ask the server for the newest one and reload once if it differs
+addEventListener('load', () => { try { fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' }).then(r => r.text()).then(t => {
+  const m = t.match(/id="ldVer">([^<]+)</), mine = (document.getElementById('ldVer') || {}).textContent;
+  if (m && mine && m[1] !== mine && sessionStorage.getItem('casita-upd') !== m[1]) { sessionStorage.setItem('casita-upd', m[1]); location.replace(location.pathname + '?v=' + Date.now()); } }).catch(() => {}); } catch (e) {} });
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800;900&display=swap">
@@ -515,7 +521,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="ld-bar"><i id="ldBar"></i></div>
   <div class="ld-tip" id="ldTip">Preparando la casa…</div>
   <a class="ld-esc" href="?reparar">¿Se ha quedado aquí? Toca para repararlo</a>
-  <div class="ld-ver">versión 24-10 · 2</div>
+  <div class="ld-ver" id="ldVer">versión 24-10 · 3</div>
 </div>
 <div class="app" id="app">
   <div class="moon" aria-hidden="true"></div>
