@@ -14,6 +14,10 @@
 <link rel="icon" href="icon-512.png">
 <link rel="apple-touch-icon" href="icon-512.png">
 <script>
+// ?reparar puts the saved game aside (a copy is kept) and starts clean; ?seguro opens with the heavy effects off
+try { const q = location.search;
+  if (/reparar/.test(q)) { const v = localStorage.getItem('casita-deco-v2'); if (v) localStorage.setItem('casita-deco-copia-' + Date.now(), v); localStorage.removeItem('casita-deco-v2'); history.replaceState(null, '', location.pathname); }
+  if (/seguro/.test(q)) window.__safeMode = true; } catch (e) {}
 // if anything stops the game from opening, say so on the loading screen and offer a way out instead of hanging forever
 window.__errs = [];
 addEventListener('error', e => { if (e.message) { __errs.push(e.message + (e.lineno ? ' (línea ' + e.lineno + ')' : '')); setTimeout(() => window.__showErr && __showErr(), 0); } });
@@ -37,6 +41,9 @@ setTimeout(() => { if (!window.__started) __showErr(true); }, 12000);
 <style>
 .loader { position: fixed; inset: 0; z-index: 100; background: #1E1830; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; transition: opacity .45s ease, visibility .45s; }
 .loader.gone { opacity: 0; visibility: hidden; }
+.ld-ver { position: absolute; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font: 700 11px system-ui, sans-serif; color: rgba(241,233,255,.35); }
+.ld-esc { opacity: 0; pointer-events: none; animation: ldEsc .3s 9s forwards; color: #FFB49E; font: 800 13px system-ui, sans-serif; text-decoration: underline; padding: 10px; }
+@keyframes ldEsc { to { opacity: 1; pointer-events: auto; } }
 .ld-house { width: 76px; height: auto; overflow: visible; }
 .ld-roof { fill: #FF6F4D; fill-opacity: 0; stroke: #FF6F4D; stroke-width: 2.6; stroke-linejoin: round; stroke-dasharray: 160; stroke-dashoffset: 160; animation: ldDraw 1.1s ease forwards, ldFill .4s .9s ease forwards; }
 .ld-door { fill: #1E1830; opacity: 0; animation: ldFill .3s 1.15s forwards; }
@@ -507,6 +514,8 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="ld-name"><span>casita</span> <span>deco</span></div>
   <div class="ld-bar"><i id="ldBar"></i></div>
   <div class="ld-tip" id="ldTip">Preparando la casa…</div>
+  <a class="ld-esc" href="?reparar">¿Se ha quedado aquí? Toca para repararlo</a>
+  <div class="ld-ver">versión 24-10 · 2</div>
 </div>
 <div class="app" id="app">
   <div class="moon" aria-hidden="true"></div>
@@ -5006,6 +5015,7 @@ function hideLoader() { // the first frame is on screen: finish the bar and fade
 /* ---------- start ---------- */
 state.sky = settings.sky || (saved && saved.night ? 'noche' : 'dia');
 state.lockAll = !!settings.lockAll; renderLockAll(); app.classList.toggle('onehand', settings.oneHand === '1');
+if (window.__safeMode) { settings.quality = 'ahorro'; broken.reflejos = broken.espejos = broken.polvo = 1; }
 autoQ.level = Math.min(AUTO_STEPS.length - 1, +(settings.autoQ || 0)); applyQuality();
 const PHONE = matchMedia('(pointer: coarse)').matches;
 if (settings.metersMin ?? (PHONE ? 1 : 0)) $('meters').classList.add('min');
