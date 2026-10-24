@@ -1820,13 +1820,6 @@ Object.assign(CAT, {
   barbacoa: { name: 'Barbacoa', tab: 'jardin', tags: 'exterior', w: 1, d: 1, price: 180, comfort: 1, style: 4, role: 'acento',
     build(g, m) { for (let i = 0; i < 3; i++) { const a = i / 3 * 2 * PI; rod(g, V3(Math.cos(a) * 0.25, 0, Math.sin(a) * 0.25), V3(0, 0.6, 0), 0.015, M(DARK)); }
       const b = add(g, new THREE.SphereGeometry(0.28, 28, 12, 0, 2 * PI, PI / 2, PI / 2), m, 0, 0.78, 0); m.side = THREE.DoubleSide; const l = add(g, new THREE.SphereGeometry(0.28, 28, 12, 0, 2 * PI, 0, PI / 2), m, 0, 0.8, 0); l.scale.y = 0.8; S(g, 0.03, M(DARK), 0, 1.05, 0); } },
-  piscina: { name: 'Piscina', tab: 'jardin', tags: 'exterior', w: 4, d: 3, price: 2400, comfort: 8, style: 9, role: 'piedra', light: { y: 0.4, color: 0x7FD3F0, power: 0.9 },
-    build(g, m) { const e = 0.24; BX(g, 3.9, 0.04, 2.9, M(0x4FA3C9), 0, 0.02, 0);
-      for (const sz of [-1, 1]) B(g, 4, 0.42, e, m, 0, 0.21, sz * (1.5 - e / 2)); for (const sx of [-1, 1]) B(g, e, 0.42, 3 - 2 * e, m, sx * (2 - e / 2), 0.21, 0);
-      for (const sz of [-1, 1]) BX(g, 4 - 2 * e, 0.36, 0.01, M(0x6CC0E0), 0, 0.2, sz * (1.5 - e - 0.005)); for (const sx of [-1, 1]) BX(g, 0.01, 0.36, 3 - 2 * e, M(0x6CC0E0), sx * (2 - e - 0.005), 0.2, 0);
-      const w = add(g, new THREE.PlaneGeometry(4 - 2 * e, 3 - 2 * e), waterMat, 0, 0.34, 0); w.rotation.x = -PI / 2; w.castShadow = false;
-      for (const x of [1.45, 1.75]) { rod(g, V3(x, 0.1, -1.3), V3(x, 0.7, -1.3), 0.015, M(METAL)); rod(g, V3(x, 0.7, -1.3), V3(x, 0.6, -1.5), 0.015, M(METAL)); }
-      add(g, new THREE.TorusGeometry(0.22, 0.07, 10, 28), M(0xFF8FB0), -0.8, 0.37, 0.3).rotation.x = PI / 2; } },
   farola: { name: 'Farola', tab: 'jardin', glow: true, tags: 'exterior', w: 1, d: 1, price: 140, comfort: 1, style: 5, role: 'luz', light: { y: 2.1, color: 0xFFD08A, power: 1.3 },
     build(g, m) { C(g, 0.12, 0.15, 0.1, M(DARK), 0, 0.05, 0, 16); C(g, 0.035, 0.045, 2.0, M(DARK), 0, 1.05, 0, 10); C(g, 0.12, 0.09, 0.28, m, 0, 2.18, 0, 6); K(g, 0.17, 0.14, M(DARK), 0, 2.39, 0); } },
   columpio: { name: 'Columpio', tab: 'jardin', tags: 'exterior bebe', w: 2, d: 1, price: 220, comfort: 2, style: 5, role: 'acento',
@@ -2048,7 +2041,7 @@ const SECTIONS = {
   pared: [['Cortinas', D => D.family || /^cort|^estor|^persiana/.test(D.key)], ['Cuadros', 'cuadro cuadroGrande galeriaFotos triptico mapamundi tapiz macrame neon pizarra tableroCorcho guirnalda'],
     ['Espejos y relojes', 'espejo espejoLuz reloj'], ['Baldas', 'balda estanteFlotante armarioAlto colgante percheroPared toallero'], ['Aparatos', 'telePared campana radiador aireAcond']],
   huecos: [['Ventanas', D => D.opening === 'window'], ['Puertas', D => D.opening === 'door']],
-  jardin: [['Plantas', 'cerezo arbol pino palmera arbusto seto parterre'], ['Para estar', 'tumbona mesaSombrilla barbacoa columpio casetaPerro piscina fuente'], ['Más', 'valla vallaLarga farola coche bicicleta']],
+  jardin: [['Plantas', 'cerezo arbol pino palmera arbusto seto parterre'], ['Para estar', 'tumbona mesaSombrilla barbacoa columpio casetaPerro fuente'], ['Más', 'valla vallaLarga farola coche bicicleta']],
 };
 function sectioned(tabId, list) { // [[key, D]] -> html with a small label before each section
   const secs = SECTIONS[tabId]; if (!secs) return list.map(([k, D]) => cardHtml(k, D)).join('');
@@ -2227,6 +2220,10 @@ function rectRoom(lv, x0, z0, x1, z1, floor, wall) {
   for (let z = z0; z < z1; z++) { setWall(lv, ekey('v', x0, z), wall, -1); setWall(lv, ekey('v', x1, z), wall, 1); }
 }
 function migrateOpenings(levels) {
+  for (const lv of levels) { // the old ready-made 4×3 pool becomes a pool you can reshape
+    const old = lv.items.filter(i => i.type === 'piscina'); for (const o of old) { const [w, d] = o.r % 2 ? [3, 4] : [4, 3]; lv.pool = lv.pool || {};
+      for (let x = o.gx; x < o.gx + w; x++) for (let z = o.gz; z < o.gz + d; z++) { lv.pool[ckey(x, z)] = 1; if (!lv.tiles[ckey(x, z)]) lv.tiles[ckey(x, z)] = 'cesped'; } }
+    if (old.length) lv.items = lv.items.filter(i => i.type !== 'piscina'); }
   for (const lv of levels) for (const [k, e] of Object.entries(lv.walls)) if (e.o) { lv.items.push({ type: e.o === 'door' ? 'puerta' : 'ventana', edge: k, side: 1, r: 0, ci: 0 }); e.o = null; }
   return levels;
 }
@@ -2285,8 +2282,9 @@ function themeHouse(kind) {
     items0 = [wl('ventanalPanoramico', 'h,3,9'), wl('puertaCorredera', 'h,7,9'), wl('ventanaDoble', 'h,4,2'), wl('ventanaArco', 'h,8,2'), wl('puerta', 'v,10,5'), wl('ventanaDoble', 'h,11,2'), wl('ventana', 'v,14,5'),
       it('sofaModular3', 3, 5, 0, 4), it('alfOval3x2', 3, 6, 0, 4), it('mesaCafe', 4, 7), it('lamparaGlobo', 6, 5, 0, 4), it('monstera', 3, 3), it('encimera', 6, 2), it('fregadero', 7, 2), it('fogon', 8, 2), it('nevera', 9, 2),
       it('mesaMadera2', 7, 5, 0, 4), it('silla', 7, 6, 2, 4), it('silla', 8, 6, 2, 4), it('silla', 7, 4, 0, 4), it('plafon', 5, 5), it('cama', 11, 3, 0, 4), it('mesita', 13, 3, 0, 4), it('armario', 11, 7, 2, 4), it('lamparaPapel', 11, 5),
-      it('tumbona', 3, 9, 2, 4), it('tumbona', 4, 9, 2, 4), it('mesaSombrilla', 11, 9, 0, 4), it('piscina', 6, 10), it('palmera', 2, 12), it('palmera', 12, 12), it('palmera', 13, 10), it('fuente', 3, 12), it('farola', 13, 9)];
+      it('tumbona', 3, 9, 2, 4), it('tumbona', 4, 9, 2, 4), it('mesaSombrilla', 11, 9, 0, 4), it('palmera', 2, 12), it('palmera', 12, 12), it('palmera', 13, 10), it('fuente', 3, 12), it('farola', 13, 9)];
     for (const k of Object.keys(L0.tiles)) if (L0.tiles[k] === 'pino') L0.roof[k] = 'plano';
+    for (let x = 6; x < 10; x++) for (let z = 10; z < 13; z++) L0.pool[ckey(x, z)] = 1;
   } else if (kind === 'cabana') {
     F(0, 0, 16, 14, 'cesped'); F(7, 10, 9, 14, 'camino');
     rectRoom(L0, 4, 3, 12, 10, 'nogal', 'friso'); rectRoom(L1, 4, 3, 12, 10, 'pino', 'piedraPared'); rectRoom(L1, 9, 3, 12, 6, 'baldosa', 'metro');
@@ -2330,7 +2328,7 @@ const settings = { quality: 'alta', cat: '1', vibrate: '1', sound: '1', music: '
 const SAVE_KEY = 'casita-deco-v2';
 let saved = null;
 try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || JSON.parse(localStorage.getItem('casita-deco-v1') || 'null'); } catch (e) { saved = null; }
-const cleanItems = list => (list || []).filter(i => CAT[i.type]).map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length }));
+const cleanItems = list => (list || []).filter(i => CAT[i.type] || i.type === 'piscina').map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length }));
 if (saved && saved.rooms && saved.rooms.build && saved.rooms.build.levels) rooms.build = { cur: 0, best: 0, levels: fillLevels(migrateOpenings(saved.rooms.build.levels.map(l => ({ tiles: l.tiles || {}, walls: l.walls || {}, roof: l.roof || {}, pool: l.pool || {}, items: cleanItems(l.items) })))) };
 if (saved && saved.rooms) for (const L of ALL) {
   const r = saved.rooms[L.id]; if (!r || L.build || (L.challenge && r.key !== L.key)) continue; // yesterday's challenge starts over
@@ -3854,15 +3852,31 @@ function roofAll(st) {
 function buildPool(i) {
   const lv = HOUSE.levels[i], cells = Object.keys(lv.pool || {}).map(k => k.split(',').map(Number)); if (!cells.length) return;
   const g = levelGroups[i].geo, wet = (x, z) => isPool(i, x, z);
-  const depth = (vx, vz) => { let d = 3; for (let x = vx - 3; x < vx + 3; x++) for (let z = vz - 3; z < vz + 3; z++) if (!wet(x, z)) d = Math.min(d, Math.max(Math.max(0, x - vx, vx - x - 1), Math.max(0, z - vz, vz - z - 1))); return d; };
+  const depth = (vx, vz) => { let d = 3; for (let x = Math.floor(vx) - 3; x < vx + 3; x++) for (let z = Math.floor(vz) - 3; z < vz + 3; z++) if (!wet(x, z)) d = Math.min(d, Math.max(Math.max(0, x - vx, vx - x - 1), Math.max(0, z - vz, vz - z - 1))); return d; };
   const shallow = new THREE.Color(0xA8E6F7), deep = new THREE.Color(0x2E86BE), pos = [], col = [], uv = [], c = new THREE.Color();
-  for (const [x, z] of cells) for (const tri of [[[0, 0], [0, 1], [1, 0]], [[1, 0], [0, 1], [1, 1]]]) for (const [dx, dz] of tri) {
-    const vx = x + dx, vz = z + dz; pos.push(vx - GW / 2, 0.03, vz - GD / 2); c.copy(shallow).lerp(deep, Math.min(1, depth(vx, vz) / 1.6)); col.push(c.r, c.g, c.b); uv.push(vx / 1.7, vz / 1.7); }
-  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.computeVertexNormals();
+  const vert = (vx, vz) => { pos.push(vx - GW / 2, 0.03, vz - GD / 2); c.copy(shallow).lerp(deep, Math.min(1, depth(vx, vz) / 1.6)); col.push(c.r, c.g, c.b); uv.push(vx / 1.7, vz / 1.7); };
+  const tri = (a, b, d) => { const ny = (b[1] - a[1]) * (d[0] - a[0]) - (b[0] - a[0]) * (d[1] - a[1]); for (const v of ny > 0 ? [a, b, d] : [a, d, b]) vert(v[0], v[1]); }; // always facing up
+  const R0 = 0.5, SEG = 8, cop = [];
+  for (const [x, z] of cells) { const mx = x + 0.5, mz = z + 0.5;
+    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { // each cell in four quarters; an outside corner gets a round quarter
+      const ox = !wet(x + sx, z), oz = !wet(x, z + sz), round = ox && oz && !wet(x + sx, z + sz);
+      if (round) { for (let k = 0; k < SEG; k++) { const a0 = k / SEG * PI / 2, a1 = (k + 1) / SEG * PI / 2; tri([mx, mz], [mx + sx * Math.cos(a1) * R0, mz + sz * Math.sin(a1) * R0], [mx + sx * Math.cos(a0) * R0, mz + sz * Math.sin(a0) * R0]); }
+        cop.push({ arc: true, x: mx, z: mz, sx, sz }); }
+      else { const cx2 = mx + sx * 0.5, cz2 = mz + sz * 0.5; tri([mx, mz], [cx2, mz], [mx, cz2]); tri([cx2, mz], [cx2, cz2], [mx, cz2]);
+        if (ox) cop.push({ x: cx2, z: mz + sz * 0.25, w: 0.26, d: 0.5 }); if (oz) cop.push({ x: mx + sx * 0.25, z: cz2, w: 0.5, d: 0.26 });
+        if (!ox && !oz && !wet(x + sx, z + sz)) cop.push({ x: cx2, z: cz2, w: 0.26, d: 0.26 }); } } }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((_, k) => (k % 3 === 1 ? 1 : 0)), 3)); // flat water: every normal straight up
   const w = new THREE.Mesh(geo, poolWaterMat); w.receiveShadow = true; g.add(w);
-  for (const [x, z] of cells) { const cx = x + 0.5 - GW / 2, cz = z + 0.5 - GD / 2;
-    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (!wet(x + dx, z + dz)) { const e = P(g, dz ? 1.0 : 0.26, 0.09, dx ? 1.0 : 0.26, copingMat, cx + dx * 0.5, 0.045, cz + dz * 0.5); e.castShadow = true; }
-    for (const [dx, dz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) if (!wet(x + dx, z) && !wet(x, z + dz)) P(g, 0.26, 0.09, 0.26, copingMat, cx + dx * 0.5, 0.045, cz + dz * 0.5); }
+  // the stone edge: straight pieces along the sides and curved pieces round the corners
+  const arcGeo = poolArcGeo();
+  for (const q of cop) { if (q.arc) { const m = add(g, arcGeo, copingMat, q.x - GW / 2, 0, q.z - GD / 2); m.rotation.y = q.sx > 0 ? (q.sz > 0 ? 0 : PI / 2) : (q.sz > 0 ? -PI / 2 : PI); m.castShadow = true; }
+    else P(g, q.w, 0.09, q.d, copingMat, q.x - GW / 2, 0.045, q.z - GD / 2).castShadow = true; }
+}
+let poolArc = null;
+function poolArcGeo() { // a quarter ring of stone, outer radius just past the cell edge, extruded 9 cm high
+  if (poolArc) return poolArc; const sh = new THREE.Shape(), ro = 0.63, ri = 0.37; sh.absarc(0, 0, ro, 0, -PI / 2, true); sh.absarc(0, 0, ri, -PI / 2, 0, false);
+  const g2 = new THREE.ExtrudeGeometry(sh, { depth: 0.09, bevelEnabled: false, curveSegments: 16 }); g2.rotateX(-PI / 2); return (poolArc = g2);
 }
 function openingMap(lv) { // wall edges a door or window cuts through: edge -> { it, n }
   const out = {};
