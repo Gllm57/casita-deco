@@ -30,6 +30,10 @@ Hecho con [three.js](https://threejs.org/) r128, todo en un único archivo HTML.
 
 ## Novedades
 
+- **Catálogo como en Los Sims:** ordenado por función (Asientos, Superficies, Camas, Almacenaje, Electrónica, Electrodomésticos, Fontanería, Iluminación, Decoración, Ocio, Niños y mascotas, Exterior, Puertas y ventanas, Pintura y suelo), cada uno con sus secciones.
+- **Objetos nuevos que se usan:** ordenador, equipo de música, máquina recreativa, cinta de correr, banco de pesas, mesa de ajedrez, telescopio, mesa de billar, casa de muñecas, cubo de basura, jacuzzi, hamaca y cama elástica.
+- **Cosas que hacen algo:** la nevera abre sus puertas, el inodoro tira de la cadena, la mecedora se mece, columpio y hamaca se balancean, piano y guitarra suenan, la música hace bailar a Milo, el billar mueve las bolas, el robot aspirador recorre la casa, la barbacoa echa humo, la cafetera humea, la tostadora salta y la chimenea se apaga con su luz.
+- **Piscinas redondeadas:** las esquinas exteriores son curvas, con borde de piedra curvo. La piscina fija de 4×3 ya no está; las que tenías se convierten en piscinas editables.
 - **Cosas que funcionan:** teles con dibujos animados, grifos del fregadero, lavabos, bañera y ducha con agua corriendo, fogones y placa que se encienden con el horno iluminado, microondas, lavadora y secadora girando, ventilador y tocadiscos. Tócalos (o usa el botón) para encender y apagar, también en el paseo.
 - **Piscina con la forma que quieras** (Obra · Piscina): arrastra para darle forma, más azul y honda en el centro, con borde de piedra; arrastra encima para taparla.
 - **Gráficos:** reflejos en suelos brillantes (mármol, azulejo, terrazo), rayos de sol con polvo flotando por las ventanas, noche con estrellas, luna y ventanas iluminadas, agua que ondula, fuego de chimenea que parpadea y tejados con chimenea y canalones.
