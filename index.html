@@ -21,14 +21,16 @@ try { const q = location.search;
   if (/reparar/.test(q)) { const v = localStorage.getItem('casita-deco-v2'); if (v) localStorage.setItem('casita-deco-copia-' + Date.now(), v); localStorage.removeItem('casita-deco-v2'); history.replaceState(null, '', location.pathname); }
   if (/seguro/.test(q)) window.__safeMode = true; } catch (e) {}
 // if anything stops the game from opening, say so on the loading screen and offer a way out instead of hanging forever
-window.__errs = [];
+window.__errs = []; window.__st = 'descargando'; window.__stage = x => { window.__st = x; };
+// a live line on the loading screen: which step it is on and for how long; if the seconds stop, the phone is stuck in that step
+const __t0 = Date.now(); setInterval(() => { const t = document.getElementById('ldTip'); if (t && !window.__started) t.textContent = 'Preparando la casa… · ' + window.__st + ' · ' + Math.round((Date.now() - __t0) / 1000) + ' s'; }, 500);
 addEventListener('error', e => { if (e.message) { __errs.push(e.message + (e.lineno ? ' (línea ' + e.lineno + ')' : '')); setTimeout(() => window.__showErr && __showErr(), 0); } });
 addEventListener('unhandledrejection', e => { __errs.push(String(e.reason && e.reason.message || e.reason)); });
 window.__showErr = force => {
   const L = document.getElementById('loader'); if (!L || L.classList.contains('gone') || document.getElementById('ldErr')) return; if (!force && !__errs.length) return;
   const box = document.createElement('div'); box.id = 'ldErr';
   box.style.cssText = 'max-width:300px;text-align:center;color:#F1E9FF;font:700 13px Nunito,system-ui,sans-serif;display:flex;flex-direction:column;gap:10px;align-items:center;padding:0 16px';
-  box.innerHTML = '<b style="font-size:16px">No se pudo abrir el juego</b><span style="opacity:.75">' + (__errs[0] || (window.THREE ? 'Tarda demasiado en cargar' : 'No se pudo descargar el motor 3D: revisa la conexión')).replace(/</g, '&lt;') + '</span>'
+  box.innerHTML = '<b style="font-size:16px">No se pudo abrir el juego</b><span style="opacity:.75">' + (__errs[0] || ('Paso: ' + window.__st + '. ') + (window.THREE ? 'Tarda demasiado en cargar' : 'No se pudo descargar el motor 3D: revisa la conexión')).replace(/</g, '&lt;') + '</span>'
     + '<button id="ldRetry" style="border:0;border-radius:999px;padding:11px 20px;font:800 14px Nunito,system-ui;background:#FF6F4D;color:#fff">Reintentar</button>'
     + '<button id="ldFix" style="border:0;border-radius:999px;padding:9px 18px;font:800 13px Nunito,system-ui;background:rgba(255,255,255,.14);color:#fff">Reparar la partida guardada</button>'
     + '<small style="opacity:.55;font-weight:700">Reparar guarda una copia y empieza limpio</small>';
@@ -521,7 +523,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
   <div class="ld-bar"><i id="ldBar"></i></div>
   <div class="ld-tip" id="ldTip">Preparando la casa…</div>
   <a class="ld-esc" href="?reparar">¿Se ha quedado aquí? Toca para repararlo</a>
-  <div class="ld-ver" id="ldVer">versión 24-10 · 3</div>
+  <div class="ld-ver" id="ldVer">versión 25-10 · 4</div>
 </div>
 <div class="app" id="app">
   <div class="moon" aria-hidden="true"></div>
@@ -759,6 +761,7 @@ canvas#room { position: absolute; inset: 0; width: 100%; height: 100%; display: 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>if (!window.THREE) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>'); // a second source if the first one fails</script>
 <script>
+__stage(window.THREE ? 'motor 3D listo' : 'sin motor 3D');
 (() => {
 const loadStart = performance.now(); document.getElementById('ldBar').style.animation = 'none'; document.getElementById('ldBar').style.width = '80%';
 const WALL_H = 2.6, HALF_H = 1.05, PI = Math.PI, LEVEL_H = WALL_H + 0.15, WALL_T = 0.15, STUB_H = 0.24;
@@ -881,6 +884,7 @@ function pot(g, m, rt, rb, h, x = 0, y = 0, z = 0, seg = 28) {
   const o = add(g, new THREE.LatheGeometry(prof.map(([r, hh]) => new THREE.Vector2(r, hh)), seg), m, x, y, z);
   const soil = add(g, new THREE.CircleGeometry(rt - t * 1.15, seg), SOIL, x, y + h - Math.max(0.018, lip * 0.9), z); soil.rotation.x = -PI / 2; soil.castShadow = false; return o;
 }
+__stage('catálogo');
 const CAT = {
   sofa: { name: 'Sofá', tab: 'muebles', tags: 'salon', w: 2, d: 1, price: 450, comfort: 9, style: 4, role: 'tela',
     build(g, m) { const wd = M(WOOD); for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = C(g, 0.034, 0.02, 0.15, wd, sx * 0.82, 0.072, 0.03 + sz * 0.3, 12); l.rotation.set(sz * 0.14, 0, -sx * 0.14); }
@@ -2444,12 +2448,14 @@ const THEMES = [['playa', 'Casa de playa', 'linear-gradient(135deg,#4FC3E0,#2F8F
 const BUILD_DEF = { id: 'build', build: true, home: true, room: 'Mi proyecto', kind: 'Constructor', tag: 'salon', color: '#E0803A', w: 16, d: 14, wall: 'hueso', floor: 'roble', needs: [], open: [], start: [], s3: 150, c3: 70 };
 const ALL = [...LEVELS, ...HOMES, ...RETOS, BUILD_DEF];
 const freshRoom = L => ({ wall: L.wall, floor: L.floor, best: 0, key: L.key, items: L.start.map(s => ({ r: 0, ci: 0, ...s })) });
+__stage('salas');
 const rooms = {}; for (const L of ALL) rooms[L.id] = L.build ? { cur: 0, best: 0, levels: exampleHouse() } : freshRoom(L);
 let projects = [], projCur = 0;
 const settings = { quality: 'alta', cat: '1', vibrate: '1', sound: '1', music: '1', oneHand: '0', shake: '0', budget: '0' };
 
 // saved game lives in this browser only (v1 = earlier versions of the game)
 const SAVE_KEY = 'casita-deco-v2';
+__stage('partida guardada');
 let saved = null;
 try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || JSON.parse(localStorage.getItem('casita-deco-v1') || 'null'); } catch (e) { saved = null; }
 const cleanItems = list => (list || []).filter(i => CAT[i.type] || i.type === 'piscina').map(i => ({ ...i, ci: (i.ci || 0) % COLLECTIONS.length }));
@@ -2474,6 +2480,7 @@ const homeUnlocked = h => totalStars() >= h.unlock;
 
 /* ---------- renderer & scene ---------- */
 const canvas = $('room');
+__stage('pantalla 3D');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false; // the frame loop says when
 const scene = new THREE.Scene();
@@ -4953,6 +4960,7 @@ function frame(now) {
   try { frameBody(now); } catch (e) { console.error(e); if (!loaderGone) { __errs.push(e.message); __showErr(); } }
 }
 function frameBody(now) {
+  if (!loaderGone) __stage('dibujando ' + (rendered + 1));
   const busy = busyNow(now), gap = state.menu ? 1000 / 24 : busy ? 0 : 1000 / 30;
   if (gap && now - last < gap - 4) return; // nothing needs a fresh picture this soon
   if (busy && !state.menu) autoQuality(now, now - last);
@@ -5025,6 +5033,7 @@ if (window.__safeMode) { settings.quality = 'ahorro'; broken.reflejos = broken.e
 autoQ.level = Math.min(AUTO_STEPS.length - 1, +(settings.autoQ || 0)); applyQuality();
 const PHONE = matchMedia('(pointer: coarse)').matches;
 if (settings.metersMin ?? (PHONE ? 1 : 0)) $('meters').classList.add('min');
+__stage('abriendo sala');
 loadRoom(saved && ALL.some(l => l.id === saved.level) ? saved.level : 'lucia');
 let incoming = null;
 if (location.hash.startsWith('#casa=')) unpackHouse(location.hash.slice(6)).then(d => {
@@ -5038,6 +5047,7 @@ $('importGo').addEventListener('click', () => {
   loadRoom('build'); closeMenu();
 });
 openMenu();
+__stage('esperando el primer dibujo');
 requestAnimationFrame(frame);
 })();
 </script>
